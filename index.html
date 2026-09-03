@@ -184,7 +184,7 @@
   <h2>One-time setup</h2>
   <div class="field">
     <label>Apps Script Web App URL</label>
-    <input id="script-url" placeholder="https://script.google.com/macros/s/AKfycbz8ayXh_rn4H0UjocqC2-qaqkXMmTMoAgJJEuX_BzmCO33H2sBaQj8wb2O83MzD2O7N_g/exec">
+    <input id="script-url" placeholder="https://script.google.com/macros/s/AKfycbxa7REwaiUnpYv48spZfHP-DhM9w6tvnp9wSqIHr4M5nO-uRIgJczk3twW6CTxj4D7I/exec">
   </div>
   <button class="btn-primary" onclick="saveScriptUrl()">Continue</button>
   <div class="status-msg" id="setup-status"></div>
@@ -585,7 +585,7 @@
 <script>
 const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz8ayXh_rn4H0UjocqC2-qaqkXMmTMoAgJJEuX_BzmCO33H2sBaQj8wb2O83MzD2O7N_g/exec';
 const FAST_REFRESH_DEBOUNCE = 120;
-const V2_BUILD = '2026.09.03-V2-EXTENSIBLE';
+const V2_BUILD = '2026.09.03-V3-FAST-BATCH';
 let APPS_SCRIPT_URL = localStorage.getItem('svd_url') || DEFAULT_APPS_SCRIPT_URL;
 let TOKEN = sessionStorage.getItem('svd_token') || '';
 let SESSION = JSON.parse(sessionStorage.getItem('svd_session') || 'null');
