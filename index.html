@@ -586,7 +586,8 @@
 const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz8ayXh_rn4H0UjocqC2-qaqkXMmTMoAgJJEuX_BzmCO33H2sBaQj8wb2O83MzD2O7N_g/exec';
 const FAST_REFRESH_DEBOUNCE = 120;
 const V2_BUILD = '2026.09.03-V3-FAST-BATCH';
-let APPS_SCRIPT_URL = localStorage.getItem('svd_url') || DEFAULT_APPS_SCRIPT_URL;
+let APPS_SCRIPT_URL = DEFAULT_APPS_SCRIPT_URL;
+localStorage.setItem('svd_url', APPS_SCRIPT_URL);
 let TOKEN = sessionStorage.getItem('svd_token') || '';
 let SESSION = JSON.parse(sessionStorage.getItem('svd_session') || 'null');
 let data = { orders: [], logs: [], customers: [], partCodes: [], locations: [], shipToParties: [], departments: [], stock: [], discussion: [], complaints: [], complaintComments: [], v2: {permissions:[],roles:[],fields:[],dropdowns:[],plans:{},additional:{}} };
@@ -623,26 +624,77 @@ async function doLogin() {
   const username = document.getElementById('login-username').value.trim();
   const password = document.getElementById('login-password').value;
   const statusEl = document.getElementById('login-status');
+
   if (!username || !password) {
-    statusEl.textContent = 'Enter username and password.'; statusEl.className = 'status-msg err';
+    statusEl.textContent = 'Enter username and password.';
+    statusEl.className = 'status-msg err';
     return;
   }
-  statusEl.textContent = 'Signing in…'; statusEl.className = 'status-msg';
+
+  statusEl.textContent = 'Signing in…';
+  statusEl.className = 'status-msg';
+
   try {
     const res = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'login', username, password })
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'login',
+        username: username,
+        password: password
+      }),
+      redirect: 'follow',
+      cache: 'no-store'
     });
-    const result = await res.json();
-    if (result.error) { statusEl.textContent = result.error; statusEl.className = 'status-msg err'; return; }
+
+    const raw = await res.text();
+
+    if (!res.ok) {
+      statusEl.textContent = 'Server returned HTTP ' + res.status + '. Check Apps Script deployment.';
+      statusEl.className = 'status-msg err';
+      console.error('Login HTTP error:', res.status, raw);
+      return;
+    }
+
+    let result;
+    try {
+      result = JSON.parse(raw);
+    } catch (parseErr) {
+      statusEl.textContent = 'Apps Script did not return JSON. Redeploy the Web App and try again.';
+      statusEl.className = 'status-msg err';
+      console.error('Login non-JSON response:', raw);
+      return;
+    }
+
+    if (result.error) {
+      statusEl.textContent = result.error;
+      statusEl.className = 'status-msg err';
+      return;
+    }
+
+    if (!result.token) {
+      statusEl.textContent = 'Login response has no session token. Redeploy the latest Code.gs.';
+      statusEl.className = 'status-msg err';
+      console.error('Invalid login response:', result);
+      return;
+    }
+
     TOKEN = result.token;
-    SESSION = { role: result.role, unit: result.unit, displayName: result.displayName };
+    SESSION = {
+      username: result.username,
+      role: result.role,
+      unit: result.unit,
+      displayName: result.displayName
+    };
+
     sessionStorage.setItem('svd_token', TOKEN);
     sessionStorage.setItem('svd_session', JSON.stringify(SESSION));
+
     showApp();
   } catch (e) {
-    statusEl.textContent = 'Could not reach the server.'; statusEl.className = 'status-msg err';
+    console.error('Login fetch failed:', e);
+    statusEl.textContent = 'Could not reach Apps Script. Make sure the latest Web App deployment is active and accessible.';
+    statusEl.className = 'status-msg err';
   }
 }
 
