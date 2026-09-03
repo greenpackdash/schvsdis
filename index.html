@@ -211,6 +211,7 @@
 
   <div class="tabs">
     <div class="tab active" data-tab="orders" onclick="switchTab('orders')">All Orders</div>
+    <div class="tab" data-tab="bulknew" onclick="switchTab('bulknew')">Multiple Orders</div>
     <div class="tab" data-tab="new" onclick="switchTab('new')">New Order</div>
     <div class="tab" data-tab="dispatch" onclick="switchTab('dispatch')">Dispatch / Pending</div>
     <div class="tab" data-tab="stock" onclick="switchTab('stock')">FG Stock</div>
@@ -257,6 +258,19 @@
         <table id="orders-table"><thead></thead><tbody></tbody></table>
       </div>
       <div id="orders-empty" class="empty" style="display:none;">No orders match these filters.</div>
+    </div>
+  </div>
+
+  <!-- MULTIPLE ORDER CREATION TAB -->
+  <div id="tab-bulknew" style="display:none;">
+    <div class="card">
+      <h2>Multiple Order Creation</h2>
+      <div class="sub" style="margin-bottom:10px;">Create many customer orders in one save. Ship To Party is captured here for Dispatch.</div>
+      <div class="table-scroll">
+        <table id="ppc-order-bulk-table"><thead><tr><th>Customer</th><th>Location</th><th>Part Code</th><th>Unit</th><th>Qty</th><th>UOM</th><th>Priority</th><th>Scheduled</th><th>Ship To Party</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+      <div class="modal-actions" style="margin-top:10px;"><button class="btn-ghost" onclick="addPPCBulkRow()">+ Add Row</button><button class="btn-primary" onclick="savePPCBulkOrders()">Save All Orders</button><button class="btn-ghost" onclick="clearPPCBulkRows()">Clear</button></div>
+      <div class="status-msg" id="ppc-bulk-status"></div>
     </div>
   </div>
 
@@ -385,15 +399,6 @@
         <button class="btn-ghost" id="ppc-unlock-btn" onclick="unlockPPCPlan()" style="display:none;">Unlock</button>
       </div>
       <div class="status-msg" id="ppc-status"></div>
-    </div>
-    <div class="card">
-      <h2>PPC — Multiple Order Creation</h2>
-      <div class="sub" style="margin-bottom:10px;">Create many customer orders in one save. Ship To Party is captured here for Dispatch.</div>
-      <div class="table-scroll">
-        <table id="ppc-order-bulk-table"><thead><tr><th>Customer</th><th>Location</th><th>Part Code</th><th>Unit</th><th>Qty</th><th>UOM</th><th>Priority</th><th>Scheduled</th><th>Ship To Party</th><th></th></tr></thead><tbody></tbody></table>
-      </div>
-      <div class="modal-actions" style="margin-top:10px;"><button class="btn-ghost" onclick="addPPCBulkRow()">+ Add Row</button><button class="btn-primary" onclick="savePPCBulkOrders()">Save All Orders</button><button class="btn-ghost" onclick="clearPPCBulkRows()">Clear</button></div>
-      <div class="status-msg" id="ppc-bulk-status"></div>
     </div>
     <div class="card">
       <h2>PPC — Multiple Still Pending</h2>
@@ -724,6 +729,7 @@ function applyRoleUI() {
   const allowed = new Set(['orders']);
 
   if (role === 'owner' || role === 'admin' || role === 'ppc' || can('create_orders')) {
+    allowed.add('bulknew');
     allowed.add('new');
   }
 
@@ -833,7 +839,7 @@ async function loadData() {
       (data.logs||[]).forEach(l=>{const id=String(l.OrderID||''); if(!id)return; (logShipToIndex[id] ||= []).push(String(l.ShipToParty||''));});
       const count = Array.isArray(data.orders) ? data.orders.length : 0;
       setConn('ok', 'Live — connected · ' + count + ' orders');
-      populateDropdowns(); renderStats(); renderTable(); populateDispatchOrderSelect(); renderBulkDispatchRows(); renderPPCPendingRows(); renderDispatchHistory(); applyRoleUI();
+      populateDropdowns(); renderStats(); renderTable(); populateDispatchOrderSelect(); renderBulkDispatchRows(); renderPPCBulkRows(); renderPPCPendingRows(); renderDispatchHistory(); applyRoleUI();
       if (['ppcplan','admin'].includes(document.querySelector('.tab.active')?.dataset.tab || '')) loadV2();
       return true;
     } catch (e) { setConn('err', 'Connection failed — data not lost.'); return false; }
@@ -866,12 +872,13 @@ async function loadAux(mode){
 }
 
 function switchTab(name) {
-  ['orders','new','dispatch','stock','complaints','discussion','ppcplan','admin'].forEach(t => {
+  ['orders','bulknew','new','dispatch','stock','complaints','discussion','ppcplan','admin'].forEach(t => {
     const panel = document.getElementById('tab-' + t);
     const tab = document.querySelector(`.tab[data-tab="${t}"]`);
     if (panel) panel.style.display = t === name ? 'block' : 'none';
     if (tab) tab.classList.toggle('active', t === name);
   });
+  if (name === 'bulknew') { renderPPCBulkRows(); }
   if (name === 'dispatch') { populateDispatchOrderSelect(); renderDispatchHistory(); }
   if (name === 'stock') renderStockTable();
   if (name === 'complaints') { renderComplaints(); loadAux('complaints'); }
