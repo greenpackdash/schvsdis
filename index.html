@@ -211,12 +211,12 @@
 
   <div class="tabs">
     <div class="tab active" data-tab="orders" onclick="switchTab('orders')">All Orders</div>
-    <div class="tab" data-tab="new" onclick="switchTab('new')">New Order</div>
-    <div class="tab" data-tab="dispatch" onclick="switchTab('dispatch')">Dispatch / Pending</div>
+    <div class="tab" data-tab="multiple" onclick="switchTab('multiple')" id="multiple-tab">Multiple Orders</div>
+    <div class="tab" data-tab="ppcplan" onclick="switchTab('ppcplan')" id="ppcplan-tab">PPC Plan</div>
+    <div class="tab" data-tab="new" onclick="switchTab('new')" id="new-tab">New Order</div>
     <div class="tab" data-tab="stock" onclick="switchTab('stock')">FG Stock</div>
     <div class="tab" data-tab="complaints" onclick="switchTab('complaints')">Complaints</div>
     <div class="tab" data-tab="discussion" onclick="switchTab('discussion')">Discussion</div>
-    <div class="tab" data-tab="ppcplan" onclick="switchTab('ppcplan')">PPC Plan</div>
     <div class="tab" data-tab="admin" onclick="switchTab('admin')">Admin</div>
   </div>
 
@@ -260,10 +260,10 @@
     </div>
   </div>
 
-  <!-- NEW ORDER TAB -->
+  <!-- SINGLE-ENTRY TAB: PPC = New Order, Dispatch = Single Dispatch -->
   <div id="tab-new" style="display:none;">
-    <div class="card">
-      <h2>New Order</h2>
+    <div class="card" id="single-order-card">
+      <h2 id="single-order-title">New Order</h2>
       <div class="grid">
         <div class="field combo"><label>Customer Name</label><input id="n-customer" list="dl-customers" placeholder="Select or type new"><datalist id="dl-customers"></datalist></div>
         <div class="field combo"><label>Customer Location</label><input id="n-location" list="dl-locations" placeholder="e.g. Chakan, Waluj"><datalist id="dl-locations"></datalist></div>
@@ -279,11 +279,9 @@
       <button class="btn-primary btn-block" onclick="submitOrder()">Create Order</button>
       <div class="status-msg" id="new-status"></div>
     </div>
-  </div>
 
-  <!-- DISPATCH / STILL PENDING TAB -->
-  <div id="tab-dispatch" style="display:none;">
-    <div class="card" id="dispatch-entry-card">
+    <div class="card" id="dispatch-entry-card" style="display:none;">
+
       <h2 id="dispatch-form-title">Dispatch / Still Pending</h2>
       <div class="field">
         <label>Entry Type</label>
@@ -344,9 +342,24 @@
       <button class="btn-primary btn-block" id="dispatch-submit-btn" onclick="submitDispatch()">Log Dispatch</button>
       <div class="status-msg" id="dispatch-status"></div>
     </div>
-    <div class="card" id="bulk-dispatch-card">
+
+  </div>
+
+  <!-- MULTIPLE ORDERS TAB -->
+  <div id="tab-multiple" style="display:none;">
+    <div class="card" id="ppc-multiple-card">
+      <h2>PPC — Multiple Order Creation</h2>
+      <div class="sub" style="margin-bottom:10px;">Create many customer orders in one save. Ship To Party is registered here and will automatically appear at Dispatch.</div>
+      <div class="table-scroll">
+        <table id="ppc-order-bulk-table"><thead><tr><th>Customer</th><th>Location</th><th>Part Code</th><th>Unit</th><th>Qty</th><th>UOM</th><th>Priority</th><th>Scheduled</th><th>Ship To Party</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+      <div class="modal-actions" style="margin-top:10px;"><button class="btn-ghost" onclick="addPPCBulkRow()">+ Add Row</button><button class="btn-primary" onclick="savePPCBulkOrders()">Save All Orders</button><button class="btn-ghost" onclick="clearPPCBulkRows()">Clear</button></div>
+      <div class="status-msg" id="ppc-bulk-status"></div>
+    </div>
+
+    <div class="card" id="dispatch-multiple-card" style="display:none;">
       <h2>Dispatch — Multiple Orders</h2>
-      <div class="sub" style="margin-bottom:10px;">Search and select multiple pending orders, enter quantity and Ship To Party, then dispatch them together.</div>
+      <div class="sub" style="margin-bottom:10px;">Select multiple pending orders. Their PPC Ship To Party is pre-filled automatically; Dispatch may change it only when necessary.</div>
       <div class="toolbar"><input id="bulk-dispatch-search" type="search" placeholder="Search customer, part, Order ID, date…" oninput="renderBulkDispatchRows()"><button class="btn-ghost btn-small" onclick="selectAllBulkDispatch()">Select all visible</button></div>
       <div class="table-scroll"><table id="bulk-dispatch-table"><thead><tr><th>Select</th><th>Order</th><th>Customer</th><th>Part</th><th>Pending</th><th>UOM</th><th>Dispatch Qty</th><th>Ship To Party</th></tr></thead><tbody></tbody></table></div>
       <div class="grid" style="margin-top:10px;">
@@ -357,9 +370,9 @@
       <div class="modal-actions"><button class="btn-primary" onclick="saveBulkDispatch()">Dispatch Selected</button><button class="btn-ghost" onclick="clearBulkDispatchSelection()">Clear Selection</button></div>
       <div class="status-msg" id="bulk-dispatch-status"></div>
     </div>
-    <div class="card">
-      <h2>Dispatch History</h2>
-      <div id="dispatch-history"></div>
+
+    <div class="card" id="dispatch-history-card" style="display:none;">
+      <h2>Dispatch History</h2><div id="dispatch-history"></div>
     </div>
   </div>
 
@@ -385,23 +398,6 @@
         <button class="btn-ghost" id="ppc-unlock-btn" onclick="unlockPPCPlan()" style="display:none;">Unlock</button>
       </div>
       <div class="status-msg" id="ppc-status"></div>
-    </div>
-    <div class="card">
-      <h2>PPC — Multiple Order Creation</h2>
-      <div class="sub" style="margin-bottom:10px;">Create many customer orders in one save. Ship To Party is captured here for Dispatch.</div>
-      <div class="table-scroll">
-        <table id="ppc-order-bulk-table"><thead><tr><th>Customer</th><th>Location</th><th>Part Code</th><th>Unit</th><th>Qty</th><th>UOM</th><th>Priority</th><th>Scheduled</th><th>Ship To Party</th><th></th></tr></thead><tbody></tbody></table>
-      </div>
-      <div class="modal-actions" style="margin-top:10px;"><button class="btn-ghost" onclick="addPPCBulkRow()">+ Add Row</button><button class="btn-primary" onclick="savePPCBulkOrders()">Save All Orders</button><button class="btn-ghost" onclick="clearPPCBulkRows()">Clear</button></div>
-      <div class="status-msg" id="ppc-bulk-status"></div>
-    </div>
-    <div class="card">
-      <h2>PPC — Multiple Still Pending</h2>
-      <div class="sub" style="margin-bottom:10px;">Select pending orders and enter a department + reason for each. One click updates the whole batch.</div>
-      <div class="toolbar"><input id="ppc-pending-search" type="search" placeholder="Search customer, part code, Order ID…" oninput="renderPPCPendingRows()"><button class="btn-ghost btn-small" onclick="selectAllPPCPending()">Select all</button></div>
-      <div class="table-scroll"><table id="ppc-pending-table"><thead><tr><th>Select</th><th>Order</th><th>Customer</th><th>Part</th><th>Pending</th><th>Department</th><th>Reason</th><th>Ship To Party</th></tr></thead><tbody></tbody></table></div>
-      <div class="modal-actions" style="margin-top:10px;"><button class="btn-primary" onclick="savePPCPendingBatch()">Save Pending Updates</button></div>
-      <div class="status-msg" id="ppc-pending-status"></div>
     </div>
     <div class="card"><h2>Additional Quantity Summary</h2><div id="ppc-summary"></div></div>
   </div>
@@ -718,73 +714,54 @@ function applyRoleUI() {
   const perms = new Set((data?.v2 && data.v2.permissions) || []);
   const can = p => role === 'owner' || perms.has(p);
 
-  // Role-safe baseline. These are intentionally enforced by role as well as
-  // configurable permissions so a missing/late V2 config cannot expose the
-  // wrong operational screen.
-  const allowed = new Set(['orders']);
-
-  if (role === 'owner' || role === 'admin' || role === 'ppc' || can('create_orders')) {
+  // Navigation is role-specific and intentionally simple.
+  const allowed = new Set(['orders','stock','complaints','discussion']);
+  if (role === 'owner' || role === 'ppc' || role === 'admin' || can('create_orders')) {
+    allowed.add('multiple');
     allowed.add('new');
   }
-
-  // Actual Dispatch is ONLY for Owner / Dispatch (or a future role explicitly
-  // granted view_dispatch + mark_dispatched). PPC never gets this tab.
-  const actualDispatch = role === 'owner' || role === 'dispatch' ||
-    (can('view_dispatch') && can('mark_dispatched') && role !== 'ppc');
-  if (actualDispatch) allowed.add('dispatch');
-
-  if (role === 'owner' || role === 'dispatch' || role === 'ppc' || can('view_dispatch')) {
-    allowed.add('stock');
+  if (role === 'owner' || role === 'ppc' || can('view_ppc_plan')) allowed.add('ppcplan');
+  if (role === 'owner' || role === 'dispatch' || (can('view_dispatch') && can('mark_dispatched') && role !== 'ppc')) {
+    allowed.add('multiple');
+    allowed.add('new');
   }
-
-  if (role === 'owner' || role === 'admin' || can('view_orders')) {
-    allowed.add('complaints');
-    allowed.add('discussion');
-  }
-
-  if (role === 'owner' || role === 'ppc' || can('view_ppc_plan')) {
-    allowed.add('ppcplan');
-  }
-
-  if (role === 'owner' || role === 'admin' || can('access_admin_panel')) {
-    allowed.add('admin');
-  }
+  if (role === 'owner' || role === 'admin' || can('access_admin_panel')) allowed.add('admin');
 
   document.querySelectorAll('.tab').forEach(t => {
     t.style.display = allowed.has(t.dataset.tab) ? '' : 'none';
   });
 
-  // Dispatch entry controls are never shown to PPC. Backend also blocks PPC
-  // dispatch actions, so hiding here is only the UI layer.
+  const multipleTab = document.getElementById('multiple-tab');
+  const newTab = document.getElementById('new-tab');
+  const ppcPlanTab = document.getElementById('ppcplan-tab');
+  if (multipleTab) multipleTab.textContent = role === 'dispatch' ? 'Multiple Dispatch' : 'Multiple Orders';
+  if (newTab) newTab.textContent = role === 'dispatch' ? 'Single Dispatch' : 'New Order';
+  if (ppcPlanTab) ppcPlanTab.textContent = 'PPC Plan';
+
+  const ppcCard = document.getElementById('ppc-multiple-card');
+  const dispatchMulti = document.getElementById('dispatch-multiple-card');
+  const dispatchHistory = document.getElementById('dispatch-history-card');
+  const singleOrderCard = document.getElementById('single-order-card');
   const dispatchEntryCard = document.getElementById('dispatch-entry-card');
-  const bulkDispatchCard = document.getElementById('bulk-dispatch-card');
-  const dispatchHistoryCard = document.querySelector('#tab-dispatch > .card:last-child');
-  const canActualDispatch = role === 'owner' || role === 'dispatch' ||
-    (can('mark_dispatched') && role !== 'ppc');
-  if (dispatchEntryCard) dispatchEntryCard.style.display = canActualDispatch ? '' : 'none';
-  if (bulkDispatchCard) bulkDispatchCard.style.display = canActualDispatch ? '' : 'none';
-  if (dispatchHistoryCard) dispatchHistoryCard.style.display = (role === 'owner' || role === 'dispatch' || can('view_dispatch')) ? '' : 'none';
+  if (ppcCard) ppcCard.style.display = role === 'ppc' || role === 'owner' || role === 'admin' ? '' : 'none';
+  if (dispatchMulti) dispatchMulti.style.display = role === 'dispatch' || role === 'owner' ? '' : 'none';
+  if (dispatchHistory) dispatchHistory.style.display = role === 'dispatch' || role === 'owner' ? '' : 'none';
+  if (singleOrderCard) singleOrderCard.style.display = role === 'dispatch' ? 'none' : '';
+  if (dispatchEntryCard) dispatchEntryCard.style.display = role === 'dispatch' || role === 'owner' ? '' : 'none';
+  const singleTitle = document.getElementById('single-order-title');
+  if (singleTitle) singleTitle.textContent = role === 'dispatch' ? 'Single Dispatch' : 'New Order';
 
-  // PPC uses the PPC Plan tab for Still-Pending work. It does not get the
-  // Dispatch/Pending operational tab.
-  const modeEl = document.getElementById('d-mode');
-  if (modeEl) {
-    modeEl.innerHTML = '<option value="dispatch">Dispatch Completed / Partial Dispatch</option>' +
-      '<option value="pending">Still Pending — No Dispatch</option>';
-    modeEl.value = 'dispatch';
-    toggleDispatchMode();
+  // PPC never receives actual dispatch controls. Backend also enforces this.
+  if (role === 'ppc') {
+    const modeEl = document.getElementById('d-mode');
+    if (modeEl) modeEl.value = 'pending';
   }
 
-  const stockEditorRole = role;
   const stockAdminCard = document.getElementById('stock-admin-card');
-  if (stockAdminCard) {
-    stockAdminCard.style.display = ['owner','dispatch','ppc'].includes(stockEditorRole) ? '' : 'none';
-  }
+  if (stockAdminCard) stockAdminCard.style.display = ['owner','dispatch','ppc'].includes(role) ? '' : 'none';
 
   const activeTab = document.querySelector('.tab.active');
-  if (activeTab && activeTab.style.display === 'none') {
-    switchTab('orders');
-  }
+  if (activeTab && activeTab.style.display === 'none') switchTab('orders');
 }
 
 function showApp() {
@@ -866,13 +843,17 @@ async function loadAux(mode){
 }
 
 function switchTab(name) {
-  ['orders','new','dispatch','stock','complaints','discussion','ppcplan','admin'].forEach(t => {
+  ['orders','multiple','new','stock','complaints','discussion','ppcplan','admin'].forEach(t => {
     const panel = document.getElementById('tab-' + t);
     const tab = document.querySelector(`.tab[data-tab="${t}"]`);
     if (panel) panel.style.display = t === name ? 'block' : 'none';
     if (tab) tab.classList.toggle('active', t === name);
   });
-  if (name === 'dispatch') { populateDispatchOrderSelect(); renderDispatchHistory(); }
+  if (name === 'multiple') {
+    if (String(SESSION?.role||'').toLowerCase() === 'dispatch') { renderBulkDispatchRows(); renderDispatchHistory(); }
+    else { renderPPCBulkRows(); }
+  }
+  if (name === 'new') { populateDispatchOrderSelect(); }
   if (name === 'stock') renderStockTable();
   if (name === 'complaints') { renderComplaints(); loadAux('complaints'); }
   if (name === 'discussion') { renderDiscussion(); loadAux('discussion'); }
@@ -1112,7 +1093,8 @@ function dispatchOrderSearchText(o) {
     fmtDate(o.ScheduledDate),
     o.PendingDepartment,
     o.PendingReason,
-    o.Status
+    o.Status,
+    o.ShipToParty
   ].join(' ').toLowerCase();
 }
 
@@ -1175,6 +1157,9 @@ function selectDispatchOrder(orderId) {
   document.getElementById('d-order-search').value = formatDispatchOrderLabel(o);
   document.getElementById('d-order-results').classList.remove('open');
   document.getElementById('d-uom').value = o.UOM || 'Nos';
+  // PPC-registered Ship To Party is the default at Dispatch. Dispatch may edit it if needed.
+  const shipToEl = document.getElementById('d-shipto');
+  if (shipToEl) shipToEl.value = o.ShipToParty || '';
 
   updateOrderInfo();
 }
@@ -1635,7 +1620,7 @@ function renderBulkDispatchRows(){
     <td>${esc(o.OrderID)}</td><td>${esc(o.Customer)}</td><td>${esc(o.PartCode)}</td><td>${Number(o.PendingQty||0).toLocaleString()}</td><td>${esc(o.UOM||'Nos')}</td>
     <td><input type="number" min="1" max="${Number(o.PendingQty||0)}" data-bqty="${esc(o.OrderID)}" value="${esc(bulkDispatchQty[o.OrderID]||'')}" placeholder="Qty"></td>
     <td><input list="dl-shipto" data-bship="${esc(o.OrderID)}" value="${esc(bulkDispatchShipTo[o.OrderID]||o.ShipToParty||'')}" placeholder="Ship To"></td>
-  </tr>`).join('')||'<tr><td colspan="7" class="empty">No pending orders found.</td></tr>';
+  </tr>`).join('')||'<tr><td colspan="8" class="empty">No pending orders found.</td></tr>';
   tb.querySelectorAll('.bulk-dispatch-check').forEach(el=>el.onchange=()=>{if(el.checked)bulkDispatchSelected.add(el.dataset.id);else bulkDispatchSelected.delete(el.dataset.id);});
   tb.querySelectorAll('[data-bqty]').forEach(el=>el.oninput=()=>bulkDispatchQty[el.dataset.bqty]=el.value);
   tb.querySelectorAll('[data-bship]').forEach(el=>el.oninput=()=>bulkDispatchShipTo[el.dataset.bship]=el.value);
