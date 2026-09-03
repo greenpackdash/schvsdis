@@ -7,56 +7,107 @@
 <style>
   :root {
     --bg: #0b0d12;
+    --bg-grad: radial-gradient(1200px 600px at 10% -10%, rgba(91,141,239,.10), transparent 60%),
+               radial-gradient(1000px 600px at 100% 0%, rgba(63,208,160,.08), transparent 55%),
+               #0b0d12;
     --panel: #12151c;
     --panel-2: #191d27;
+    --panel-3: #1e2330;
     --border: #262b38;
+    --border-soft: #1d212b;
     --text: #eef0f4;
     --muted: #8b93a7;
     --accent: #5b8def;
     --accent-2: #3fd0a0;
     --warn: #eab84d;
     --danger: #e5586e;
-    --radius: 12px;
+    --radius: 14px;
+    --radius-sm: 9px;
     --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.25);
+    --shadow-md: 0 10px 30px rgba(0,0,0,.35);
+    --ease: cubic-bezier(.4,0,.2,1);
   }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font-family:var(--font); padding:20px 24px 60px; }
-  h1 { font-size:20px; margin:0; }
+  body {
+    margin:0; background:var(--bg-grad); background-attachment: fixed;
+    color:var(--text); font-family:var(--font); padding:20px 24px 60px;
+    animation: bodyFadeIn .35s var(--ease);
+  }
+  @keyframes bodyFadeIn { from { opacity:0; } to { opacity:1; } }
+  ::selection { background: rgba(91,141,239,.35); }
+  ::-webkit-scrollbar { width:10px; height:10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: #333a4a; }
+
+  h1 { font-size:20px; margin:0; letter-spacing:-.01em; }
   .sub { color:var(--muted); font-size:13px; margin-top:4px; }
   .topbar { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
-  .conn { font-size:12px; padding:5px 10px; border-radius:999px; border:1px solid var(--border); color:var(--muted); }
-  .conn.ok { color:var(--accent-2); border-color:rgba(63,208,160,.3); }
-  .conn.err { color:var(--danger); border-color:rgba(229,88,110,.3); }
+  .conn {
+    font-size:12px; padding:5px 12px 5px 10px; border-radius:999px; border:1px solid var(--border);
+    color:var(--muted); display:inline-flex; align-items:center; gap:6px; transition: all .25s var(--ease);
+  }
+  .conn::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--muted); transition: background .25s var(--ease); }
+  .conn.ok { color:var(--accent-2); border-color:rgba(63,208,160,.3); background:rgba(63,208,160,.06); }
+  .conn.ok::before { background:var(--accent-2); box-shadow:0 0 8px rgba(63,208,160,.7); }
+  .conn.err { color:var(--danger); border-color:rgba(229,88,110,.3); background:rgba(229,88,110,.06); }
+  .conn.err::before { background:var(--danger); }
 
   .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:20px; }
-  .stat { background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
-  .stat .n { font-size:22px; font-weight:700; }
-  .stat .l { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-top:2px;}
+  .stat {
+    background:linear-gradient(180deg, var(--panel-3), var(--panel));
+    border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;
+    box-shadow: var(--shadow-sm); transition: transform .2s var(--ease), border-color .2s var(--ease);
+  }
+  .stat:hover { transform: translateY(-2px); border-color:#333a4a; }
+  .stat .n { font-size:23px; font-weight:800; letter-spacing:-.02em; }
+  .stat .l { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:3px;}
   .stat.warn .n { color:var(--warn); }
   .stat.good .n { color:var(--accent-2); }
 
-  .tabs { display:flex; gap:8px; margin-bottom:16px; border-bottom:1px solid var(--border); }
-  .tab { padding:10px 4px; cursor:pointer; color:var(--muted); font-size:13px; font-weight:600; border-bottom:2px solid transparent; margin-right:14px;}
+  .tabs { display:flex; gap:8px; margin-bottom:16px; border-bottom:1px solid var(--border); overflow-x:auto; scrollbar-width:none; }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab {
+    padding:10px 4px; cursor:pointer; color:var(--muted); font-size:13px; font-weight:600;
+    border-bottom:2px solid transparent; margin-right:14px; white-space:nowrap;
+    transition: color .2s var(--ease), border-color .2s var(--ease);
+  }
+  .tab:hover { color:#c7cbd6; }
   .tab.active { color:var(--text); border-color:var(--accent); }
 
-  .card { background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin-bottom:16px; }
-  .card h2 { font-size:14px; margin:0 0 14px; }
+  .card {
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:18px;
+    margin-bottom:16px; box-shadow: var(--shadow-sm);
+    animation: cardIn .3s var(--ease);
+  }
+  @keyframes cardIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform:none; } }
+  .card h2 { font-size:14px; margin:0 0 14px; letter-spacing:.01em; }
   .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
   @media (max-width:900px){ .grid{ grid-template-columns:repeat(2,1fr);} }
   @media (max-width:600px){ .grid{ grid-template-columns:1fr;} }
   label { display:block; font-size:11px; color:var(--muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:.03em; }
   input, select, textarea {
     width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text);
-    padding:9px 10px; border-radius:8px; font-size:13px; font-family:var(--font);
+    padding:9px 10px; border-radius:var(--radius-sm); font-size:13px; font-family:var(--font);
+    transition: border-color .15s var(--ease), box-shadow .15s var(--ease), background .15s var(--ease);
   }
-  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); }
-  input:disabled, select:disabled { opacity:.6; cursor:not-allowed; }
+  input:hover, select:hover, textarea:hover { border-color:#333a4a; }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(91,141,239,.15); }
+  input:disabled, select:disabled { opacity:.55; cursor:not-allowed; }
   .field { margin-bottom:12px; }
   .field.combo { position:relative; }
 
-  button { cursor:pointer; border:none; border-radius:8px; padding:9px 14px; font-size:13px; font-weight:600; }
-  .btn-primary { background:var(--accent); color:#fff; }
+  button {
+    cursor:pointer; border:none; border-radius:var(--radius-sm); padding:9px 14px; font-size:13px; font-weight:600;
+    transition: transform .12s var(--ease), filter .15s var(--ease), background .15s var(--ease), opacity .15s var(--ease);
+  }
+  button:active { transform: scale(.97); }
+  .btn-primary { background:linear-gradient(180deg, #6a99f4, var(--accent)); color:#fff; box-shadow:0 2px 10px rgba(91,141,239,.25); }
+  .btn-primary:hover { filter:brightness(1.08); }
+  .btn-primary:disabled { opacity:.6; cursor:not-allowed; filter:none; }
   .btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border); }
+  .btn-ghost:hover { color:var(--text); border-color:#3a4152; background:rgba(255,255,255,.02); }
   .btn-small { padding:6px 10px; font-size:12px; }
   .btn-block { width:100%; margin-top:6px; }
 
@@ -66,12 +117,13 @@
 
   table { width:100%; border-collapse:collapse; font-size:12.5px; }
   th { text-align:left; color:var(--muted); font-weight:600; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em;
-       padding:9px 10px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--panel); }
-  td { padding:9px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+       padding:9px 10px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--panel); z-index:2; }
+  td { padding:9px 10px; border-bottom:1px solid var(--border-soft); white-space:nowrap; }
+  tr { transition: background .12s var(--ease); }
   tr:hover td { background:var(--panel-2); }
-  .table-scroll { overflow-x:auto; }
+  .table-scroll { overflow-x:auto; border-radius:var(--radius-sm); }
 
-  .pill { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; }
+  .pill { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; letter-spacing:.01em; }
   .pill-pending { background:rgba(234,184,77,.15); color:var(--warn); }
   .pill-completed { background:rgba(63,208,160,.15); color:var(--accent-2); }
   .pill-high { background:rgba(229,88,110,.15); color:var(--danger); }
@@ -80,36 +132,76 @@
   .pill-role { background:rgba(91,141,239,.15); color:var(--accent); }
 
   .bar-wrap { width:80px; height:6px; background:var(--border); border-radius:3px; overflow:hidden; display:inline-block; vertical-align:middle; margin-right:6px;}
-  .bar-fill { height:100%; background:var(--accent-2); }
+  .bar-fill { height:100%; background:linear-gradient(90deg, var(--accent-2), #56e0b3); transition: width .3s var(--ease); }
 
   .empty { color:var(--muted); text-align:center; padding:40px 0; font-size:13px; }
-  .status-msg { font-size:12px; margin-top:8px; min-height:16px; }
+  .status-msg { font-size:12px; margin-top:8px; min-height:16px; transition: color .2s var(--ease); }
   .status-msg.ok { color:var(--accent-2); }
   .status-msg.err { color:var(--danger); }
 
-  .login-wrap { min-height:80vh; display:flex; align-items:center; justify-content:center; }
-  .login-card { background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:32px; width:360px; max-width:92vw; }
-  .brand-logo { width:145px; height:48px; object-fit:contain; background:#fff; border-radius:4px; display:block; }
-  .login-card .brand-logo { width:220px; height:auto; margin-bottom:16px; background:#fff; }
+  /* ===== LOGIN ===== */
+  .login-wrap {
+    min-height:88vh; display:flex; align-items:center; justify-content:center;
+    animation: loginWrapIn .4s var(--ease);
+  }
+  @keyframes loginWrapIn { from { opacity:0; transform: scale(.98); } to { opacity:1; transform:none; } }
+  .login-card {
+    background:linear-gradient(180deg, var(--panel-3), var(--panel));
+    border:1px solid var(--border); border-radius:18px; padding:34px 32px;
+    width:380px; max-width:92vw; box-shadow: var(--shadow-md);
+    position:relative; overflow:hidden;
+  }
+  .login-card::before {
+    content:''; position:absolute; top:-60%; left:-20%; width:60%; height:220%;
+    background: radial-gradient(circle, rgba(91,141,239,.10), transparent 60%);
+    pointer-events:none;
+  }
+  .brand-logo { width:145px; height:48px; object-fit:contain; background:#fff; border-radius:6px; display:block; }
+  .login-card .brand-logo { width:210px; height:auto; margin-bottom:18px; background:#fff; padding:6px; border-radius:8px; }
+  .login-card h2 { margin:0 0 4px; font-size:18px; letter-spacing:-.01em; }
+  .login-card .sub { margin-bottom:22px; }
+  .login-card .field { margin-bottom:14px; }
+  .login-card input { padding:11px 12px; }
+  #login-status { display:flex; align-items:center; gap:8px; }
+
+  .spinner {
+    display:inline-block; width:14px; height:14px; border-radius:50%;
+    border:2px solid rgba(255,255,255,.35); border-top-color:#fff;
+    animation: spin .7s linear infinite; vertical-align:middle;
+  }
+  .spinner.dark { border-color: rgba(139,147,167,.35); border-top-color: var(--accent); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .btn-primary.loading { pointer-events:none; }
+  .btn-primary .btn-label { display:inline-flex; align-items:center; gap:8px; justify-content:center; width:100%; }
+
+  /* ===== chat / discussion ===== */
   .chat-box { max-height:520px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
-  .chat-msg { padding:2px 0; }
+  .chat-msg { padding:2px 0; animation: cardIn .25s var(--ease); }
   .chat-meta { font-size:10px; color:var(--muted); margin:0 0 4px 3px; line-height:1.3; background:transparent; border:0; padding:0; }
-  .chat-text { display:block; width:fit-content; max-width:92%; background:var(--panel-2); border:1px solid rgba(91,141,239,.45); border-radius:10px; padding:10px 12px; white-space:pre-wrap; word-break:break-word; font-size:13px; line-height:1.45; color:var(--text); }
+  .chat-text { display:block; width:fit-content; max-width:92%; background:var(--panel-2); border:1px solid rgba(91,141,239,.45); border-radius:12px; padding:10px 12px; white-space:pre-wrap; word-break:break-word; font-size:13px; line-height:1.45; color:var(--text); transition: border-color .15s var(--ease); }
   .chat-msg:hover .chat-text { border-color:var(--accent); }
-  .complaint-card { border:1px solid var(--border); background:var(--panel-2); border-radius:10px; padding:14px; margin-bottom:10px; }
+  .complaint-card { border:1px solid var(--border); background:var(--panel-2); border-radius:12px; padding:14px; margin-bottom:10px; transition: border-color .15s var(--ease); }
+  .complaint-card:hover { border-color:#333a4a; }
   .complaint-head { display:flex; gap:8px; justify-content:space-between; align-items:center; flex-wrap:wrap; }
   .comment { border-top:1px solid var(--border); padding:8px 0 0; margin-top:8px; }
-  .login-card h2 { margin:0 0 4px; font-size:17px; }
-  .login-card .sub { margin-bottom:20px; }
-  .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.68); display:none; align-items:center; justify-content:center; z-index:1000; padding:20px; }
-  .modal { width:min(760px,96vw); max-height:92vh; overflow:auto; background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:20px; box-shadow:0 20px 70px rgba(0,0,0,.45); }
+  .modal-backdrop {
+    position:fixed; inset:0; background:rgba(6,7,11,.72); backdrop-filter: blur(2px);
+    display:none; align-items:center; justify-content:center; z-index:1000; padding:20px;
+  }
+  .modal-backdrop.open { display:flex; animation: bodyFadeIn .18s var(--ease); }
+  .modal {
+    width:min(760px,96vw); max-height:92vh; overflow:auto; background:var(--panel); border:1px solid var(--border);
+    border-radius:16px; padding:22px; box-shadow:0 20px 70px rgba(0,0,0,.5);
+    animation: modalPop .22s var(--ease);
+  }
+  @keyframes modalPop { from { opacity:0; transform: translateY(10px) scale(.98); } to { opacity:1; transform:none; } }
   .modal-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
   .modal-head h2 { margin:0; font-size:16px; }
   .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:14px; }
   .action-cell { display:flex; gap:6px; align-items:center; }
   .mini-note { font-size:11px; color:var(--muted); margin-top:4px; }
   .history-card { border:1px solid var(--border); background:var(--panel-2); border-radius:10px; padding:12px; margin-top:12px; }
-  .history-row { display:grid; grid-template-columns:1.1fr 1fr 1fr .8fr 1fr; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); font-size:12px; }
+  .history-row { display:grid; grid-template-columns:1.1fr 1fr 1fr .8fr 1fr; gap:8px; padding:8px 0; border-bottom:1px solid var(--border-soft); font-size:12px; }
   .history-row:last-child { border-bottom:0; }
   .searchable-order-field { position:relative; }
   .order-search-wrap { position:relative; }
@@ -123,13 +215,13 @@
   .order-search-results {
     display:none; position:absolute; z-index:500; left:0; right:0; top:calc(100% + 4px);
     max-height:360px; overflow-y:auto; background:var(--panel);
-    border:1px solid var(--border); border-radius:10px;
+    border:1px solid var(--border); border-radius:12px;
     box-shadow:0 18px 50px rgba(0,0,0,.45);
   }
-  .order-search-results.open { display:block; }
+  .order-search-results.open { display:block; animation: cardIn .15s var(--ease); }
   .order-result {
     width:100%; text-align:left; background:transparent; color:var(--text);
-    border:0; border-bottom:1px solid var(--border); border-radius:0;
+    border:0; border-bottom:1px solid var(--border-soft); border-radius:0;
     padding:10px 12px; font-weight:400;
   }
   .order-result:last-child { border-bottom:0; }
@@ -139,15 +231,37 @@
   .order-result-pending { color:var(--warn); font-weight:700; }
   .order-no-results { padding:16px 12px; color:var(--muted); font-size:12px; text-align:center; }
 
-
   .select-col { width:38px; text-align:center; }
   .row-check, #select-all-orders { width:16px; height:16px; cursor:pointer; accent-color:var(--accent); }
   .bulkbar { display:none; align-items:center; gap:8px; padding:10px 12px; margin:-4px 0 12px; border:1px solid rgba(91,141,239,.35); background:rgba(91,141,239,.08); border-radius:10px; }
-  .bulkbar.show { display:flex; flex-wrap:wrap; }
+  .bulkbar.show { display:flex; flex-wrap:wrap; animation: cardIn .2s var(--ease); }
   .bulk-count { font-weight:700; }
+
+  /* ===== ADMIN PANEL ===== */
+  .admin-hero {
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    padding:18px 20px; border-radius:16px; margin-bottom:16px;
+    background: linear-gradient(135deg, rgba(91,141,239,.14), rgba(63,208,160,.08));
+    border:1px solid rgba(91,141,239,.25);
+  }
+  .admin-hero h2 { margin:0; font-size:16px; }
+  .admin-hero .sub { margin-top:4px; }
+  .admin-hero .badge { font-size:11px; padding:4px 10px; border-radius:999px; background:rgba(255,255,255,.08); color:var(--text); border:1px solid rgba(255,255,255,.1); }
   .admin-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  .config-list { max-height:360px; overflow:auto; border:1px solid var(--border); border-radius:8px; }
-  .config-row { padding:9px 10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; gap:8px; font-size:12px; }
+  .admin-panel {
+    background: var(--panel-2); border:1px solid var(--border); border-radius:14px; padding:16px;
+    transition: border-color .2s var(--ease), transform .2s var(--ease);
+  }
+  .admin-panel:hover { border-color:#333a4a; }
+  .admin-panel-head { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .admin-panel-icon {
+    width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-size:14px; background: rgba(91,141,239,.15); color:var(--accent); flex-shrink:0;
+  }
+  .admin-panel h2 { margin:0; font-size:13.5px; }
+  .config-list { max-height:360px; overflow:auto; border:1px solid var(--border); border-radius:10px; background:var(--panel); }
+  .config-row { padding:10px 12px; border-bottom:1px solid var(--border-soft); display:flex; justify-content:space-between; gap:8px; font-size:12px; align-items:center; transition: background .12s var(--ease); }
+  .config-row:hover { background: var(--panel-2); }
   .config-row:last-child { border-bottom:0; }
   .danger-note { color:var(--warn); font-size:11px; margin-top:6px; }
   @media(max-width:800px){.admin-grid{grid-template-columns:1fr;}}
@@ -155,6 +269,10 @@
   .search-wrap { position:relative; min-width:260px; flex:1; }
   .search-wrap input { width:100%; min-width:260px; padding-right:30px; }
   .search-hint { font-size:11px; color:var(--muted); margin:-5px 0 12px; }
+
+  /* tab panel fade transition */
+  .tab-panel { animation: cardIn .22s var(--ease); }
+
   @media (max-width:700px){ .history-row{grid-template-columns:1fr 1fr;} .search-wrap{min-width:100%;} .search-wrap input{min-width:100%;} }
 </style>
 </head>
@@ -174,7 +292,7 @@
       <label>Password</label>
       <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password">
     </div>
-    <button class="btn-primary btn-block" onclick="doLogin()">Sign In</button>
+    <button class="btn-primary btn-block" id="login-btn" onclick="doLogin()"><span class="btn-label" id="login-btn-label">Sign In</span></button>
     <div class="status-msg" id="login-status"></div>
   </div>
 </div>
@@ -221,7 +339,7 @@
   </div>
 
   <!-- ORDERS TAB -->
-  <div id="tab-orders">
+  <div id="tab-orders" class="tab-panel">
     <div class="card">
       <div class="toolbar">
         <div class="search-wrap">
@@ -404,43 +522,46 @@
 
   <!-- ADMIN TAB -->
   <div id="tab-admin" style="display:none;">
-    <div class="card">
-      <h2>System Administration</h2>
-      <div class="sub">Configuration changes affect the new V2 system. Existing production data is preserved.</div>
-      <div class="admin-grid" style="margin-top:14px;">
-        <div>
-          <h2>New Role</h2>
-          <div class="field"><label>Role Name</label><input id="admin-role-name" placeholder="Supervisor"></div>
-          <div id="admin-permissions" class="config-list"></div>
-          <button class="btn-primary btn-block" onclick="createAdminRole()">Create Role</button>
-          <div class="status-msg" id="admin-role-status"></div>
+    <div class="admin-hero">
+      <div>
+        <h2>System Administration</h2>
+        <div class="sub">Configuration changes affect the new V2 system. Existing production data is preserved.</div>
+      </div>
+      <span class="badge" id="admin-role-badge">Signed in</span>
+    </div>
+    <div class="admin-grid">
+      <div class="admin-panel">
+        <div class="admin-panel-head"><div class="admin-panel-icon">＋</div><h2>New Role</h2></div>
+        <div class="field"><label>Role Name</label><input id="admin-role-name" placeholder="Supervisor"></div>
+        <div id="admin-permissions" class="config-list"></div>
+        <button class="btn-primary btn-block" onclick="createAdminRole()">Create Role</button>
+        <div class="status-msg" id="admin-role-status"></div>
+      </div>
+      <div class="admin-panel">
+        <div class="admin-panel-head"><div class="admin-panel-icon">▤</div><h2>New Field</h2></div>
+        <div class="field"><label>Module</label><input id="admin-field-module" placeholder="Orders"></div>
+        <div class="field"><label>Field Name</label><input id="admin-field-name" placeholder="UOM"></div>
+        <div class="field"><label>Label</label><input id="admin-field-label" placeholder="UOM"></div>
+        <div class="grid">
+          <div class="field"><label>Type</label><select id="admin-field-type"><option>text</option><option>number</option><option>dropdown</option><option>date</option></select></div>
+          <div class="field"><label>Dropdown ID (optional)</label><input id="admin-field-dropdown"></div>
         </div>
-        <div>
-          <h2>New Field</h2>
-          <div class="field"><label>Module</label><input id="admin-field-module" placeholder="Orders"></div>
-          <div class="field"><label>Field Name</label><input id="admin-field-name" placeholder="UOM"></div>
-          <div class="field"><label>Label</label><input id="admin-field-label" placeholder="UOM"></div>
-          <div class="grid">
-            <div class="field"><label>Type</label><select id="admin-field-type"><option>text</option><option>number</option><option>dropdown</option><option>date</option></select></div>
-            <div class="field"><label>Dropdown ID (optional)</label><input id="admin-field-dropdown"></div>
-          </div>
-          <button class="btn-primary btn-block" onclick="createAdminField()">Add Field</button>
-          <div class="status-msg" id="admin-field-status"></div>
-        </div>
-        <div>
-          <h2>New Dropdown Option</h2>
-          <div class="field"><label>Dropdown Name</label><input id="admin-dd-name" placeholder="UOM"></div>
-          <div class="field"><label>Option</label><input id="admin-dd-option" placeholder="Nos"></div>
-          <button class="btn-primary btn-block" onclick="createAdminDropdownOption()">Add Option</button>
-          <div class="status-msg" id="admin-dd-status"></div>
-        </div>
-        <div>
-          <h2>Assign User Role</h2>
-          <div class="field"><label>Username</label><input id="admin-user-name"></div>
-          <div class="field"><label>Role</label><input id="admin-user-role" placeholder="Supervisor"></div>
-          <button class="btn-primary btn-block" onclick="assignAdminUserRole()">Assign Role</button>
-          <div class="status-msg" id="admin-user-status"></div>
-        </div>
+        <button class="btn-primary btn-block" onclick="createAdminField()">Add Field</button>
+        <div class="status-msg" id="admin-field-status"></div>
+      </div>
+      <div class="admin-panel">
+        <div class="admin-panel-head"><div class="admin-panel-icon">▾</div><h2>New Dropdown Option</h2></div>
+        <div class="field"><label>Dropdown Name</label><input id="admin-dd-name" placeholder="UOM"></div>
+        <div class="field"><label>Option</label><input id="admin-dd-option" placeholder="Nos"></div>
+        <button class="btn-primary btn-block" onclick="createAdminDropdownOption()">Add Option</button>
+        <div class="status-msg" id="admin-dd-status"></div>
+      </div>
+      <div class="admin-panel">
+        <div class="admin-panel-head"><div class="admin-panel-icon">☺</div><h2>Assign User Role</h2></div>
+        <div class="field"><label>Username</label><input id="admin-user-name"></div>
+        <div class="field"><label>Role</label><input id="admin-user-role" placeholder="Supervisor"></div>
+        <button class="btn-primary btn-block" onclick="assignAdminUserRole()">Assign Role</button>
+        <div class="status-msg" id="admin-user-status"></div>
       </div>
     </div>
     <div class="card"><h2>Configured Roles</h2><div id="admin-role-list" class="config-list"></div></div>
@@ -620,6 +741,24 @@ function init() {
     showApp();
   } else {
     document.getElementById('login-screen').style.display = 'flex';
+    // Quality-of-life: focus the username field immediately, and let Enter submit.
+    const u = document.getElementById('login-username');
+    if (u) setTimeout(() => u.focus(), 50);
+  }
+}
+
+function setLoginLoading(isLoading) {
+  const btn = document.getElementById('login-btn');
+  const label = document.getElementById('login-btn-label');
+  if (!btn || !label) return;
+  if (isLoading) {
+    btn.disabled = true;
+    btn.classList.add('loading');
+    label.innerHTML = '<span class="spinner"></span> Signing in…';
+  } else {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    label.textContent = 'Sign In';
   }
 }
 
@@ -634,8 +773,9 @@ async function doLogin() {
     return;
   }
 
-  statusEl.textContent = 'Signing in…';
+  statusEl.textContent = '';
   statusEl.className = 'status-msg';
+  setLoginLoading(true);
 
   try {
     const res = await fetch(APPS_SCRIPT_URL, {
@@ -693,13 +833,23 @@ async function doLogin() {
     sessionStorage.setItem('svd_token', TOKEN);
     sessionStorage.setItem('svd_session', JSON.stringify(SESSION));
 
+    statusEl.textContent = 'Welcome back — loading your dashboard…';
+    statusEl.className = 'status-msg ok';
+
     showApp();
   } catch (e) {
     console.error('Login fetch failed:', e);
     statusEl.textContent = 'Could not reach Apps Script. Make sure the latest Web App deployment is active and accessible.';
     statusEl.className = 'status-msg err';
+  } finally {
+    setLoginLoading(false);
   }
 }
+
+['login-username','login-password'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doLogin(); } });
+});
 
 function doLogout() {
   sessionStorage.removeItem('svd_token');
@@ -759,6 +909,9 @@ function applyRoleUI() {
 
   const stockAdminCard = document.getElementById('stock-admin-card');
   if (stockAdminCard) stockAdminCard.style.display = ['owner','dispatch','ppc'].includes(role) ? '' : 'none';
+
+  const adminBadge = document.getElementById('admin-role-badge');
+  if (adminBadge) adminBadge.textContent = (SESSION?.displayName || SESSION?.username || '') + ' · ' + (SESSION?.role || '');
 
   const activeTab = document.querySelector('.tab.active');
   if (activeTab && activeTab.style.display === 'none') switchTab('orders');
@@ -846,7 +999,10 @@ function switchTab(name) {
   ['orders','multiple','new','stock','complaints','discussion','ppcplan','admin'].forEach(t => {
     const panel = document.getElementById('tab-' + t);
     const tab = document.querySelector(`.tab[data-tab="${t}"]`);
-    if (panel) panel.style.display = t === name ? 'block' : 'none';
+    if (panel) {
+      panel.style.display = t === name ? 'block' : 'none';
+      if (t === name) { panel.classList.remove('tab-panel'); void panel.offsetWidth; panel.classList.add('tab-panel'); }
+    }
     if (tab) tab.classList.toggle('active', t === name);
   });
   if (name === 'multiple') {
@@ -1411,10 +1567,12 @@ function openEditDispatch(logId) {
   document.getElementById('de-reason').value = o ? (o.PendingReason || '') : '';
   document.getElementById('de-note').value = l.Note || '';
   document.getElementById('dispatch-edit-status').textContent = '';
+  document.getElementById('dispatch-edit-modal-backdrop').classList.add('open');
   document.getElementById('dispatch-edit-modal-backdrop').style.display = 'flex';
 }
 
 function closeDispatchEditModal() {
+  document.getElementById('dispatch-edit-modal-backdrop').classList.remove('open');
   document.getElementById('dispatch-edit-modal-backdrop').style.display = 'none';
 }
 
@@ -1474,10 +1632,12 @@ function openEditOrder(orderId) {
   document.getElementById('e-reason').value = o.PendingReason || '';
   document.getElementById('e-dispatched-note').textContent = `Already dispatched: ${Number(o.DispatchedQty||0).toLocaleString()}. Order quantity cannot be reduced below this amount.`;
   document.getElementById('edit-status').textContent = '';
+  document.getElementById('edit-modal-backdrop').classList.add('open');
   document.getElementById('edit-modal-backdrop').style.display = 'flex';
 }
 
 function closeEditModal() {
+  document.getElementById('edit-modal-backdrop').classList.remove('open');
   document.getElementById('edit-modal-backdrop').style.display = 'none';
 }
 
@@ -1661,8 +1821,8 @@ function selectPPCOrder(id){const o=data.orders.find(x=>String(x.OrderID)===Stri
 async function savePPCPlan(){const id=document.getElementById('ppc-order').value,qty=document.getElementById('ppc-planned-qty').value;if(!id||!qty)return;try{const r=await postAction({action:'savePPCPlan',orderId:id,plannedQty:qty});if(r.error)throw new Error(r.error);await loadV2(true);selectPPCOrder(id);}catch(e){document.getElementById('ppc-status').textContent='Failed: '+e.message;document.getElementById('ppc-status').className='status-msg err';}}
 async function finalizePPCPlan(){const id=document.getElementById('ppc-order').value,qty=document.getElementById('ppc-planned-qty').value;if(!id||!qty)return;try{const r=await postAction({action:'finalizePPCPlan',orderId:id,plannedQty:qty});if(r.error)throw new Error(r.error);await loadV2(true);selectPPCOrder(id);document.getElementById('ppc-status').textContent='PPC plan finalized and locked.';document.getElementById('ppc-status').className='status-msg ok';}catch(e){document.getElementById('ppc-status').textContent='Failed: '+e.message;document.getElementById('ppc-status').className='status-msg err';}}
 async function unlockPPCPlan(){const id=document.getElementById('ppc-order').value;if(!id)return;const reason=prompt('Reason for unlocking this PPC plan:');if(!reason)return;try{const r=await postAction({action:'unlockPPCPlan',orderId:id,reason});if(r.error)throw new Error(r.error);await loadV2(true);selectPPCOrder(id);}catch(e){alert(e.message);}}
-function openAdditionalQty(id){const o=data.orders.find(x=>String(x.OrderID)===String(id));if(!o)return;document.getElementById('aq-order-id').value=id;document.getElementById('aq-order-info').textContent=`${o.Customer} · ${o.PartCode} · Planned: ${Number(data.v2.plans[id]?.PlannedQty||0).toLocaleString()} · Existing additional: ${Number(data.v2.additional[id]||0).toLocaleString()}`;document.getElementById('aq-qty').value='';document.getElementById('aq-note').value='';document.getElementById('aq-approved-by').value='';document.getElementById('aq-status').textContent='';document.getElementById('additional-qty-modal').style.display='flex';}
-function closeAdditionalQty(){document.getElementById('additional-qty-modal').style.display='none';}
+function openAdditionalQty(id){const o=data.orders.find(x=>String(x.OrderID)===String(id));if(!o)return;document.getElementById('aq-order-id').value=id;document.getElementById('aq-order-info').textContent=`${o.Customer} · ${o.PartCode} · Planned: ${Number(data.v2.plans[id]?.PlannedQty||0).toLocaleString()} · Existing additional: ${Number(data.v2.additional[id]||0).toLocaleString()}`;document.getElementById('aq-qty').value='';document.getElementById('aq-note').value='';document.getElementById('aq-approved-by').value='';document.getElementById('aq-status').textContent='';document.getElementById('additional-qty-modal').classList.add('open');document.getElementById('additional-qty-modal').style.display='flex';}
+function closeAdditionalQty(){document.getElementById('additional-qty-modal').classList.remove('open');document.getElementById('additional-qty-modal').style.display='none';}
 async function submitAdditionalQty(){const id=document.getElementById('aq-order-id').value,qty=document.getElementById('aq-qty').value,reason=document.getElementById('aq-reason').value,note=document.getElementById('aq-note').value.trim(),approved=document.getElementById('aq-approved-by').value.trim(),st=document.getElementById('aq-status');st.textContent='Saving…';try{const r=await postAction({action:'addAdditionalQty',orderId:id,qty,reason,reasonNote:note,approvedBy:approved});if(r.error)throw new Error(r.error);st.textContent='Additional quantity added successfully.';st.className='status-msg ok';await loadV2(true);setTimeout(closeAdditionalQty,300);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
 async function createAdminRole(){const st=document.getElementById('admin-role-status');const name=document.getElementById('admin-role-name').value.trim();const permissions=[...(data.v2.permissions||[])];if(!name){st.textContent='Role name is required';st.className='status-msg err';return;}try{const r=await postAction({action:'createRole',roleName:name,permissions});if(r.error)throw new Error(r.error);st.textContent='Role created.';st.className='status-msg ok';await loadV2(true);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
 async function createAdminField(){const st=document.getElementById('admin-field-status');try{const r=await postAction({action:'createField',module:document.getElementById('admin-field-module').value.trim(),fieldName:document.getElementById('admin-field-name').value.trim(),label:document.getElementById('admin-field-label').value.trim(),type:document.getElementById('admin-field-type').value,dropdownId:document.getElementById('admin-field-dropdown').value.trim()});if(r.error)throw new Error(r.error);st.textContent='Field added to configuration.';st.className='status-msg ok';await loadV2(true);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
