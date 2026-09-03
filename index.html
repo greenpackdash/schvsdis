@@ -184,7 +184,7 @@
   <h2>One-time setup</h2>
   <div class="field">
     <label>Apps Script Web App URL</label>
-    <input id="script-url" placeholder="https://script.google.com/macros/s/AKfycbwShcRNmpa_tV3tGHin81fEnsAqR4uxwYyXcyBklGbCgYxAp4mVgV9GSWmGc-ZRRC3fAA/exec">
+    <input id="script-url" placeholder="https://script.google.com/macros/s/AKfycbxa7REwaiUnpYv48spZfHP-DhM9w6tvnp9wSqIHr4M5nO-uRIgJczk3twW6CTxj4D7I/exec">
   </div>
   <button class="btn-primary" onclick="saveScriptUrl()">Continue</button>
   <div class="status-msg" id="setup-status"></div>
@@ -829,14 +829,35 @@ async function loadData() {
       if (json.error === 'AUTH_REQUIRED') { setConn('err','Session expired — please sign in again.'); return false; }
       if (json.error) { setConn('err', json.error); return false; }
       data = {...data,...json};
+      logShipToIndex={};
+      (data.logs||[]).forEach(l=>{const id=String(l.OrderID||''); if(!id)return; (logShipToIndex[id] ||= []).push(String(l.ShipToParty||''));});
       const count = Array.isArray(data.orders) ? data.orders.length : 0;
       setConn('ok', 'Live — connected · ' + count + ' orders');
-      populateDropdowns(); renderStats(); renderTable(); populateDispatchOrderSelect(); renderBulkDispatchRows(); renderPPCPendingRows(); renderDispatchHistory(); renderV2(); applyRoleUI();
+      populateDropdowns(); renderStats(); renderTable(); populateDispatchOrderSelect(); renderBulkDispatchRows(); renderPPCPendingRows(); renderDispatchHistory(); applyRoleUI();
+      if (['ppcplan','admin'].includes(document.querySelector('.tab.active')?.dataset.tab || '')) loadV2();
       return true;
     } catch (e) { setConn('err', 'Connection failed — data not lost.'); return false; }
     finally { loadInFlight=null; }
   })();
   return loadInFlight;
+}
+let v2Loaded=false, v2InFlight=null;
+async function loadV2(force=false){
+  if(v2Loaded && !force) return true;
+  if(v2InFlight) return v2InFlight;
+  v2InFlight=(async()=>{
+    try{
+      const res=await fetch(APPS_SCRIPT_URL+'?mode=v2&token='+encodeURIComponent(TOKEN),{cache:'no-store'});
+      const json=await res.json();
+      if(json.error){setConn('err',json.error);return false;}
+      data.v2=json.v2||{permissions:[]};
+      v2Loaded=true;
+      renderV2();
+      applyRoleUI();
+      return true;
+    }catch(e){return false;} finally{v2InFlight=null;}
+  })();
+  return v2InFlight;
 }
 let auxLoaded={complaints:false,discussion:false};
 async function loadAux(mode){
@@ -855,6 +876,7 @@ function switchTab(name) {
   if (name === 'stock') renderStockTable();
   if (name === 'complaints') { renderComplaints(); loadAux('complaints'); }
   if (name === 'discussion') { renderDiscussion(); loadAux('discussion'); }
+  if (name === 'ppcplan' || name === 'admin') loadV2();
 }
 
 function populateDropdowns() {
@@ -921,10 +943,7 @@ function getFiltered() {
     .filter(o => !date || fmtDate(o.ScheduledDate) === date)
     .filter(o => {
       if (!q) return true;
-      const dispatchShipTo = (data.logs || [])
-        .filter(l => String(l.OrderID) === String(o.OrderID))
-        .map(l => String(l.ShipToParty||''))
-        .join(' ');
+      const dispatchShipTo = (logShipToIndex[String(o.OrderID)] || []).join(' ');
       const haystack = [o.OrderID,o.Customer,o.CustomerLocation,o.PartCode,o.Unit,o.Priority,
         o.OrderQty,o.DispatchedQty,o.PendingQty,o.PendingDepartment,o.PendingReason,
         o.FGStatus,o.Status,dispatchShipTo].join(' ').toLowerCase();
@@ -936,6 +955,9 @@ function clearFilters() {
   ['f-search','f-customer','f-part','f-unit','f-status','f-dept','f-date'].forEach(id => document.getElementById(id).value = '');
   renderTable();
 }
+
+let tableRenderTimer=null;
+function debouncedRenderTable(){clearTimeout(tableRenderTimer);tableRenderTimer=setTimeout(renderTable,120);}
 
 function renderTable() {
   const rows = getFiltered();
@@ -1651,15 +1673,15 @@ function renderV2(){
 function renderPPCSummary(){const box=document.getElementById('ppc-summary');if(!box)return;const plans=data.v2?.plans||{}, adds=data.v2?.additional||{};const rows=data.orders.filter(o=>plans[o.OrderID]);box.innerHTML=rows.length?rows.slice(0,200).map(o=>{const p=plans[o.OrderID],a=Number(adds[o.OrderID]||0),q=Number(p.PlannedQty||0);return `<div class="config-row"><span><b>${esc(o.OrderID)}</b> · ${esc(o.Customer)} · ${esc(o.PartCode)}</span><span>${q.toLocaleString()} + ${a.toLocaleString()} = ${(q+a).toLocaleString()} · ${esc(p.Status)}</span></div>`}).join(''):'<div class="empty">No PPC plans created yet.</div>';}
 function filterPPCOrders(){const q=(document.getElementById('ppc-order-search').value||'').toLowerCase().trim(),box=document.getElementById('ppc-order-results');ppcSearchIndex=data.orders;const rows=q?ppcSearchIndex.filter(o=>[o.OrderID,o.Customer,o.PartCode,o.Unit,o.ScheduledDate].join(' ').toLowerCase().includes(q)):ppcSearchIndex;box.innerHTML=rows.slice(0,100).map(o=>`<button type="button" class="order-result" onclick="selectPPCOrder('${esc(o.OrderID)}')"><div class="order-result-main">${esc(o.Customer)} · ${esc(o.PartCode)} · ${esc(o.Unit)}</div><div class="order-result-meta">${esc(o.OrderID)} · ${Number(o.OrderQty||0).toLocaleString()} ordered</div></button>`).join('')||'<div class="order-no-results">No orders found.</div>';box.classList.add('open');}
 function selectPPCOrder(id){const o=data.orders.find(x=>String(x.OrderID)===String(id));if(!o)return;document.getElementById('ppc-order').value=o.OrderID;document.getElementById('ppc-order-search').value=`${o.Customer} — ${o.PartCode} [${o.Unit}]`;document.getElementById('ppc-order-results').classList.remove('open');const p=(data.v2.plans||{})[o.OrderID];document.getElementById('ppc-planned-qty').value=p?.PlannedQty||o.OrderQty||'';document.getElementById('ppc-plan-status').value=p?.Status||'Draft';document.getElementById('ppc-order-info').textContent=`Order quantity: ${Number(o.OrderQty||0).toLocaleString()} ${esc(o.UOM||'Nos')} · Current dispatched: ${Number(o.DispatchedQty||0).toLocaleString()}`;document.getElementById('ppc-unlock-btn').style.display=(SESSION.role==='Owner'&&p?.Status==='Finalized')?'inline-block':'none';}
-async function savePPCPlan(){const id=document.getElementById('ppc-order').value,qty=document.getElementById('ppc-planned-qty').value;if(!id||!qty)return;try{const r=await postAction({action:'savePPCPlan',orderId:id,plannedQty:qty});if(r.error)throw new Error(r.error);await loadData();selectPPCOrder(id);}catch(e){document.getElementById('ppc-status').textContent='Failed: '+e.message;document.getElementById('ppc-status').className='status-msg err';}}
-async function finalizePPCPlan(){const id=document.getElementById('ppc-order').value,qty=document.getElementById('ppc-planned-qty').value;if(!id||!qty)return;try{const r=await postAction({action:'finalizePPCPlan',orderId:id,plannedQty:qty});if(r.error)throw new Error(r.error);await loadData();selectPPCOrder(id);document.getElementById('ppc-status').textContent='PPC plan finalized and locked.';document.getElementById('ppc-status').className='status-msg ok';}catch(e){document.getElementById('ppc-status').textContent='Failed: '+e.message;document.getElementById('ppc-status').className='status-msg err';}}
-async function unlockPPCPlan(){const id=document.getElementById('ppc-order').value;if(!id)return;const reason=prompt('Reason for unlocking this PPC plan:');if(!reason)return;try{const r=await postAction({action:'unlockPPCPlan',orderId:id,reason});if(r.error)throw new Error(r.error);await loadData();selectPPCOrder(id);}catch(e){alert(e.message);}}
+async function savePPCPlan(){const id=document.getElementById('ppc-order').value,qty=document.getElementById('ppc-planned-qty').value;if(!id||!qty)return;try{const r=await postAction({action:'savePPCPlan',orderId:id,plannedQty:qty});if(r.error)throw new Error(r.error);await loadV2(true);selectPPCOrder(id);}catch(e){document.getElementById('ppc-status').textContent='Failed: '+e.message;document.getElementById('ppc-status').className='status-msg err';}}
+async function finalizePPCPlan(){const id=document.getElementById('ppc-order').value,qty=document.getElementById('ppc-planned-qty').value;if(!id||!qty)return;try{const r=await postAction({action:'finalizePPCPlan',orderId:id,plannedQty:qty});if(r.error)throw new Error(r.error);await loadV2(true);selectPPCOrder(id);document.getElementById('ppc-status').textContent='PPC plan finalized and locked.';document.getElementById('ppc-status').className='status-msg ok';}catch(e){document.getElementById('ppc-status').textContent='Failed: '+e.message;document.getElementById('ppc-status').className='status-msg err';}}
+async function unlockPPCPlan(){const id=document.getElementById('ppc-order').value;if(!id)return;const reason=prompt('Reason for unlocking this PPC plan:');if(!reason)return;try{const r=await postAction({action:'unlockPPCPlan',orderId:id,reason});if(r.error)throw new Error(r.error);await loadV2(true);selectPPCOrder(id);}catch(e){alert(e.message);}}
 function openAdditionalQty(id){const o=data.orders.find(x=>String(x.OrderID)===String(id));if(!o)return;document.getElementById('aq-order-id').value=id;document.getElementById('aq-order-info').textContent=`${o.Customer} · ${o.PartCode} · Planned: ${Number(data.v2.plans[id]?.PlannedQty||0).toLocaleString()} · Existing additional: ${Number(data.v2.additional[id]||0).toLocaleString()}`;document.getElementById('aq-qty').value='';document.getElementById('aq-note').value='';document.getElementById('aq-approved-by').value='';document.getElementById('aq-status').textContent='';document.getElementById('additional-qty-modal').style.display='flex';}
 function closeAdditionalQty(){document.getElementById('additional-qty-modal').style.display='none';}
-async function submitAdditionalQty(){const id=document.getElementById('aq-order-id').value,qty=document.getElementById('aq-qty').value,reason=document.getElementById('aq-reason').value,note=document.getElementById('aq-note').value.trim(),approved=document.getElementById('aq-approved-by').value.trim(),st=document.getElementById('aq-status');st.textContent='Saving…';try{const r=await postAction({action:'addAdditionalQty',orderId:id,qty,reason,reasonNote:note,approvedBy:approved});if(r.error)throw new Error(r.error);st.textContent='Additional quantity added successfully.';st.className='status-msg ok';await loadData();setTimeout(closeAdditionalQty,300);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
-async function createAdminRole(){const st=document.getElementById('admin-role-status');const name=document.getElementById('admin-role-name').value.trim();const permissions=[...(data.v2.permissions||[])];if(!name){st.textContent='Role name is required';st.className='status-msg err';return;}try{const r=await postAction({action:'createRole',roleName:name,permissions});if(r.error)throw new Error(r.error);st.textContent='Role created.';st.className='status-msg ok';await loadData();}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
-async function createAdminField(){const st=document.getElementById('admin-field-status');try{const r=await postAction({action:'createField',module:document.getElementById('admin-field-module').value.trim(),fieldName:document.getElementById('admin-field-name').value.trim(),label:document.getElementById('admin-field-label').value.trim(),type:document.getElementById('admin-field-type').value,dropdownId:document.getElementById('admin-field-dropdown').value.trim()});if(r.error)throw new Error(r.error);st.textContent='Field added to configuration.';st.className='status-msg ok';await loadData();}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
-async function createAdminDropdownOption(){const st=document.getElementById('admin-dd-status');try{const r=await postAction({action:'createDropdownOption',dropdownName:document.getElementById('admin-dd-name').value.trim(),optionValue:document.getElementById('admin-dd-option').value.trim()});if(r.error)throw new Error(r.error);st.textContent='Dropdown option added.';st.className='status-msg ok';await loadData();}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
+async function submitAdditionalQty(){const id=document.getElementById('aq-order-id').value,qty=document.getElementById('aq-qty').value,reason=document.getElementById('aq-reason').value,note=document.getElementById('aq-note').value.trim(),approved=document.getElementById('aq-approved-by').value.trim(),st=document.getElementById('aq-status');st.textContent='Saving…';try{const r=await postAction({action:'addAdditionalQty',orderId:id,qty,reason,reasonNote:note,approvedBy:approved});if(r.error)throw new Error(r.error);st.textContent='Additional quantity added successfully.';st.className='status-msg ok';await loadV2(true);setTimeout(closeAdditionalQty,300);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
+async function createAdminRole(){const st=document.getElementById('admin-role-status');const name=document.getElementById('admin-role-name').value.trim();const permissions=[...(data.v2.permissions||[])];if(!name){st.textContent='Role name is required';st.className='status-msg err';return;}try{const r=await postAction({action:'createRole',roleName:name,permissions});if(r.error)throw new Error(r.error);st.textContent='Role created.';st.className='status-msg ok';await loadV2(true);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
+async function createAdminField(){const st=document.getElementById('admin-field-status');try{const r=await postAction({action:'createField',module:document.getElementById('admin-field-module').value.trim(),fieldName:document.getElementById('admin-field-name').value.trim(),label:document.getElementById('admin-field-label').value.trim(),type:document.getElementById('admin-field-type').value,dropdownId:document.getElementById('admin-field-dropdown').value.trim()});if(r.error)throw new Error(r.error);st.textContent='Field added to configuration.';st.className='status-msg ok';await loadV2(true);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
+async function createAdminDropdownOption(){const st=document.getElementById('admin-dd-status');try{const r=await postAction({action:'createDropdownOption',dropdownName:document.getElementById('admin-dd-name').value.trim(),optionValue:document.getElementById('admin-dd-option').value.trim()});if(r.error)throw new Error(r.error);st.textContent='Dropdown option added.';st.className='status-msg ok';await loadV2(true);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
 async function assignAdminUserRole(){const st=document.getElementById('admin-user-status');try{const r=await postAction({action:'assignUserRole',username:document.getElementById('admin-user-name').value.trim(),role:document.getElementById('admin-user-role').value.trim()});if(r.error)throw new Error(r.error);st.textContent='Role assigned.';st.className='status-msg ok';}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
 
 function fmtDateTime(v){if(!v)return '—';const d=new Date(v);if(isNaN(d))return String(v);return d.toLocaleString();}
