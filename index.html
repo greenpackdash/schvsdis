@@ -947,6 +947,27 @@ function applyRoleUI() {
   if (activeTab && activeTab.style.display === 'none') switchTab('orders');
 }
 
+function lockUnitFieldsForSession(){
+  const role=String(SESSION?.role||'').trim().toLowerCase();
+  const unit=String(SESSION?.unit||'').trim();
+  const restricted=['ppc','dispatch'].includes(role);
+  ['n-unit','d-unit','bulk-d-unit','de-unit','f-unit'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    if(restricted && unit){
+      el.innerHTML=`<option value="${esc(unit)}" selected>${esc(unit)}</option>`;
+      el.value=unit;
+      el.disabled=true;
+      el.title='Locked to your assigned unit';
+    }else{
+      el.disabled=false;
+      el.title='';
+    }
+  });
+  // Multiple-order rows are rebuilt dynamically, so renderPPCBulkRows handles
+  // the row-level Unit lock separately.
+}
+
 function showApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('main-app').style.display = 'block';
@@ -957,15 +978,7 @@ function showApp() {
     : 'Live order tracking across all units';
 
   const role = String(SESSION.role || '').trim().toLowerCase();
-  if (SESSION.unit && !['owner','viewonly','admin'].includes(role)) {
-    ['n-unit','d-unit','f-unit','bulk-d-unit'].forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.innerHTML = `<option value="${esc(SESSION.unit)}">${esc(SESSION.unit)}</option>`;
-      el.value = SESSION.unit;
-      el.disabled = true;
-    });
-  }
+  lockUnitFieldsForSession();
 
   // Apply immediately using role fallback, then load V2 permissions and apply
   // again. This prevents a race where Admin/Dispatch appear only after data loads.
@@ -1076,6 +1089,7 @@ function populateDropdowns() {
   if (bc) bc.innerHTML = bulkCustomers.map(v=>`<option value="${esc(v)}">`).join('');
   if (bl) bl.innerHTML = bulkLocations.map(v=>`<option value="${esc(v)}">`).join('');
   if (ba) ba.innerHTML = bulkAddresses.map(v=>`<option value="${esc(v)}">`).join('');
+  lockUnitFieldsForSession();
 
   const fc = document.getElementById('f-customer');
   fc.innerHTML = '<option value="">All customers</option>' + data.customers.map(c => `<option>${esc(c)}</option>`).join('');
@@ -1706,10 +1720,15 @@ function renderPPCBulkRows(){
  <td><input data-p="customer" data-i="${i}" list="dl-bulk-customers" value="${esc(r.customer)}" placeholder="Customer" autocomplete="off"></td><td><input data-p="customerLocation" data-i="${i}" list="dl-bulk-locations" value="${esc(r.customerLocation)}" placeholder="Location" autocomplete="off"></td>
  <td><select data-p="orderType" data-i="${i}" onchange="ppcBulkRows[${i}].orderType=this.value;renderPPCBulkRows()"><option value="STANDARD" ${r.orderType!=='SET'?'selected':''}>Article</option><option value="SET" ${r.orderType==='SET'?'selected':''}>Set</option></select></td>
  <td>${r.orderType==='SET'?`<select data-p="setCode" data-i="${i}"><option value="">Set</option>${(data.sets||[]).map(x=>`<option value="${esc(x.SetCode)}" ${r.setCode===x.SetCode?'selected':''}>${esc(x.SetCode)}</option>`).join('')}</select>`:`<input data-p="partCode" data-i="${i}" list="dl-parts" value="${esc(r.partCode)}" placeholder="Part Code">`}</td>
- <td><select data-p="unit" data-i="${i}">${(data.units||[]).map(u=>`<option ${r.unit===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td><td><input data-p="orderQty" data-i="${i}" type="number" min="1" value="${esc(r.orderQty)}" placeholder="Qty"></td><td><select data-p="uom" data-i="${i}">${(data.uoms||['Nos','Pcs','Kg','Box','Sheet','Set','Meter']).map(u=>`<option ${r.uom===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td><td><select data-p="priority" data-i="${i}">${(data.priorities||['High','Medium','Low']).map(u=>`<option ${r.priority===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td><td><input data-p="scheduledDate" data-i="${i}" type="date" value="${esc(r.scheduledDate)}"></td><td><input data-p="shipToParty" data-i="${i}" list="dl-shipto" value="${esc(r.shipToParty)}" placeholder="Ship To" autocomplete="off"></td><td><input data-p="shipToAddress" data-i="${i}" list="dl-bulk-shipto-addresses" value="${esc(r.shipToAddress)}" placeholder="Ship-to Address" autocomplete="off"></td><td><button class="btn-ghost btn-small" onclick="removePPCBulkRow(${i})">×</button></td></tr>`).join('');
+ <td>${String(SESSION?.role||'').toLowerCase()==='owner'?`<select data-p="unit" data-i="${i}">${(data.units||[]).map(u=>`<option ${r.unit===u?'selected':''}>${esc(u)}</option>`).join('')}</select>`:`<select data-p="unit" data-i="${i}" disabled><option value="${esc(SESSION?.unit||r.unit||'')}" selected>${esc(SESSION?.unit||r.unit||'')}</option></select>`}</td><td><input data-p="orderQty" data-i="${i}" type="number" min="1" value="${esc(r.orderQty)}" placeholder="Qty"></td><td><select data-p="uom" data-i="${i}">${(data.uoms||['Nos','Pcs','Kg','Box','Sheet','Set','Meter']).map(u=>`<option ${r.uom===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td><td><select data-p="priority" data-i="${i}">${(data.priorities||['High','Medium','Low']).map(u=>`<option ${r.priority===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td><td><input data-p="scheduledDate" data-i="${i}" type="date" value="${esc(r.scheduledDate)}"></td><td><input data-p="shipToParty" data-i="${i}" list="dl-shipto" value="${esc(r.shipToParty)}" placeholder="Ship To" autocomplete="off"></td><td><input data-p="shipToAddress" data-i="${i}" list="dl-bulk-shipto-addresses" value="${esc(r.shipToAddress)}" placeholder="Ship-to Address" autocomplete="off"></td><td><button class="btn-ghost btn-small" onclick="removePPCBulkRow(${i})">×</button></td></tr>`).join('');
  tb.querySelectorAll('[data-p]').forEach(el=>el.addEventListener('input',()=>{
    const i=Number(el.dataset.i), field=el.dataset.p;
-   ppcBulkRows[i][field]=el.value;
+   if(field==='unit' && ['ppc','dispatch'].includes(String(SESSION?.role||'').toLowerCase()) && SESSION?.unit){
+     ppcBulkRows[i].unit=SESSION.unit;
+     el.value=SESSION.unit;
+   } else {
+     ppcBulkRows[i][field]=el.value;
+   }
    if(field==='shipToParty'){
      const matches=bulkShipToAddressSuggestions(el.value);
      if(matches.length && !String(ppcBulkRows[i].shipToAddress||'').trim()) ppcBulkRows[i].shipToAddress=matches[0];
