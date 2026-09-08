@@ -385,13 +385,16 @@
       <div class="grid">
         <div class="field combo"><label>Customer Name</label><input id="n-customer" list="dl-customers" placeholder="Select or type new"><datalist id="dl-customers"></datalist></div>
         <div class="field combo"><label>Customer Location</label><input id="n-location" list="dl-locations" placeholder="e.g. Chakan, Waluj"><datalist id="dl-locations"></datalist></div>
-        <div class="field combo"><label>Part Code</label><input id="n-part" list="dl-parts" placeholder="Select or type new" oninput="showStock()"><datalist id="dl-parts"></datalist></div>
+        <div class="field"><label>Order Type</label><select id="n-order-type" onchange="toggleOrderType()"><option value="STANDARD">Standard Article</option><option value="SET">IKEA Set</option></select></div>
+        <div class="field combo" id="n-part-field"><label>Part Code</label><input id="n-part" list="dl-parts" placeholder="Select or type new" oninput="showStock()"><datalist id="dl-parts"></datalist></div>
+        <div class="field combo" id="n-set-field" style="display:none"><label>Set Code</label><select id="n-set"><option value="">— Select Set —</option></select></div>
         <div class="field"><label>Unit</label><select id="n-unit"><option value="">— Select —</option><option>Unit 1</option><option>Unit 2</option><option>Unit 5</option><option>Unit Delta</option></select></div>
         <div class="field"><label>Order Quantity</label><input id="n-qty" type="number" min="1" placeholder="1000"></div>
-        <div class="field"><label>UOM</label><select id="n-uom"></select></div>
+        <div class="field" id="n-uom-field"><label>UOM</label><select id="n-uom"></select></div>
         <div class="field"><label>Priority Level</label><select id="n-priority"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
         <div class="field"><label>Scheduled Date</label><input id="n-date" type="date"></div>
         <div class="field combo"><label>Ship To Party</label><input id="n-shipto" list="dl-shipto" placeholder="Select or type ship-to party"></div>
+        <div class="field" style="grid-column:span 2"><label>Ship-to Address</label><input id="n-shipto-address" placeholder="Full delivery / ship-to address"></div>
       </div>
       <div class="sub" id="n-stock-info" style="margin:-4px 0 12px;">Enter a Part Code to see current FG stock.</div>
       <button class="btn-primary btn-block" onclick="submitOrder()">Create Order</button>
@@ -401,6 +404,15 @@
     <div class="card" id="dispatch-entry-card" style="display:none;">
 
       <h2 id="dispatch-form-title">Dispatch / Still Pending</h2>
+      <div class="field">
+        <label>Dispatch Item Type</label>
+        <select id="d-dispatch-type" onchange="toggleDispatchItemType()"><option value="STANDARD">Standard Article</option><option value="SET">IKEA Set</option></select>
+      </div>
+      <div class="field" id="d-set-order-field" style="display:none">
+        <label>Find Set Order</label>
+        <select id="d-set-order"><option value="">— Select pending set —</option></select>
+        <div class="mini-note">Selecting a set dispatches every BOM component automatically.</div>
+      </div>
       <div class="field">
         <label>Entry Type</label>
         <select id="d-mode" onchange="toggleDispatchMode()">
@@ -444,6 +456,10 @@
           <input id="d-shipto" list="dl-shipto" placeholder="Select or type ship-to party">
           <datalist id="dl-shipto"></datalist>
         </div>
+        <div class="field" id="d-shipto-address-field">
+          <label>Ship-to Address</label>
+          <input id="d-shipto-address" placeholder="Full delivery / ship-to address">
+        </div>
         <div class="field" id="d-date-field">
           <label>Dispatched Date</label>
           <input id="d-date" type="date">
@@ -469,7 +485,7 @@
       <h2>PPC — Multiple Order Creation</h2>
       <div class="sub" style="margin-bottom:10px;">Create many customer orders in one save. Ship To Party is registered here and will automatically appear at Dispatch.</div>
       <div class="table-scroll">
-        <table id="ppc-order-bulk-table"><thead><tr><th>Customer</th><th>Location</th><th>Part Code</th><th>Unit</th><th>Qty</th><th>UOM</th><th>Priority</th><th>Scheduled</th><th>Ship To Party</th><th></th></tr></thead><tbody></tbody></table>
+        <table id="ppc-order-bulk-table"><thead><tr><th>Customer</th><th>Location</th><th>Type</th><th>Part / Set</th><th>Unit</th><th>Qty</th><th>UOM</th><th>Priority</th><th>Scheduled</th><th>Ship To Party</th><th>Ship-to Address</th><th></th></tr></thead><tbody></tbody></table>
       </div>
       <div class="modal-actions" style="margin-top:10px;"><button class="btn-ghost" onclick="addPPCBulkRow()">+ Add Row</button><button class="btn-primary" onclick="savePPCBulkOrders()">Save All Orders</button><button class="btn-ghost" onclick="clearPPCBulkRows()">Clear</button></div>
       <div class="status-msg" id="ppc-bulk-status"></div>
@@ -555,6 +571,17 @@
         <div class="field"><label>Option</label><input id="admin-dd-option" placeholder="Nos"></div>
         <button class="btn-primary btn-block" onclick="createAdminDropdownOption()">Add Option</button>
         <div class="status-msg" id="admin-dd-status"></div>
+      </div>
+      <div class="admin-panel">
+        <div class="admin-panel-head"><div class="admin-panel-icon">▦</div><h2>IKEA Set / BOM</h2></div>
+        <div class="field"><label>Set Code</label><input id="admin-set-code" placeholder="IKEA-SET-001"></div>
+        <div class="field"><label>Set Name</label><input id="admin-set-name" placeholder="Bedroom Set"></div>
+        <div class="field"><label>Customer (optional)</label><input id="admin-set-customer" placeholder="IKEA"></div>
+        <div class="field"><label>Components</label><textarea id="admin-set-components" rows="6" placeholder="ARTICLE-A,2,Nos,Unit 5
+ARTICLE-B,1,Nos,Unit 5
+ARTICLE-C,4,Nos,Unit 1"></textarea><div class="mini-note">One component per line: Part Code, Quantity per Set, UOM, Unit</div></div>
+        <button class="btn-primary btn-block" onclick="createAdminSet()">Create Set</button>
+        <div class="status-msg" id="admin-set-status"></div>
       </div>
       <div class="admin-panel">
         <div class="admin-panel-head"><div class="admin-panel-icon">☺</div><h2>Assign User Role</h2></div>
@@ -714,7 +741,7 @@ let APPS_SCRIPT_URL = DEFAULT_APPS_SCRIPT_URL;
 localStorage.setItem('svd_url', APPS_SCRIPT_URL);
 let TOKEN = sessionStorage.getItem('svd_token') || '';
 let SESSION = JSON.parse(sessionStorage.getItem('svd_session') || 'null');
-let data = { orders: [], logs: [], customers: [], partCodes: [], locations: [], shipToParties: [], departments: [], stock: [], uoms: ['Nos','Pcs','Kg','Box','Sheet','Set','Meter'], discussion: [], complaints: [], complaintComments: [], v2: {permissions:[],roles:[],fields:[],dropdowns:[],plans:{},additional:{}} };
+let data = { orders: [], logs: [], customers: [], partCodes: [], locations: [], shipToParties: [], sets: [], setOrders: [], departments: [], stock: [], uoms: ['Nos','Pcs','Kg','Box','Sheet','Set','Meter'], discussion: [], complaints: [], complaintComments: [], v2: {permissions:[],roles:[],fields:[],dropdowns:[],plans:{},additional:{}} };
 let selectedOrders = new Set();
 let ppcSearchIndex = [];
 
@@ -963,7 +990,7 @@ async function loadData() {
       (data.logs||[]).forEach(l=>{const id=String(l.OrderID||''); if(!id)return; (logShipToIndex[id] ||= []).push(String(l.ShipToParty||''));});
       const count = Array.isArray(data.orders) ? data.orders.length : 0;
       setConn('ok', 'Live — connected · ' + count + ' orders');
-      populateDropdowns(); renderStats(); renderTable(); populateDispatchOrderSelect(); renderBulkDispatchRows(); renderPPCPendingRows(); renderDispatchHistory(); applyRoleUI();
+      populateDropdowns(); toggleOrderType(); toggleDispatchItemType(); renderStats(); renderTable(); populateDispatchOrderSelect(); renderBulkDispatchRows(); renderPPCPendingRows(); renderDispatchHistory(); applyRoleUI();
       if (['ppcplan','admin'].includes(document.querySelector('.tab.active')?.dataset.tab || '')) loadV2();
       return true;
     } catch (e) { setConn('err', 'Connection failed — data not lost.'); return false; }
@@ -1026,6 +1053,10 @@ function populateDropdowns() {
     if (current && uoms.includes(current)) el.value = current;
     else el.value = 'Nos';
   });
+  const setSel=document.getElementById('n-set');
+  if(setSel) setSel.innerHTML='<option value="">— Select Set —</option>'+(data.sets||[]).map(x=>`<option value="${esc(x.SetCode)}">${esc(x.SetCode)} — ${esc(x.SetName||'')}</option>`).join('');
+  const setOrderSel=document.getElementById('d-set-order');
+  if(setOrderSel) setOrderSel.innerHTML='<option value="">— Select pending set —</option>'+(data.setOrders||[]).filter(x=>x.status==='Pending').sort((a,b)=>new Date(b.scheduledDate)-new Date(a.scheduledDate)).map(x=>`<option value="${esc(x.setOrderId)}">${esc(x.setCode)} · ${esc(x.customer)} · ${x.pendingSets} sets pending · ${esc(x.unit)}</option>`).join('');
   const dept = document.getElementById('d-dept');
   if (dept) dept.innerHTML = '<option value="">— Select —</option>' + (data.departments || []).map(d => `<option>${esc(d)}</option>`).join('');
   toggleDispatchMode();
@@ -1371,104 +1402,45 @@ document.getElementById('d-order-search').addEventListener('keydown', function(e
   }
 });
 
+function toggleOrderType(){
+  const type=document.getElementById('n-order-type')?.value||'STANDARD';
+  const isSet=type==='SET';
+  const pf=document.getElementById('n-part-field'),sf=document.getElementById('n-set-field'),uf=document.getElementById('n-uom-field');
+  if(pf)pf.style.display=isSet?'none':''; if(sf)sf.style.display=isSet?'':'none'; if(uf)uf.style.display=isSet?'none':'';
+  const info=document.getElementById('n-stock-info'); if(info&&isSet)info.textContent='Select an IKEA Set. The BOM will expand automatically into individual pending articles.';
+}
+function toggleDispatchItemType(){
+  const isSet=(document.getElementById('d-dispatch-type')?.value||'STANDARD')==='SET';
+  const sf=document.getElementById('d-set-order-field'); if(sf)sf.style.display=isSet?'':'none';
+  const search=document.querySelector('.searchable-order-field'); if(search)search.style.display=isSet?'none':'';
+  const info=document.getElementById('d-order-info'); if(info&&isSet)info.textContent='Select a pending set. One dispatch quantity will be applied to every BOM component.';
+}
+
 async function submitOrder() {
-  const customer = document.getElementById('n-customer').value.trim();
-  const location = document.getElementById('n-location').value.trim();
-  const part = document.getElementById('n-part').value.trim();
-  const unit = document.getElementById('n-unit').value;
-  const qty = document.getElementById('n-qty').value;
-  const uom = document.getElementById('n-uom').value || 'Nos';
-  const priority = document.getElementById('n-priority').value;
-  const date = document.getElementById('n-date').value;
-  const shipToParty = document.getElementById('n-shipto')?.value.trim() || '';
-  const statusEl = document.getElementById('new-status');
-  if (!customer || !part || !unit || !qty || !date) { statusEl.textContent = 'Customer, part code, unit, quantity and scheduled date are required.'; statusEl.className = 'status-msg err'; return; }
-  statusEl.textContent = 'Saving…'; statusEl.className = 'status-msg';
-  try {
-    const res = await postAction({ action:'addOrder', customer, customerLocation:location, partCode:part, unit, uom, orderQty:qty, priority, scheduledDate:date, shipToParty });
-    if (res.error) throw new Error(res.error);
-    if(res.order){ data.orders.unshift(res.order); }
-    const addLocal=(arr,v)=>{if(v&&!arr.includes(v))arr.push(v);};
-    if(res.order){addLocal(data.customers,res.order.Customer);addLocal(data.partCodes,res.order.PartCode);addLocal(data.locations,res.order.CustomerLocation);addLocal(data.shipToParties,res.order.ShipToParty);}
-    statusEl.textContent = `✓ Order created. FG: ${res.fgStatus}.`;
-    statusEl.className = 'status-msg ok';
-    document.getElementById('n-part').value=''; document.getElementById('n-qty').value=''; document.getElementById('n-uom').value='Nos'; document.getElementById('n-location').value=''; document.getElementById('n-shipto').value='';
-    if (!SESSION.unit) document.getElementById('n-unit').value='';
-    populateDropdowns(); renderStats(); renderTable(); populateDispatchOrderSelect(); renderPPCPendingRows();
-  } catch(e) { statusEl.textContent='Failed: '+e.message; statusEl.className='status-msg err'; }
+  const type=document.getElementById('n-order-type')?.value||'STANDARD';
+  const customer=document.getElementById('n-customer').value.trim(), location=document.getElementById('n-location').value.trim(), part=document.getElementById('n-part').value.trim(), setCode=document.getElementById('n-set')?.value||'', unit=document.getElementById('n-unit').value, qty=document.getElementById('n-qty').value, uom=document.getElementById('n-uom').value||'Nos', priority=document.getElementById('n-priority').value, date=document.getElementById('n-date').value, shipToParty=document.getElementById('n-shipto')?.value.trim()||'', shipToAddress=document.getElementById('n-shipto-address')?.value.trim()||'';
+  const statusEl=document.getElementById('new-status');
+  if(!customer||!unit||!qty||!date||(type==='SET'?!setCode:!part)){statusEl.textContent=type==='SET'?'Customer, Set, unit, quantity and scheduled date are required.':'Customer, part code, unit, quantity and scheduled date are required.';statusEl.className='status-msg err';return;}
+  statusEl.textContent='Saving…';statusEl.className='status-msg';
+  try{const res=await postAction({action:'addOrder',orderType:type,setCode,customer,customerLocation:location,partCode:part,unit,uom,orderQty:qty,priority,scheduledDate:date,shipToParty,shipToAddress});if(res.error)throw new Error(res.error);
+    (res.orders||[res.order]).filter(Boolean).forEach(o=>data.orders.unshift(o)); data.orders.sort((a,b)=>new Date(b.CreatedAt)-new Date(a.CreatedAt));
+    const addLocal=(arr,v)=>{if(v&&!arr.includes(v))arr.push(v)}; (res.orders||[res.order]).filter(Boolean).forEach(o=>{addLocal(data.customers,o.Customer);addLocal(data.partCodes,o.PartCode);addLocal(data.locations,o.CustomerLocation);addLocal(data.shipToParties,o.ShipToParty)});
+    statusEl.textContent=res.message||`✓ Order created.`;statusEl.className='status-msg ok';
+    document.getElementById('n-part').value='';document.getElementById('n-qty').value='';document.getElementById('n-location').value='';document.getElementById('n-shipto').value='';document.getElementById('n-shipto-address').value='';if(document.getElementById('n-set'))document.getElementById('n-set').value='';
+    if(!SESSION.unit)document.getElementById('n-unit').value=''; populateDropdowns();renderStats();renderTable();populateDispatchOrderSelect();renderPPCPendingRows();
+  }catch(e){statusEl.textContent='Failed: '+e.message;statusEl.className='status-msg err';}
 }
 
 async function submitDispatch() {
-  const mode = document.getElementById('d-mode').value;
-  const orderId = document.getElementById('d-order').value;
-  const qty = document.getElementById('d-qty').value;
-  const unit = document.getElementById('d-unit').value;
-  const shipToParty = document.getElementById('d-shipto').value.trim();
-  const date = document.getElementById('d-date').value;
-  const dept = document.getElementById('d-dept').value;
-  const reason = document.getElementById('d-reason').value.trim();
-  const statusEl = document.getElementById('dispatch-status');
-
-  if (!orderId) {
-    statusEl.textContent = 'Select an order.'; statusEl.className = 'status-msg err';
-    return;
+  const mode=document.getElementById('d-mode').value, type=document.getElementById('d-dispatch-type')?.value||'STANDARD', setOrderId=document.getElementById('d-set-order')?.value||'', orderId=document.getElementById('d-order').value, qty=document.getElementById('d-qty').value, unit=document.getElementById('d-unit').value, shipToParty=document.getElementById('d-shipto').value.trim(), shipToAddress=document.getElementById('d-shipto-address')?.value.trim()||'', date=document.getElementById('d-date').value, dept=document.getElementById('d-dept').value, reason=document.getElementById('d-reason').value.trim(), statusEl=document.getElementById('dispatch-status');
+  if(mode==='pending'){if(!orderId){statusEl.textContent='Select an order.';statusEl.className='status-msg err';return;}if(!dept||!reason){statusEl.textContent='For Still Pending, select the department and enter the reason.';statusEl.className='status-msg err';return;}try{const res=await postAction({action:'updatePending',orderId,pendingDepartment:dept,pendingReason:reason});if(res.error)throw new Error(res.error);const o=data.orders.find(x=>String(x.OrderID)===String(orderId));if(o){o.PendingQty=res.pending;o.PendingDepartment=dept;o.PendingReason=reason;o.Status='Pending';}statusEl.textContent=`✓ Still pending — ${res.pending} quantity pending.`;statusEl.className='status-msg ok';renderStats();renderTable();populateDispatchOrderSelect();renderPPCPendingRows();}catch(e){statusEl.textContent='Failed: '+e.message;statusEl.className='status-msg err';}return;}
+  if(SESSION.role==='PPC'){statusEl.textContent='PPC can record Still Pending only. Actual dispatch must be logged by Dispatch.';statusEl.className='status-msg err';return;}
+  if(type==='SET'){
+    if(!setOrderId||!qty||!unit||!shipToParty||!date){statusEl.textContent='For Set dispatch, select the Set Order and enter quantity, unit, Ship To Party and date.';statusEl.className='status-msg err';return;}
+    statusEl.textContent='Dispatching set…';statusEl.className='status-msg';try{const res=await postAction({action:'dispatchSet',setOrderId,setQty:qty,unit,shipToParty,shipToAddress,dispatchedDate:date,note:reason});if(res.error)throw new Error(res.error);await loadData();statusEl.textContent=res.message||'✓ Set dispatched successfully.';statusEl.className='status-msg ok';document.getElementById('d-qty').value='';document.getElementById('d-set-order').value='';document.getElementById('d-shipto-address').value='';toggleDispatchItemType();}catch(e){statusEl.textContent='Failed: '+e.message;statusEl.className='status-msg err';}return;
   }
-
-  if (mode === 'pending') {
-    if (!dept || !reason) {
-      statusEl.textContent = 'For Still Pending, select the department and enter the reason. Quantity is not required.';
-      statusEl.className = 'status-msg err';
-      return;
-    }
-    statusEl.textContent = 'Saving…'; statusEl.className = 'status-msg';
-    try {
-      const res = await postAction({ action:'updatePending', orderId, pendingDepartment:dept, pendingReason:reason });
-      if (res.error) throw new Error(res.error);
-      const o=data.orders.find(x=>String(x.OrderID)===String(orderId));
-      if(o){o.PendingQty=res.pending;o.PendingDepartment=dept;o.PendingReason=reason;o.Status='Pending';o.LastUpdated=new Date().toISOString();}
-      statusEl.textContent = `✓ Still pending — ${res.pending} quantity pending.`;
-      statusEl.className = 'status-msg ok';
-      document.getElementById('d-reason').value = '';
-      renderStats();renderTable();populateDispatchOrderSelect();renderPPCPendingRows();
-    } catch (e) {
-      statusEl.textContent = 'Failed: ' + e.message; statusEl.className = 'status-msg err';
-    }
-    return;
-  }
-
-  if (!qty || !unit || !shipToParty || !date) {
-    statusEl.textContent = 'For a dispatch entry, Ship To Party, unit, quantity and date are required.';
-    statusEl.className = 'status-msg err';
-    return;
-  }
-
-  if (SESSION.role === 'PPC') {
-    statusEl.textContent = 'PPC can record Still Pending only. Actual dispatch must be logged by Dispatch.';
-    statusEl.className = 'status-msg err';
-    return;
-  }
-
-  statusEl.textContent = 'Saving…'; statusEl.className = 'status-msg';
-  try {
-    const res = await postAction({
-      action:'addDispatch', orderId, unit, dispatchedQty:qty, dispatchedDate:date,
-      shipToParty, pendingDepartment:dept, pendingReason:reason
-    });
-    if (res.error) throw new Error(res.error);
-    statusEl.textContent = res.status === 'Completed'
-      ? 'Logged — order is now Completed.'
-      : `Logged — ${res.pending} still pending.`;
-    statusEl.className = 'status-msg ok';
-    const o=data.orders.find(x=>String(x.OrderID)===String(orderId));
-    if(o){o.DispatchedQty=res.dispatched;o.PendingQty=res.pending;o.Status=res.status;o.PendingDepartment=res.status==='Completed'?'':(dept||o.PendingDepartment);o.PendingReason=res.status==='Completed'?'':(reason||o.PendingReason);o.LastUpdated=new Date().toISOString();}
-    if(res.log){data.logs.push(res.log);}
-    if(shipToParty&&!data.shipToParties.includes(shipToParty))data.shipToParties.push(shipToParty);
-    document.getElementById('d-qty').value = '';
-    document.getElementById('d-reason').value = '';
-    renderStats();renderTable();populateDispatchOrderSelect();renderDispatchHistory();renderBulkDispatchRows();
-  } catch (e) {
-    statusEl.textContent = 'Failed: ' + e.message; statusEl.className = 'status-msg err';
-  }
+  if(!orderId||!qty||!unit||!shipToParty||!date){statusEl.textContent='For a dispatch entry, Ship To Party, unit, quantity and date are required.';statusEl.className='status-msg err';return;}
+  statusEl.textContent='Saving…';statusEl.className='status-msg';try{const res=await postAction({action:'addDispatch',orderId,unit,dispatchedQty:qty,dispatchedDate:date,shipToParty,shipToAddress,pendingDepartment:dept,pendingReason:reason});if(res.error)throw new Error(res.error);const o=data.orders.find(x=>String(x.OrderID)===String(orderId));if(o){o.DispatchedQty=res.dispatched;o.PendingQty=res.pending;o.Status=res.status;if(res.status==='Completed'){o.PendingDepartment='';o.PendingReason='';}}if(res.log)data.logs.push(res.log);await loadData();statusEl.textContent=res.status==='Completed'?'Logged — order is now Completed.':`Logged — ${res.pending} still pending.`;statusEl.className='status-msg ok';document.getElementById('d-qty').value='';document.getElementById('d-reason').value='';}catch(e){statusEl.textContent='Failed: '+e.message;statusEl.className='status-msg err';}
 }
 
 function toggleDispatchMode() {
@@ -1712,26 +1684,18 @@ let bulkDispatchShipTo = {};
 
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 function addPPCBulkRow(seed={}){
-  ppcBulkRows.push({customer:'',customerLocation:'',partCode:'',unit:SESSION?.unit||'',uom:'Nos',orderQty:'',priority:'Medium',scheduledDate:todayISO(),shipToParty:'',...seed});
+  ppcBulkRows.push({customer:'',customerLocation:'',partCode:'',orderType:'STANDARD',setCode:'',unit:SESSION?.unit||'',uom:'Nos',orderQty:'',priority:'Medium',scheduledDate:todayISO(),shipToParty:'',shipToAddress:'',...seed});
   renderPPCBulkRows();
 }
 function clearPPCBulkRows(){ppcBulkRows=[];renderPPCBulkRows();document.getElementById('ppc-bulk-status').textContent='';}
 function renderPPCBulkRows(){
-  const tb=document.querySelector('#ppc-order-bulk-table tbody'); if(!tb)return;
-  if(!ppcBulkRows.length) addPPCBulkRow();
-  tb.innerHTML=ppcBulkRows.map((r,i)=>`<tr>
-    <td><input data-p="customer" data-i="${i}" value="${esc(r.customer)}" placeholder="Customer"></td>
-    <td><input data-p="customerLocation" data-i="${i}" value="${esc(r.customerLocation)}" placeholder="Location"></td>
-    <td><input data-p="partCode" data-i="${i}" value="${esc(r.partCode)}" placeholder="Part code"></td>
-    <td><select data-p="unit" data-i="${i}">${(data.units||['Unit 1','Unit 2','Unit 5','Unit Delta']).map(u=>`<option ${r.unit===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td>
-    <td><input data-p="orderQty" data-i="${i}" type="number" min="1" value="${esc(r.orderQty)}"></td>
-    <td><select data-p="uom" data-i="${i}">${(data.uoms||['Nos','Pcs','Kg','Box','Sheet','Set','Meter']).map(u=>`<option ${r.uom===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td>
-    <td><select data-p="priority" data-i="${i}"><option ${r.priority==='High'?'selected':''}>High</option><option ${r.priority==='Medium'?'selected':''}>Medium</option><option ${r.priority==='Low'?'selected':''}>Low</option></select></td>
-    <td><input data-p="scheduledDate" data-i="${i}" type="date" value="${esc(r.scheduledDate)}"></td>
-    <td><input data-p="shipToParty" data-i="${i}" list="dl-shipto" value="${esc(r.shipToParty)}" placeholder="Ship To"></td>
-    <td><button class="btn-ghost btn-small" onclick="removePPCBulkRow(${i})">×</button></td>
-  </tr>`).join('');
-  tb.querySelectorAll('[data-p]').forEach(el=>el.addEventListener('input',()=>{ppcBulkRows[Number(el.dataset.i)][el.dataset.p]=el.value;}));
+ const tb=document.querySelector('#ppc-order-bulk-table tbody');if(!tb)return;if(!ppcBulkRows.length)addPPCBulkRow();
+ tb.innerHTML=ppcBulkRows.map((r,i)=>`<tr>
+ <td><input data-p="customer" data-i="${i}" value="${esc(r.customer)}" placeholder="Customer"></td><td><input data-p="customerLocation" data-i="${i}" value="${esc(r.customerLocation)}" placeholder="Location"></td>
+ <td><select data-p="orderType" data-i="${i}" onchange="ppcBulkRows[${i}].orderType=this.value;renderPPCBulkRows()"><option value="STANDARD" ${r.orderType!=='SET'?'selected':''}>Article</option><option value="SET" ${r.orderType==='SET'?'selected':''}>Set</option></select></td>
+ <td>${r.orderType==='SET'?`<select data-p="setCode" data-i="${i}"><option value="">Set</option>${(data.sets||[]).map(x=>`<option value="${esc(x.SetCode)}" ${r.setCode===x.SetCode?'selected':''}>${esc(x.SetCode)}</option>`).join('')}</select>`:`<input data-p="partCode" data-i="${i}" list="dl-parts" value="${esc(r.partCode)}" placeholder="Part Code">`}</td>
+ <td><select data-p="unit" data-i="${i}">${(data.units||[]).map(u=>`<option ${r.unit===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td><td><input data-p="orderQty" data-i="${i}" type="number" min="1" value="${esc(r.orderQty)}" placeholder="Qty"></td><td><select data-p="uom" data-i="${i}">${(data.uoms||['Nos','Pcs','Kg','Box','Sheet','Set','Meter']).map(u=>`<option ${r.uom===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td><td><select data-p="priority" data-i="${i}">${(data.priorities||['High','Medium','Low']).map(u=>`<option ${r.priority===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td><td><input data-p="scheduledDate" data-i="${i}" type="date" value="${esc(r.scheduledDate)}"></td><td><input data-p="shipToParty" data-i="${i}" list="dl-shipto" value="${esc(r.shipToParty)}" placeholder="Ship To"></td><td><input data-p="shipToAddress" data-i="${i}" value="${esc(r.shipToAddress)}" placeholder="Address"></td><td><button class="btn-ghost btn-small" onclick="removePPCBulkRow(${i})">×</button></td></tr>`).join('');
+ tb.querySelectorAll('[data-p]').forEach(el=>el.addEventListener('input',()=>{ppcBulkRows[Number(el.dataset.i)][el.dataset.p]=el.value;}));
 }
 function removePPCBulkRow(i){ppcBulkRows.splice(i,1);renderPPCBulkRows();}
 async function savePPCBulkOrders(){
@@ -1790,7 +1754,7 @@ function clearBulkDispatchSelection(){bulkDispatchSelected.clear();bulkDispatchQ
 async function saveBulkDispatch(){
   const st=document.getElementById('bulk-dispatch-status'),unit=document.getElementById('bulk-d-unit').value,date=document.getElementById('bulk-d-date').value||todayISO(),note=document.getElementById('bulk-d-note').value.trim();
   if(!unit){st.textContent='Select dispatching unit.';st.className='status-msg err';return;}
-  const items=[...bulkDispatchSelected].map(id=>({orderId:id,uom:data.orders.find(o=>String(o.OrderID)===id)?.UOM||'Nos',dispatchedQty:bulkDispatchQty[id],shipToParty:bulkDispatchShipTo[id]||data.orders.find(o=>String(o.OrderID)===id)?.ShipToParty||''}));
+  const items=[...bulkDispatchSelected].map(id=>({orderId:id,uom:data.orders.find(o=>String(o.OrderID)===id)?.UOM||'Nos',dispatchedQty:bulkDispatchQty[id],shipToParty:bulkDispatchShipTo[id]||data.orders.find(o=>String(o.OrderID)===id)?.ShipToParty||'',shipToAddress:data.orders.find(o=>String(o.OrderID)===id)?.ShipToAddress||''}));
   if(!items.length){st.textContent='Select at least one order.';st.className='status-msg err';return;}
   st.textContent='Dispatching '+items.length+' orders…';st.className='status-msg';
   try{const r=await postAction({action:'bulkDispatch',items,unit,dispatchedDate:date,note});if(r.error)throw new Error((r.validationErrors||[]).join('\n')||r.error);
@@ -1824,6 +1788,13 @@ async function unlockPPCPlan(){const id=document.getElementById('ppc-order').val
 function openAdditionalQty(id){const o=data.orders.find(x=>String(x.OrderID)===String(id));if(!o)return;document.getElementById('aq-order-id').value=id;document.getElementById('aq-order-info').textContent=`${o.Customer} · ${o.PartCode} · Planned: ${Number(data.v2.plans[id]?.PlannedQty||0).toLocaleString()} · Existing additional: ${Number(data.v2.additional[id]||0).toLocaleString()}`;document.getElementById('aq-qty').value='';document.getElementById('aq-note').value='';document.getElementById('aq-approved-by').value='';document.getElementById('aq-status').textContent='';document.getElementById('additional-qty-modal').classList.add('open');document.getElementById('additional-qty-modal').style.display='flex';}
 function closeAdditionalQty(){document.getElementById('additional-qty-modal').classList.remove('open');document.getElementById('additional-qty-modal').style.display='none';}
 async function submitAdditionalQty(){const id=document.getElementById('aq-order-id').value,qty=document.getElementById('aq-qty').value,reason=document.getElementById('aq-reason').value,note=document.getElementById('aq-note').value.trim(),approved=document.getElementById('aq-approved-by').value.trim(),st=document.getElementById('aq-status');st.textContent='Saving…';try{const r=await postAction({action:'addAdditionalQty',orderId:id,qty,reason,reasonNote:note,approvedBy:approved});if(r.error)throw new Error(r.error);st.textContent='Additional quantity added successfully.';st.className='status-msg ok';await loadV2(true);setTimeout(closeAdditionalQty,300);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
+async function createAdminSet(){
+ const st=document.getElementById('admin-set-status');const code=document.getElementById('admin-set-code').value.trim(),name=document.getElementById('admin-set-name').value.trim(),customer=document.getElementById('admin-set-customer').value.trim(),raw=document.getElementById('admin-set-components').value.trim();
+ const components=raw.split(/\n+/).map(x=>x.split(',').map(v=>v.trim())).filter(x=>x.length>=2&&x[0]);
+ if(!code||!name||!components.length){st.textContent='Set code, set name and components are required.';st.className='status-msg err';return;}
+ const payload=components.map(x=>({partCode:x[0],qty:Number(x[1]),uom:x[2]||'Nos',unit:x[3]||'Unit 5'}));
+ try{const r=await postAction({action:'saveSet',setCode:code,setName:name,customer,components:payload});if(r.error)throw new Error(r.error);st.textContent='✓ Set created with '+payload.length+' BOM components.';st.className='status-msg ok';await loadData();}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}
+}
 async function createAdminRole(){const st=document.getElementById('admin-role-status');const name=document.getElementById('admin-role-name').value.trim();const permissions=[...(data.v2.permissions||[])];if(!name){st.textContent='Role name is required';st.className='status-msg err';return;}try{const r=await postAction({action:'createRole',roleName:name,permissions});if(r.error)throw new Error(r.error);st.textContent='Role created.';st.className='status-msg ok';await loadV2(true);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
 async function createAdminField(){const st=document.getElementById('admin-field-status');try{const r=await postAction({action:'createField',module:document.getElementById('admin-field-module').value.trim(),fieldName:document.getElementById('admin-field-name').value.trim(),label:document.getElementById('admin-field-label').value.trim(),type:document.getElementById('admin-field-type').value,dropdownId:document.getElementById('admin-field-dropdown').value.trim()});if(r.error)throw new Error(r.error);st.textContent='Field added to configuration.';st.className='status-msg ok';await loadV2(true);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
 async function createAdminDropdownOption(){const st=document.getElementById('admin-dd-status');try{const r=await postAction({action:'createDropdownOption',dropdownName:document.getElementById('admin-dd-name').value.trim(),optionValue:document.getElementById('admin-dd-option').value.trim()});if(r.error)throw new Error(r.error);st.textContent='Dropdown option added.';st.className='status-msg ok';await loadV2(true);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
@@ -1835,12 +1806,12 @@ function exportCSV() {
   if (SESSION.role !== 'Owner') return;
   const rows = getFiltered();
   const headers = ['Order ID','Customer','Location','Part Code','Unit','Priority','Order Qty','Dispatched Qty','Pending Qty',
-    'Scheduled Date','Pending Department','Pending Reason','Status'];
+    'Scheduled Date','Ship To Party','Ship-to Address','Pending Department','Pending Reason','Status'];
   const lines = [headers.join(',')];
   rows.forEach(o => {
     const line = [
       o.OrderID, o.Customer, o.CustomerLocation||'', o.PartCode, o.Unit, o.Priority, o.OrderQty, o.DispatchedQty, o.PendingQty,
-      fmtDate(o.ScheduledDate), o.PendingDepartment||'', o.PendingReason||'', o.Status
+      fmtDate(o.ScheduledDate), o.ShipToParty||'', o.ShipToAddress||'', o.PendingDepartment||'', o.PendingReason||'', o.Status
     ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
     lines.push(line);
   });
@@ -1865,8 +1836,12 @@ function esc(s) {
 
 document.getElementById('n-date').valueAsDate = new Date();
 if(document.getElementById('d-date')) document.getElementById('d-date').valueAsDate = new Date();
+if(document.getElementById('n-order-type')) toggleOrderType();
+if(document.getElementById('d-dispatch-type')) toggleDispatchItemType();
 if(document.getElementById('bulk-d-date')) document.getElementById('bulk-d-date').valueAsDate = new Date();
 document.getElementById('d-date').valueAsDate = new Date();
+if(document.getElementById('n-order-type')) toggleOrderType();
+if(document.getElementById('d-dispatch-type')) toggleDispatchItemType();
 document.addEventListener('click', e => { if(!e.target.closest('.searchable-order-field')) document.querySelectorAll('.order-search-results').forEach(x=>x.classList.remove('open')); });
 init();
 </script>
