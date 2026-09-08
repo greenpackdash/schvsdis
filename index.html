@@ -455,6 +455,9 @@
           <label>Ship To Party</label>
           <input id="d-shipto" list="dl-shipto" placeholder="Select or type ship-to party">
           <datalist id="dl-shipto"></datalist>
+        <datalist id="dl-bulk-customers"></datalist>
+        <datalist id="dl-bulk-locations"></datalist>
+        <datalist id="dl-bulk-shipto-addresses"></datalist>
         </div>
         <div class="field" id="d-shipto-address-field">
           <label>Ship-to Address</label>
@@ -1064,6 +1067,15 @@ function populateDropdowns() {
   document.getElementById('dl-parts').innerHTML = data.partCodes.map(p => `<option value="${esc(p)}">`).join('');
   document.getElementById('dl-locations').innerHTML = (data.locations||[]).map(l => `<option value="${esc(l)}">`).join('');
   document.getElementById('dl-shipto').innerHTML = (data.shipToParties||[]).map(p => `<option value="${esc(p)}">`).join('');
+  const bulkCustomers = [...new Set((data.customers||[]).filter(Boolean).map(String))].sort((a,b)=>a.localeCompare(b));
+  const bulkLocations = [...new Set((data.locations||[]).filter(Boolean).map(String))].sort((a,b)=>a.localeCompare(b));
+  const bulkAddresses = [...new Set((data.orders||[]).map(o=>String(o.ShipToAddress||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const bc = document.getElementById('dl-bulk-customers');
+  const bl = document.getElementById('dl-bulk-locations');
+  const ba = document.getElementById('dl-bulk-shipto-addresses');
+  if (bc) bc.innerHTML = bulkCustomers.map(v=>`<option value="${esc(v)}">`).join('');
+  if (bl) bl.innerHTML = bulkLocations.map(v=>`<option value="${esc(v)}">`).join('');
+  if (ba) ba.innerHTML = bulkAddresses.map(v=>`<option value="${esc(v)}">`).join('');
 
   const fc = document.getElementById('f-customer');
   fc.innerHTML = '<option value="">All customers</option>' + data.customers.map(c => `<option>${esc(c)}</option>`).join('');
@@ -1691,11 +1703,23 @@ function clearPPCBulkRows(){ppcBulkRows=[];renderPPCBulkRows();document.getEleme
 function renderPPCBulkRows(){
  const tb=document.querySelector('#ppc-order-bulk-table tbody');if(!tb)return;if(!ppcBulkRows.length)addPPCBulkRow();
  tb.innerHTML=ppcBulkRows.map((r,i)=>`<tr>
- <td><input data-p="customer" data-i="${i}" value="${esc(r.customer)}" placeholder="Customer"></td><td><input data-p="customerLocation" data-i="${i}" value="${esc(r.customerLocation)}" placeholder="Location"></td>
+ <td><input data-p="customer" data-i="${i}" list="dl-bulk-customers" value="${esc(r.customer)}" placeholder="Customer" autocomplete="off"></td><td><input data-p="customerLocation" data-i="${i}" list="dl-bulk-locations" value="${esc(r.customerLocation)}" placeholder="Location" autocomplete="off"></td>
  <td><select data-p="orderType" data-i="${i}" onchange="ppcBulkRows[${i}].orderType=this.value;renderPPCBulkRows()"><option value="STANDARD" ${r.orderType!=='SET'?'selected':''}>Article</option><option value="SET" ${r.orderType==='SET'?'selected':''}>Set</option></select></td>
  <td>${r.orderType==='SET'?`<select data-p="setCode" data-i="${i}"><option value="">Set</option>${(data.sets||[]).map(x=>`<option value="${esc(x.SetCode)}" ${r.setCode===x.SetCode?'selected':''}>${esc(x.SetCode)}</option>`).join('')}</select>`:`<input data-p="partCode" data-i="${i}" list="dl-parts" value="${esc(r.partCode)}" placeholder="Part Code">`}</td>
- <td><select data-p="unit" data-i="${i}">${(data.units||[]).map(u=>`<option ${r.unit===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td><td><input data-p="orderQty" data-i="${i}" type="number" min="1" value="${esc(r.orderQty)}" placeholder="Qty"></td><td><select data-p="uom" data-i="${i}">${(data.uoms||['Nos','Pcs','Kg','Box','Sheet','Set','Meter']).map(u=>`<option ${r.uom===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td><td><select data-p="priority" data-i="${i}">${(data.priorities||['High','Medium','Low']).map(u=>`<option ${r.priority===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td><td><input data-p="scheduledDate" data-i="${i}" type="date" value="${esc(r.scheduledDate)}"></td><td><input data-p="shipToParty" data-i="${i}" list="dl-shipto" value="${esc(r.shipToParty)}" placeholder="Ship To"></td><td><input data-p="shipToAddress" data-i="${i}" value="${esc(r.shipToAddress)}" placeholder="Address"></td><td><button class="btn-ghost btn-small" onclick="removePPCBulkRow(${i})">×</button></td></tr>`).join('');
- tb.querySelectorAll('[data-p]').forEach(el=>el.addEventListener('input',()=>{ppcBulkRows[Number(el.dataset.i)][el.dataset.p]=el.value;}));
+ <td><select data-p="unit" data-i="${i}">${(data.units||[]).map(u=>`<option ${r.unit===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td><td><input data-p="orderQty" data-i="${i}" type="number" min="1" value="${esc(r.orderQty)}" placeholder="Qty"></td><td><select data-p="uom" data-i="${i}">${(data.uoms||['Nos','Pcs','Kg','Box','Sheet','Set','Meter']).map(u=>`<option ${r.uom===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td><td><select data-p="priority" data-i="${i}">${(data.priorities||['High','Medium','Low']).map(u=>`<option ${r.priority===u?'selected':''}>${esc(u)}</option>`).join('')}</select></td><td><input data-p="scheduledDate" data-i="${i}" type="date" value="${esc(r.scheduledDate)}"></td><td><input data-p="shipToParty" data-i="${i}" list="dl-shipto" value="${esc(r.shipToParty)}" placeholder="Ship To" autocomplete="off"></td><td><input data-p="shipToAddress" data-i="${i}" list="dl-bulk-shipto-addresses" value="${esc(r.shipToAddress)}" placeholder="Ship-to Address" autocomplete="off"></td><td><button class="btn-ghost btn-small" onclick="removePPCBulkRow(${i})">×</button></td></tr>`).join('');
+ tb.querySelectorAll('[data-p]').forEach(el=>el.addEventListener('input',()=>{
+   const i=Number(el.dataset.i), field=el.dataset.p;
+   ppcBulkRows[i][field]=el.value;
+   if(field==='shipToParty'){
+     const matches=bulkShipToAddressSuggestions(el.value);
+     if(matches.length && !String(ppcBulkRows[i].shipToAddress||'').trim()) ppcBulkRows[i].shipToAddress=matches[0];
+   }
+ }));
+}
+function bulkShipToAddressSuggestions(party){
+  const q=String(party||'').trim().toLowerCase();
+  if(!q)return [];
+  return [...new Set((data.orders||[]).filter(o=>String(o.ShipToParty||'').trim().toLowerCase()===q).map(o=>String(o.ShipToAddress||'').trim()).filter(Boolean))];
 }
 function removePPCBulkRow(i){ppcBulkRows.splice(i,1);renderPPCBulkRows();}
 async function savePPCBulkOrders(){
