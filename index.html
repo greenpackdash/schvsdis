@@ -851,9 +851,12 @@ body {
 .ppc-article-cell{min-width:190px}.ppc-article-cell select,.ppc-article-cell input{display:block;margin-bottom:5px}.ppc-article-cell>*:last-child{margin-bottom:0}
 .ppc-qty-cell{min-width:145px}.ppc-qty-wrap{display:grid;grid-template-columns:1fr 74px;gap:5px}
 .ppc-defaults-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:8px 10px;border:1px solid var(--border);border-radius:9px;background:rgba(255,255,255,.02);font-size:12px}
-.ppc-defaults-bar label{display:flex;align-items:center;gap:7px;color:var(--muted);cursor:pointer}
+.ppc-defaults-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.ppc-defaults-bar label{display:flex;align-items:center;gap:7px;color:var(--muted);cursor:pointer;white-space:nowrap}
 .ppc-defaults-bar input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px}
-.ppc-defaults-hint{color:var(--muted);font-size:11px}
+.ppc-defaults-hint{color:var(--muted);font-size:11px;line-height:1.35;text-align:right}
+.ppc-last-used-btn{padding:5px 8px;font-size:11px;white-space:nowrap}
+@media(max-width:800px){.ppc-defaults-bar{align-items:flex-start;flex-direction:column}.ppc-defaults-hint{text-align:left}}
 .ppc-copy-check{display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;font-size:11px;color:var(--muted)}
 .ppc-copy-check input{accent-color:var(--accent);width:14px;height:14px}
 .ppc-date-input{min-width:128px}.ppc-ship-cell{min-width:210px}.ppc-ship-cell input{display:block;margin-bottom:5px}.ppc-ship-cell input:last-child{margin-bottom:0}
@@ -943,297 +946,9 @@ body {
 :root[data-theme="light"] .login-signature{color:rgba(109,40,217,.32)}
 </style>
 
-
-<style id="greenpack-mobile-ui-fix">
-/* =========================================================
-   GREENPACK MIS — MOBILE UI LAYER
-   Desktop layout is intentionally untouched.
-   ========================================================= */
-@media (max-width: 700px){
-  html,body{width:100%;max-width:100%;overflow-x:hidden;}
-  body{
-    padding:10px 10px 80px!important;
-    background-attachment:scroll!important;
-    -webkit-text-size-adjust:100%;
-  }
-
-  /* ---------- TOP HEADER ---------- */
-  .topbar{
-    width:100%;
-    display:flex!important;
-    flex-direction:column!important;
-    align-items:stretch!important;
-    gap:10px!important;
-    margin-bottom:12px!important;
-    padding:10px!important;
-    border:1px solid var(--border)!important;
-    border-radius:14px!important;
-    background:var(--panel)!important;
-  }
-  .topbar>div:first-child{
-    width:100%;
-    gap:10px!important;
-    align-items:center!important;
-  }
-  .topbar .brand-logo{
-    width:88px!important;
-    height:42px!important;
-    flex:0 0 88px!important;
-    object-fit:contain!important;
-  }
-  .topbar h1{
-    font-size:16px!important;
-    line-height:20px!important;
-    white-space:normal!important;
-  }
-  .topbar .sub{font-size:11px!important;line-height:15px!important;}
-  .topbar>div:last-child{
-    width:100%;
-    display:grid!important;
-    grid-template-columns:minmax(0,1fr) auto auto auto!important;
-    gap:6px!important;
-    align-items:center!important;
-  }
-  .app-preferences{display:flex!important;gap:5px!important;min-width:0;}
-  .app-pref-select{min-width:0!important;width:100%!important;max-width:115px!important;font-size:11px!important;padding:7px 25px 7px 8px!important;}
-  .theme-toggle{width:34px!important;height:32px!important;flex:0 0 34px!important;}
-  .pill-role,.conn{font-size:10px!important;white-space:nowrap!important;padding:6px 8px!important;min-width:0!important;overflow:hidden;text-overflow:ellipsis;}
-  .topbar .btn-small{padding:7px 8px!important;font-size:10px!important;white-space:nowrap!important;}
-
-  /* ---------- KPI / STAT CARDS ---------- */
-  .stats{
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:8px!important;
-    margin-bottom:12px!important;
-  }
-  .stat{
-    min-width:0!important;
-    padding:11px 12px!important;
-    border-radius:12px!important;
-  }
-  .stat .n{font-size:20px!important;line-height:24px!important;}
-  .stat .l{font-size:9px!important;line-height:12px!important;}
-
-  /* ---------- NAVIGATION ---------- */
-  .tabs{
-    position:sticky!important;
-    top:0!important;
-    z-index:100!important;
-    width:calc(100% + 20px)!important;
-    margin-left:-10px!important;
-    margin-bottom:12px!important;
-    padding:7px 10px 0!important;
-    gap:2px!important;
-    background:var(--bg)!important;
-    border-bottom:1px solid var(--border)!important;
-    box-shadow:0 5px 16px rgba(0,0,0,.12)!important;
-    overflow-x:auto!important;
-    -webkit-overflow-scrolling:touch!important;
-    scrollbar-width:none!important;
-  }
-  .tabs::-webkit-scrollbar{display:none!important;}
-  .tab{
-    flex:0 0 auto!important;
-    min-height:38px!important;
-    display:flex!important;
-    align-items:center!important;
-    padding:8px 11px!important;
-    margin-right:2px!important;
-    font-size:11px!important;
-    border-bottom-width:2px!important;
-  }
-
-  /* ---------- CARDS / CONTENT ---------- */
-  .card{
-    width:100%!important;
-    max-width:100%!important;
-    padding:12px!important;
-    margin-bottom:10px!important;
-    border-radius:13px!important;
-    overflow:hidden!important;
-  }
-  .card h2{font-size:13px!important;margin-bottom:11px!important;}
-  .grid{grid-template-columns:1fr!important;gap:9px!important;}
-  .field{margin-bottom:9px!important;}
-  label{font-size:10px!important;margin-bottom:4px!important;}
-  input,select,textarea{
-    min-height:40px!important;
-    font-size:13px!important;
-    padding:9px 10px!important;
-  }
-  textarea{min-height:84px!important;}
-  button{min-height:38px!important;}
-  .btn-small{min-height:34px!important;}
-
-  /* ---------- TOOLBARS / SEARCH ---------- */
-  .toolbar{
-    display:grid!important;
-    grid-template-columns:1fr!important;
-    gap:7px!important;
-    align-items:stretch!important;
-  }
-  .toolbar .spacer{display:none!important;}
-  .toolbar input,.toolbar select{width:100%!important;min-width:0!important;}
-  .search-wrap{width:100%!important;min-width:0!important;}
-  .search-wrap input{width:100%!important;min-width:0!important;}
-  .bulk-dispatch-toolbar{gap:7px!important;}
-  .bulk-search-box{width:100%!important;min-width:0!important;}
-
-  /* ---------- TABLES: NEVER SQUASH THEM ---------- */
-  .table-scroll,
-  .bulk-dispatch-list{
-    width:100%!important;
-    max-width:100%!important;
-    overflow-x:auto!important;
-    overflow-y:auto!important;
-    -webkit-overflow-scrolling:touch!important;
-    overscroll-behavior-x:contain!important;
-    border-radius:9px!important;
-  }
-  table{font-size:11px!important;}
-  th{font-size:9px!important;padding:8px 8px!important;}
-  td{font-size:11px!important;padding:8px!important;}
-
-  /* Keep intentionally wide operational tables usable with horizontal swipe. */
-  #tab-orders #orders-table{min-width:1200px!important;}
-  #tab-orders .table-scroll{max-height:62vh!important;min-height:240px!important;}
-  #ppc-order-bulk-table{min-width:1080px!important;}
-  #stock-table{min-width:820px!important;}
-  #bulk-stock-table{min-width:760px!important;}
-  #tab-dispatch-history #dispatch-history-table{min-width:1000px!important;}
-  .bulk-dispatch-list table{min-width:900px!important;}
-
-  /* Visual cue that a wide table can be swiped. */
-  .table-scroll::after,
-  .bulk-dispatch-list::after{
-    content:'Swipe →';
-    position:sticky;
-    left:8px;
-    bottom:6px;
-    display:block;
-    width:max-content;
-    margin-top:-1px;
-    padding:3px 7px;
-    border-radius:999px;
-    font-size:9px;
-    color:var(--muted);
-    background:var(--panel-2);
-    border:1px solid var(--border);
-    pointer-events:none;
-    opacity:.8;
-  }
-
-  /* ---------- PPC QUICK ENTRY ---------- */
-  .ppc-defaults-bar{
-    flex-direction:column!important;
-    align-items:stretch!important;
-    gap:7px!important;
-  }
-  .ppc-defaults-hint{font-size:10px!important;line-height:14px!important;}
-
-  /* ---------- BULK DISPATCH ---------- */
-  .dispatch-bulk-card{padding:12px 10px 0!important;}
-  .bulk-dispatch-head{flex-direction:column!important;gap:7px!important;}
-  .bulk-title-row h2{font-size:14px!important;}
-  .bulk-live-pill{font-size:9px!important;}
-  .bulk-dispatch-summary{font-size:10px!important;}
-  .bulk-dispatch-list{max-height:52vh!important;min-height:220px!important;}
-  .bulk-dispatch-actionbar{
-    margin-left:-10px!important;
-    margin-right:-10px!important;
-    padding:10px!important;
-    position:sticky!important;
-    bottom:0!important;
-  }
-  .bulk-action-fields{grid-template-columns:1fr!important;gap:7px!important;}
-  .bulk-note-field{grid-column:auto!important;}
-  .bulk-submit-area{flex-direction:column!important;align-items:stretch!important;gap:7px!important;}
-  .bulk-submit-area .status-msg{width:100%!important;}
-  .bulk-submit-btn{width:100%!important;min-width:0!important;}
-
-  /* ---------- FG STOCK ---------- */
-  .bulk-stock-toolbar{
-    display:grid!important;
-    grid-template-columns:1fr!important;
-    gap:7px!important;
-  }
-  .bulk-stock-toolbar button{width:100%!important;}
-  .bulk-stock-summary{font-size:10px!important;line-height:15px!important;}
-  #tab-stock .table-scroll{max-height:55vh!important;}
-  #bulk-stock-table th,#bulk-stock-table td{padding:7px!important;}
-  .bulk-stock-part{min-width:230px!important;}
-  .bulk-stock-qty{width:130px!important;}
-
-  /* ---------- SETS / COMPONENT TABLES ---------- */
-  .set-builder-head,
-  .admin-panel-head{gap:8px!important;}
-  .set-builder-head{flex-direction:column!important;align-items:stretch!important;}
-  .set-component-table{min-width:620px!important;}
-  .set-dispatch-components>div{grid-template-columns:minmax(0,1fr) auto auto!important;gap:7px!important;}
-
-  /* ---------- HISTORY ---------- */
-  .history-row{grid-template-columns:1fr!important;gap:7px!important;}
-  .history-card{padding:10px!important;}
-
-  /* ---------- ADMIN ---------- */
-  .admin-grid{grid-template-columns:1fr!important;}
-  .admin-panel{min-width:0!important;}
-  .config-row{align-items:flex-start!important;flex-direction:column!important;}
-
-  /* ---------- MODALS ---------- */
-  .modal-backdrop{padding:10px!important;align-items:flex-end!important;}
-  .modal{
-    width:100%!important;
-    max-width:100%!important;
-    max-height:88vh!important;
-    overflow:auto!important;
-    border-radius:16px 16px 10px 10px!important;
-  }
-  .modal-head{padding:13px!important;}
-  .modal-actions{position:sticky;bottom:0;padding:10px!important;background:var(--panel)!important;}
-  .modal-actions button{flex:1!important;}
-
-  /* ---------- AUTOCOMPLETE ---------- */
-  .ppc-autocomplete-menu{max-width:calc(100vw - 20px)!important;}
-  .ppc-autocomplete-item{padding:10px!important;font-size:12px!important;}
-
-  /* ---------- LOGIN ---------- */
-  .login-wrap{
-    min-height:100svh!important;
-    margin:-10px -10px -80px!important;
-    padding:18px 14px 55px!important;
-  }
-  .login-card{
-    width:100%!important;
-    max-width:420px!important;
-    padding:22px 18px!important;
-    border-radius:18px!important;
-  }
-  .login-card .brand-logo{width:150px!important;max-width:75%!important;margin-bottom:18px!important;}
-  .login-card h2{font-size:20px!important;line-height:25px!important;}
-  .login-card .sub{font-size:12px!important;line-height:17px!important;}
-  .login-preferences{top:10px!important;right:10px!important;}
-
-  /* ---------- TOUCH / ACCESSIBILITY ---------- */
-  button,input,select,textarea{touch-action:manipulation;}
-  input,select,textarea{scroll-margin-top:70px;}
-  @supports(padding:max(0px)){
-    body{padding-bottom:max(80px,calc(24px + env(safe-area-inset-bottom)))!important;}
-  }
-}
-
-@media (max-width: 420px){
-  .topbar>div:last-child{grid-template-columns:minmax(0,1fr) auto auto!important;}
-  .topbar .pill-role{display:none!important;}
-  .topbar .conn{max-width:105px!important;}
-  .topbar .btn-small{padding-left:7px!important;padding-right:7px!important;}
-  .stat .n{font-size:18px!important;}
-  .stat{padding:10px!important;}
-  .tab{padding-left:10px!important;padding-right:10px!important;}
-}
-</style>
-
-</head>
+<style>
+.mgmt-dashboard{margin:18px 0 22px}.dashboard-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;margin-bottom:14px}.dashboard-head h2{margin:0;font-size:24px}.dashboard-head p{margin:4px 0 0;color:var(--muted,#667085);font-size:13px}.dashboard-actions{display:flex;gap:8px;flex-wrap:wrap}.dashboard-actions select{min-width:130px}.dash-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:14px}.dash-kpi{padding:16px;border:1px solid var(--border,#e5e7eb);border-radius:14px;background:var(--panel,#fff);box-shadow:0 4px 14px rgba(16,24,40,.04)}.dash-kpi .label{font-size:12px;color:var(--muted,#667085)}.dash-kpi .value{font-size:25px;font-weight:800;margin-top:5px}.dash-kpi .hint{font-size:11px;color:var(--muted,#667085);margin-top:3px}.dash-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.dash-card{background:var(--panel,#fff);border:1px solid var(--border,#e5e7eb);border-radius:14px;padding:16px;min-width:0;box-shadow:0 4px 14px rgba(16,24,40,.04)}.dash-wide{grid-column:span 2}.dash-card-title{font-weight:750;font-size:14px;margin-bottom:12px}.dash-chart{min-height:150px}.bar-row{display:grid;grid-template-columns:minmax(90px,1fr) 3fr 70px;gap:8px;align-items:center;margin:9px 0;font-size:12px}.bar-track{height:9px;background:#edf0f5;border-radius:99px;overflow:hidden}.bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#6d28d9,#2563eb)}.bar-fill.warn{background:#d97706}.bar-fill.danger{background:#dc2626}.bar-fill.ok{background:#16a34a}.trend-wrap{display:flex;align-items:flex-end;gap:8px;height:155px;padding:8px 0 22px}.trend-day{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;min-width:20px}.trend-bars{height:125px;display:flex;align-items:flex-end;gap:3px}.trend-bar{flex:1;border-radius:4px 4px 1px 1px;background:#6d28d9;min-height:2px}.trend-bar.dispatch{background:#16a34a}.trend-label{text-align:center;font-size:9px;color:var(--muted,#667085);margin-top:5px;white-space:nowrap}.trend-legend{font-size:11px;color:var(--muted,#667085);margin-top:-14px}.action-item{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border,#eef0f4);font-size:12px}.action-item:last-child{border-bottom:0}.action-item strong{display:block}.action-meta{color:var(--muted,#667085);margin-top:2px}.action-badge{align-self:center;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:700;background:#fff3cd;color:#8a5a00;white-space:nowrap}.action-badge.danger{background:#fee2e2;color:#991b1b}.action-badge.info{background:#e0e7ff;color:#3730a3}.inventory-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.inv-box{padding:12px;border-radius:11px;background:var(--panel-2,#f8fafc);border:1px solid var(--border,#e5e7eb)}.inv-box b{font-size:20px}.empty-state{padding:22px;text-align:center;color:var(--muted,#667085);font-size:12px}@media(max-width:1100px){.dash-kpis{grid-template-columns:repeat(3,1fr)}.inventory-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:760px){.dashboard-head{align-items:stretch;flex-direction:column}.dash-grid{grid-template-columns:1fr}.dash-wide{grid-column:span 1}.dash-kpis{grid-template-columns:repeat(2,1fr)}.inventory-grid{grid-template-columns:1fr 1fr}}@media(prefers-reduced-motion:no-preference){.dash-kpi{animation:dashIn .28s ease both}.dash-card{animation:dashIn .34s ease both}@keyframes dashIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}}
+</style></head>
 
 <!-- LOGIN SCREEN -->
 <div id="login-screen" class="login-wrap">
@@ -1266,7 +981,7 @@ body {
   <h2>One-time setup</h2>
   <div class="field">
     <label>Apps Script Web App URL</label>
-    <input id="script-url" placeholder="https://script.google.com/macros/s/AKfycbwShcRNmpa_tV3tGHin81fEnsAqR4uxwYyXcyBklGbCgYxAp4mVgV9GSWmGc-ZRRC3fAA/exec">
+    <input id="script-url" placeholder="https://script.google.com/macros/s/AKfycbyq77xCl55WruPeXGqB5k-hBwI-j_qsDP9zhRSlZ_vMfHNaI_JMyjr2Y9FwmEDVV086/exec">
   </div>
   <button class="btn-primary" onclick="saveScriptUrl()">Continue</button>
   <div class="status-msg" id="setup-status"></div>
@@ -1297,6 +1012,23 @@ body {
 
   <div class="stats" id="stats"></div>
 
+  <section id="management-dashboard" class="mgmt-dashboard" aria-label="Management Dashboard">
+    <div class="dashboard-head">
+      <div><h2>Management Dashboard</h2><p>Live operational view of orders, dispatch and FG inventory.</p></div>
+      <div class="dashboard-actions"><select id="dash-unit" onchange="renderDashboard()"><option value="">All Units</option></select><select id="dash-period" onchange="renderDashboard()"><option value="7">Last 7 Days</option><option value="30" selected>Last 30 Days</option><option value="90">Last 90 Days</option></select><button class="btn-ghost btn-small" onclick="refreshData()">↻ Refresh</button></div>
+    </div>
+    <div class="dash-kpis" id="dash-kpis"></div>
+    <div class="dash-grid">
+      <div class="dash-card dash-wide"><div class="dash-card-title">Order & Dispatch Trend</div><div id="dash-trend" class="dash-chart"></div></div>
+      <div class="dash-card"><div class="dash-card-title">Order Status</div><div id="dash-status" class="dash-chart"></div></div>
+      <div class="dash-card"><div class="dash-card-title">Unit Overview</div><div id="dash-units" class="dash-chart"></div></div>
+      <div class="dash-card dash-wide"><div class="dash-card-title">Action Required</div><div id="dash-actions" class="dash-actions-list"></div></div>
+      <div class="dash-card"><div class="dash-card-title">Priority Breakdown</div><div id="dash-priority" class="dash-chart"></div></div>
+      <div class="dash-card"><div class="dash-card-title">Top Customers by Pending Qty</div><div id="dash-customers" class="dash-chart"></div></div>
+      <div class="dash-card dash-wide"><div class="dash-card-title">Inventory Intelligence</div><div id="dash-inventory" class="inventory-grid"></div></div>
+    </div>
+  </section>
+
   <div class="tabs">
     <div class="tab active" data-tab="multiple" onclick="switchTab('multiple')" id="multiple-tab">Multiple Orders</div>
     <div class="tab" data-tab="sets" onclick="switchTab('sets')" id="sets-tab">Customer Sets</div>
@@ -1306,6 +1038,7 @@ body {
     <div class="tab" data-tab="dispatch-history" onclick="switchTab('dispatch-history')" id="dispatch-history-tab">Dispatch History</div>
     <div class="tab" data-tab="complaints" onclick="switchTab('complaints')">Complaints</div>
     <div class="tab" data-tab="discussion" onclick="switchTab('discussion')">Discussion</div>
+    <div class="tab" data-tab="tally" onclick="switchTab('tally')">Tally Sync</div>
     <div class="tab" data-tab="admin" onclick="switchTab('admin')">Admin</div>
   </div>
 
@@ -1314,7 +1047,7 @@ body {
     <div class="card">
       <div class="toolbar">
         <div class="search-wrap">
-          <input id="f-search" type="search" placeholder="Search customer, part code, Order ID, location…" oninput="debouncedRenderTable()">
+          <input id="f-search" type="search" placeholder="Search customer, part code, Order ID, location…" oninput="renderTable()">
         </div>
         <select id="f-customer" onchange="renderTable()"><option value="">All customers</option></select>
         <select id="f-part" onchange="renderTable()"><option value="">All part codes</option></select>
@@ -1339,7 +1072,7 @@ body {
         <div class="spacer"></div>
         <button class="btn-ghost btn-small" onclick="clearFilters()">Clear filters</button>
         <button class="btn-primary btn-small" id="csv-btn" onclick="exportCSV()" style="display:none;">Export CSV</button>
-        <button class="btn-ghost btn-small" onclick="refreshData()">Refresh</button><button class="btn-ghost btn-small" id="load-older-btn" onclick="loadOlderOrders()" style="display:none;">Load older</button>
+        <button class="btn-ghost btn-small" onclick="refreshData()">Refresh</button>
       </div>
       <div class="search-hint">Search checks the actual Orders data, so you can find a part code even if it is not present in the Part Codes list.</div>
       <div id="bulkbar" class="bulkbar">
@@ -1512,8 +1245,11 @@ body {
       <h2>PPC — Multiple Order Creation</h2>
       <div class="sub" style="margin-bottom:10px;">Create many customer orders in one save. Ship To Party is registered here and will automatically appear at Dispatch.</div>
       <div class="ppc-defaults-bar">
-        <label><input id="ppc-auto-defaults" type="checkbox" checked onchange="togglePPCAutoDefaults(this.checked)"> Auto-fill new rows with default details</label>
-        <span class="ppc-defaults-hint">Enter common details once. Part Code and Qty can then be entered row-by-row. Scheduled date remains editable for every row.</span>
+        <div class="ppc-defaults-left">
+          <label><input id="ppc-auto-defaults" type="checkbox" checked onchange="togglePPCAutoDefaults(this.checked)"> Auto-fill new rows with default details</label>
+          <button type="button" class="btn-ghost btn-small ppc-last-used-btn" onclick="useLastPPCDefaults_()" title="Apply the last saved common details to new rows">↻ Use Last Used</button>
+        </div>
+        <span class="ppc-defaults-hint">Common details stay fixed for faster entry. Part Code and Qty remain row-by-row; Scheduled Date can vary.</span>
       </div>
       <div class="table-scroll">
         <table id="ppc-order-bulk-table"><thead><tr><th>Customer / Location</th><th>Article / Set</th><th>Current FG Stock</th><th>Unit</th><th>Qty / UOM</th><th>Priority</th><th>Scheduled</th><th>Ship To / Address</th><th>Defaults</th></tr></thead><tbody></tbody></table>
@@ -1624,6 +1360,56 @@ body {
         </table>
       </div>
       <div class="empty" id="dispatch-history-empty" style="display:none;">No dispatch history matches the selected filters.</div>
+    </div>
+  </div>
+
+  <!-- TALLY SYNC TAB -->
+  <div id="tab-tally" style="display:none;">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div>
+          <h2 style="margin:0 0 4px;">Tally Excel Sync</h2>
+          <div class="sub">Upload the Tally export. The MIS stores the imported rows permanently and processes only NEW, uniquely matched dispatches.</div>
+        </div>
+        <span class="badge">Safe import mode</span>
+      </div>
+
+      <div class="grid" style="margin-top:16px;">
+        <div class="field">
+          <label>Tally Excel File</label>
+          <input id="tally-file" type="file" accept=".xlsx,.xls,.csv" onchange="previewTallyFile()">
+          <div class="sub" id="tally-file-name" style="margin-top:6px;">No file selected.</div>
+        </div>
+        <div class="field">
+          <label>Preview</label>
+          <div class="sub" id="tally-preview">Select a Tally Excel file to preview the rows and detected columns.</div>
+        </div>
+      </div>
+
+      <div id="tally-summary" style="display:none;margin-top:14px;" class="bulk-stock-summary">
+        <b id="tally-row-count">0</b> rows ready &nbsp;•&nbsp;
+        <b id="tally-col-count">0</b> columns recognized &nbsp;•&nbsp;
+        <span id="tally-detection-status">Waiting</span>
+      </div>
+
+      <div style="margin-top:14px;padding:12px;border:1px solid var(--border);border-radius:10px;">
+        <b>What happens after Import?</b>
+        <div class="sub" style="margin-top:6px;line-height:1.6;">
+          1. The Excel rows are saved in <b>TallySales</b>.<br>
+          2. Already-imported identical rows are ignored.<br>
+          3. A unique Tally row is matched to an MIS order using Order No + Part Code, then safe fallback matching.<br>
+          4. A successful match updates Dispatch Qty, Dispatch History and FG Stock.<br>
+          5. Unmatched or changed rows go to <b>TallyExceptions</b> and do not change stock automatically.
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap;">
+        <button class="btn-primary" id="tally-import-btn" type="button" onclick="importTallyFile()" disabled>Import New Tally Data</button>
+        <button class="btn-ghost" type="button" onclick="clearTallyFile()">Clear</button>
+        <span class="status-msg" id="tally-status"></span>
+      </div>
+
+      <div id="tally-result" style="display:none;margin-top:16px;"></div>
     </div>
   </div>
 
@@ -1917,6 +1703,7 @@ body {
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 
 
@@ -2053,7 +1840,7 @@ function toggleTheme(){
   window.addEventListener('DOMContentLoaded',()=>observer.observe(document.body,{childList:true,subtree:true}));
 })();
 
-const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwShcRNmpa_tV3tGHin81fEnsAqR4uxwYyXcyBklGbCgYxAp4mVgV9GSWmGc-ZRRC3fAA/exec';
+const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyq77xCl55WruPeXGqB5k-hBwI-j_qsDP9zhRSlZ_vMfHNaI_JMyjr2Y9FwmEDVV086/exec';
 const FAST_REFRESH_DEBOUNCE = 120;
 const V2_BUILD = '2026.09.03-V3-FAST-BATCH';
 let APPS_SCRIPT_URL = DEFAULT_APPS_SCRIPT_URL;
@@ -2061,36 +1848,6 @@ localStorage.setItem('svd_url', APPS_SCRIPT_URL);
 let TOKEN = sessionStorage.getItem('svd_token') || '';
 let SESSION = JSON.parse(sessionStorage.getItem('svd_session') || 'null');
 let data = { orders: [], logs: [], customers: [], partCodes: [], locations: [], shipToParties: [], sets: [], setOrders: [], departments: [], stock: [], stockMovements: [], uoms: ['Nos','Pcs','Kg','Box','Sheet','Set','Meter'], discussion: [], complaints: [], complaintComments: [], v2: {permissions:[],roles:[],fields:[],dropdowns:[],plans:{},additional:{}} };
-let stockByPartUnit = Object.create(null);
-let stockActorByPartUnit = Object.create(null);
-let dispatchActorByOrder = Object.create(null);
-function rebuildClientIndexes_(){
-  stockByPartUnit = Object.create(null);
-  stockActorByPartUnit = Object.create(null);
-  dispatchActorByOrder = Object.create(null);
-
-  (data.stock || []).forEach(s=>{
-    const part=String(s.PartCode || s.Code || '').trim().toLowerCase();
-    const unit=String(s.Unit || s.ProductionUnit || '').trim().toLowerCase();
-    if(!part || !unit) return;
-    const key=part+'|'+unit;
-    stockByPartUnit[key]=(stockByPartUnit[key]||0)+(Number(s.AvailableQty)||0);
-    if(!stockActorByPartUnit[key]){
-      stockActorByPartUnit[key]=s.LastUpdatedByName || s.LastUpdatedBy || s.UpdatedByName || s.UpdatedBy || s.UserName || s.User || '';
-    }
-  });
-
-  (data.logs || []).forEach(l=>{
-    const id=String(l.OrderID || '');
-    if(!id) return;
-    const stamp=new Date(l.LoggedAt || 0).getTime() || 0;
-    const prev=dispatchActorByOrder[id];
-    if(!prev || stamp >= prev.stamp){
-      dispatchActorByOrder[id]={stamp,name:l.DispatchedByName || l.DispatchedBy || ''};
-    }
-  });
-}
-function rebuildStockIndex_(){ rebuildClientIndexes_(); }
 let selectedOrders = new Set();
 let ppcSearchIndex = [];
 
@@ -2237,12 +1994,9 @@ function doLogout() {
   document.getElementById('login-screen').style.display = 'flex';
 }
 
-function rolesUI_(raw){
-  return String(raw==null?'':raw).toLowerCase().split(/[+,|&\/]+/).map(x=>x.trim()).filter(Boolean);
-}
 function applyRoleUI() {
   const role = String(SESSION?.role || '').trim().toLowerCase();
-  const roles = rolesUI_(role);
+  const roles = role.split(/[+,|&\/]+/).map(x => x.trim()).filter(Boolean);
   const hasRole = r => roles.includes(r);
   const isOwner = hasRole('owner'), isPPC = hasRole('ppc'), isDispatch = hasRole('dispatch'), isAdmin = hasRole('admin');
   const perms = new Set((data?.v2 && data.v2.permissions) || []);
@@ -2252,6 +2006,7 @@ function applyRoleUI() {
   if (isOwner || isPPC || isAdmin || can('create_orders')) { allowed.add('multiple'); allowed.add('new'); }
   if (isOwner || isPPC) allowed.add('sets');
   if (isOwner || isDispatch || can('mark_dispatched')) { allowed.add('multiple'); allowed.add('new'); }
+  if (isOwner || isDispatch || can('mark_dispatched')) allowed.add('tally');
   if (isOwner || isAdmin || can('access_admin_panel')) allowed.add('admin');
   document.querySelectorAll('.tab').forEach(t => { t.style.display = allowed.has(t.dataset.tab) ? '' : 'none'; });
   const multipleTab=document.getElementById('multiple-tab'), newTab=document.getElementById('new-tab'), setsTab=document.getElementById('sets-tab');
@@ -2274,7 +2029,7 @@ function initAllOrdersUnitFilter(){
   const el = document.getElementById('f-unit');
   if (!el) return;
   const units = ['Unit 1','Unit 2','Unit 5','Unit Delta'];
-  const roleTokens = rolesUI_(SESSION?.role);
+  const roleTokens = String(SESSION?.role || '').trim().toLowerCase().split(/[+,|&\/]+/).map(x=>x.trim()).filter(Boolean);
   const isOwner = roleTokens.includes('owner');
   const assigned = String(SESSION?.unit || '').trim();
   const current = el.value;
@@ -2365,7 +2120,7 @@ function showApp() {
    LIVE AUTO-REFRESH
    Fetches fresh MIS data without reloading the webpage.
    ========================================================= */
-const AUTO_REFRESH_MS = 10000;
+const AUTO_REFRESH_MS = 5000;
 let autoRefreshTimer = null;
 
 function startAutoRefresh() {
@@ -2414,33 +2169,6 @@ async function refreshData(){
     btns.forEach((b,i)=>{b.disabled=false;b.textContent=old[i]||'Refresh';});
   }
 }
-async function loadOlderOrders(){
-  if(!data.hasMoreOrders || loadInFlight) return;
-  const btn=document.getElementById('load-older-btn');
-  if(btn){btn.disabled=true;btn.textContent='Loading…';}
-  try{
-    const nextOffset=Number(data.orderOffset||0)+Number(data.orderLimit||3000);
-    const limit=Number(data.orderLimit||3000);
-    const res=await fetch(APPS_SCRIPT_URL+'?mode=core&token='+encodeURIComponent(TOKEN)+'&orderOffset='+encodeURIComponent(nextOffset)+'&orderLimit='+encodeURIComponent(limit)+'&_='+Date.now(),{cache:'no-store'});
-    const json=await res.json();
-    if(json.error)throw new Error(json.error);
-    const existing=new Map((data.orders||[]).map(o=>[String(o.OrderID),o]));
-    (json.orders||[]).forEach(o=>existing.set(String(o.OrderID),o));
-    data.orders=Array.from(existing.values()).sort((a,b)=>new Date(a.CreatedAt||0)-new Date(b.CreatedAt||0));
-    const existingLogs=new Map((data.logs||[]).map(l=>[String(l.LogID),l]));
-    (json.logs||[]).forEach(l=>existingLogs.set(String(l.LogID),l));
-    data.logs=Array.from(existingLogs.values());
-    data.orderOffset=nextOffset;
-    data.orderLimit=limit;
-    data.hasMoreOrders=Boolean(json.hasMoreOrders);
-    rebuildStockIndex_();
-    populateDropdowns(); renderStats(); renderTable(); populateDispatchOrderSelect(); renderBulkDispatchRows(); renderPPCPendingRows(); renderDispatchHistory();
-  }catch(e){alert('Could not load older orders: '+e.message);}
-  finally{
-    if(btn){btn.disabled=false;btn.textContent='Load older';btn.style.display=data.hasMoreOrders?'inline-flex':'none';}
-  }
-}
-
 async function loadData(silent=false,force=false) {
   // Auto-refresh remains enabled, but unchanged cycles now make a tiny
   // version-only request. A full payload is downloaded only when the data
@@ -2472,30 +2200,14 @@ async function loadData(silent=false,force=false) {
         return true;
       }
 
-      const hadOlderPages = Number(data.orderOffset||0) > 0;
-      if(hadOlderPages && Array.isArray(data.orders) && Array.isArray(json.orders)){
-        const mergedOrders = new Map();
-        json.orders.forEach(o=>mergedOrders.set(String(o.OrderID),o));
-        data.orders.forEach(o=>mergedOrders.set(String(o.OrderID),o));
-        json.orders = Array.from(mergedOrders.values()).sort((a,b)=>new Date(a.CreatedAt||0)-new Date(b.CreatedAt||0));
-        const mergedLogs = new Map();
-        (json.logs||[]).forEach(l=>mergedLogs.set(String(l.LogID),l));
-        (data.logs||[]).forEach(l=>mergedLogs.set(String(l.LogID),l));
-        json.logs = Array.from(mergedLogs.values());
-        json.orderOffset = data.orderOffset;
-        json.hasMoreOrders = data.hasMoreOrders;
-      }
       data = {...data,...json};
-      rebuildStockIndex_();
-      const olderBtn=document.getElementById('load-older-btn');
-      if(olderBtn) olderBtn.style.display=data.hasMoreOrders?'inline-flex':'none';
       dataVersion = Number(json.version || dataVersion || 0);
       hasLoadedData = true;
       logShipToIndex={};
       (data.logs||[]).forEach(l=>{const id=String(l.OrderID||''); if(!id)return; (logShipToIndex[id] ||= []).push(String(l.ShipToParty||''));});
       const count = Array.isArray(data.orders) ? data.orders.length : 0;
       setConn('ok', 'Live — connected · ' + count + ' orders');
-      populateDropdowns(); toggleOrderType(); toggleDispatchItemType(); renderStats(); renderTable(); populateDispatchOrderSelect(); renderBulkDispatchRows(); renderPPCPendingRows(); renderDispatchHistory(); applyRoleUI(); showStock();
+      populateDropdowns(); toggleOrderType(); toggleDispatchItemType(); renderStats(); renderDashboard(); renderTable(); populateDispatchOrderSelect(); renderBulkDispatchRows(); renderPPCPendingRows(); renderDispatchHistory(); applyRoleUI(); showStock();
       if (document.querySelector('.tab.active')?.dataset.tab === 'admin') loadV2();
       return true;
     } catch (e) {
@@ -2531,8 +2243,32 @@ async function loadAux(mode){
   try{const res=await fetch(APPS_SCRIPT_URL+'?mode='+mode+'&token='+encodeURIComponent(TOKEN),{cache:'no-store'});const json=await res.json();if(json.error)return;if(mode==='complaints'){data.complaints=json.complaints||[];data.complaintComments=json.complaintComments||[];renderComplaints();}else{data.discussion=json.discussion||[];renderDiscussion();}auxLoaded[mode]=true;}catch(e){}
 }
 
+function num_(v){const n=Number(v);return Number.isFinite(n)?n:0;}
+function dashDate_(v){if(!v)return null;const d=new Date(v);return isNaN(d)?null:d;}
+function dashBar_(label,value,max,cls=''){const pct=max?Math.max(3,Math.min(100,value/max*100)):0;return `<div class="bar-row"><span>${esc(label)}</span><div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div><b>${Number(value||0).toLocaleString()}</b></div>`;}
+function renderDashboard(){
+  const orders=Array.isArray(data.orders)?data.orders:[], logs=Array.isArray(data.logs)?data.logs:[], stock=Array.isArray(data.stock)?data.stock:[];
+  const unitEl=document.getElementById('dash-unit'); if(unitEl){const units=[...new Set((data.units||[]).concat(orders.map(o=>String(o.Unit||'')).filter(Boolean)))].filter(Boolean);const cur=unitEl.value;unitEl.innerHTML='<option value="">All Units</option>'+units.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join('');if(units.includes(cur))unitEl.value=cur;}
+  const unit=unitEl?.value||''; const days=num_(document.getElementById('dash-period')?.value||30); const now=new Date(); const from=new Date(now);from.setHours(0,0,0,0);from.setDate(from.getDate()-days+1);
+  const os=orders.filter(o=>!unit||String(o.Unit)===unit); const ls=logs.filter(l=>!unit||String(l.Unit)===unit); const ss=stock.filter(r=>!unit||String(r.Unit||r.ProductionUnit)===unit);
+  const total=os.length, pending=os.reduce((a,o)=>a+Math.max(num_(o.OrderQty)-num_(o.DispatchedQty),0),0), dispatched=os.reduce((a,o)=>a+num_(o.DispatchedQty),0), fg=ss.reduce((a,r)=>a+num_(r.AvailableQty),0);
+  const insufficient=os.filter(o=>String(o.FGStatus||'').toLowerCase().includes('insufficient')).length; const completed=os.filter(o=>num_(o.PendingQty||Math.max(num_(o.OrderQty)-num_(o.DispatchedQty),0))<=0).length;
+  const high=os.filter(o=>String(o.Priority||'').toLowerCase()==='high' && num_(o.PendingQty||Math.max(num_(o.OrderQty)-num_(o.DispatchedQty),0))>0).length;
+  const k=[['Total Orders',total,'Visible orders'],['Pending Qty',pending,'Balance to dispatch'],['Dispatched Qty',dispatched,'Cumulative dispatch'],['FG Stock',fg,'Current visible stock'],['Insufficient Stock',insufficient,'Orders needing production'],['Completed',completed,'Fully dispatched']];
+  document.getElementById('dash-kpis').innerHTML=k.map(x=>`<div class="dash-kpi"><div class="label">${x[0]}</div><div class="value">${Number(x[1]).toLocaleString()}</div><div class="hint">${x[2]}</div></div>`).join('');
+  const status={Pending:0,'Ready to Dispatch':0,'Insufficient Stock':0,Completed:0,Other:0}; os.forEach(o=>{const p=Math.max(num_(o.OrderQty)-num_(o.DispatchedQty),0), f=String(o.FGStatus||'').toLowerCase();if(p<=0)status.Completed++;else if(f.includes('insufficient'))status['Insufficient Stock']++;else if(f.includes('in stock'))status['Ready to Dispatch']++;else status.Pending++;});
+  const sm=Math.max(1,...Object.values(status));document.getElementById('dash-status').innerHTML=Object.entries(status).filter(([,v])=>v).map(([k,v])=>dashBar_(k,v,sm,k.includes('Insufficient')?'danger':k==='Completed'?'ok':'')).join('')||'<div class="empty-state">No order data</div>';
+  const byUnit={};os.forEach(o=>{const u=o.Unit||'Unassigned';(byUnit[u] ||= {orders:0,pending:0,dispatch:0});byUnit[u].orders++;byUnit[u].pending+=Math.max(num_(o.OrderQty)-num_(o.DispatchedQty),0);byUnit[u].dispatch+=num_(o.DispatchedQty);});
+  const maxU=Math.max(1,...Object.values(byUnit).map(x=>x.pending));document.getElementById('dash-units').innerHTML=Object.entries(byUnit).map(([u,x])=>dashBar_(u,x.pending,maxU,'warn')).join('')||'<div class="empty-state">No unit data</div>';
+  const pri={High:0,Medium:0,Low:0};os.forEach(o=>{const p=String(o.Priority||'Medium');pri[p]=(pri[p]||0)+Math.max(num_(o.OrderQty)-num_(o.DispatchedQty),0)});const maxP=Math.max(1,...Object.values(pri));document.getElementById('dash-priority').innerHTML=Object.entries(pri).map(([k,v])=>dashBar_(k,v,maxP,k==='High'?'danger':k==='Low'?'ok':'')).join('');
+  const cust={};os.forEach(o=>{const c=o.Customer||'Unknown';cust[c]=(cust[c]||0)+Math.max(num_(o.OrderQty)-num_(o.DispatchedQty),0)});const top=Object.entries(cust).sort((a,b)=>b[1]-a[1]).slice(0,7),maxC=Math.max(1,...top.map(x=>x[1]));document.getElementById('dash-customers').innerHTML=top.map(x=>dashBar_(x[0],x[1],maxC)).join('')||'<div class="empty-state">No customer data</div>';
+  const trend=[];for(let i=days-1;i>=0;i--){const d=new Date(now);d.setHours(0,0,0,0);d.setDate(d.getDate()-i);const key=d.toISOString().slice(0,10);const oo=os.filter(o=>{const x=dashDate_(o.CreatedAt||o.ScheduledDate);return x&&x.toISOString().slice(0,10)===key}).length;const dd=ls.filter(l=>{const x=dashDate_(l.DispatchedDate||l.LoggedAt);return x&&x.toISOString().slice(0,10)===key}).reduce((a,l)=>a+num_(l.DispatchedQty),0);trend.push({d,oo,dd});}const maxT=Math.max(1,...trend.map(x=>Math.max(x.oo,x.dd)));document.getElementById('dash-trend').innerHTML=`<div class="trend-wrap">${trend.map(x=>`<div class="trend-day"><div class="trend-bars"><div class="trend-bar" title="Orders: ${x.oo}" style="height:${Math.max(2,x.oo/maxT*100)}%"></div><div class="trend-bar dispatch" title="Dispatch: ${x.dd}" style="height:${Math.max(2,x.dd/maxT*100)}%"></div></div><div class="trend-label">${x.d.getDate()}/${x.d.getMonth()+1}</div></div>`).join('')}</div><div class="trend-legend">▮ Orders &nbsp; ▮ Dispatch Qty</div>`;
+  const actions=[];os.forEach(o=>{const p=Math.max(num_(o.OrderQty)-num_(o.DispatchedQty),0);if(!p)return;const due=dashDate_(o.ScheduledDate);if(due&&due<from&&actions.length<8)actions.push({title:`Order ${o.OrderID} · ${o.Customer}`,meta:`${o.PartCode||''} · ${o.Unit||''} · ${p.toLocaleString()} pending`,badge:'Overdue',cls:'danger'});});os.filter(o=>String(o.FGStatus||'').toLowerCase().includes('insufficient')).slice(0,8).forEach(o=>{if(actions.length>=8)return;const p=Math.max(num_(o.OrderQty)-num_(o.DispatchedQty),0);actions.push({title:`FG shortage · ${o.PartCode}`,meta:`${o.Customer||''} · ${o.Unit||''} · ${p.toLocaleString()} pending`,badge:'Production',cls:'danger'});});os.filter(o=>String(o.Priority||'').toLowerCase()==='high'&&Math.max(num_(o.OrderQty)-num_(o.DispatchedQty),0)>0).slice(0,8).forEach(o=>{if(actions.length>=10)return;actions.push({title:`High priority · Order ${o.OrderID}`,meta:`${o.Customer||''} · ${Math.max(num_(o.OrderQty)-num_(o.DispatchedQty),0).toLocaleString()} pending`,badge:'High',cls:'info'});});document.getElementById('dash-actions').innerHTML=actions.slice(0,10).map(a=>`<div class="action-item"><div><strong>${esc(a.title)}</strong><div class="action-meta">${esc(a.meta)}</div></div><span class="action-badge ${a.cls}">${esc(a.badge)}</span></div>`).join('')||'<div class="empty-state">No immediate actions required.</div>';
+  const low=ss.filter(r=>num_(r.AvailableQty)<=0).length, positive=ss.filter(r=>num_(r.AvailableQty)>0).length, totalBuckets=ss.length;document.getElementById('dash-inventory').innerHTML=[['Stock Buckets',totalBuckets,'Part + Unit records'],['Positive Stock',positive,'Available buckets'],['Zero Stock',low,'Requires production'],['Stock Qty',fg,'Total current FG']].map(x=>`<div class="inv-box"><div>${x[0]}</div><b>${Number(x[1]).toLocaleString()}</b><small>${x[2]}</small></div>`).join('');
+}
+
 function switchTab(name) {
-  ['multiple','sets','orders','new','stock','dispatch-history','complaints','discussion','admin'].forEach(t => {
+  ['multiple','sets','orders','new','stock','dispatch-history','complaints','discussion','tally','admin'].forEach(t => {
     const panel = document.getElementById('tab-' + t);
     const tab = document.querySelector(`.tab[data-tab="${t}"]`);
     if (panel) {
@@ -2619,6 +2355,7 @@ function renderStats() {
 }
 
 function getFiltered() {
+  initAllOrdersUnitFilter();
   const c = document.getElementById('f-customer').value;
   const p = document.getElementById('f-part').value;
   const u = document.getElementById('f-unit').value;
@@ -2684,19 +2421,28 @@ function actorShortName(name){
 }
 
 function getLastDispatchActor(orderId){
-  return dispatchActorByOrder[String(orderId)]?.name || '';
+  const rows=(data.logs||[]).filter(l=>String(l.OrderID)===String(orderId));
+  if(!rows.length)return '';
+  rows.sort((a,b)=>new Date(b.LoggedAt||0)-new Date(a.LoggedAt||0));
+  return rows[0].DispatchedByName || rows[0].DispatchedBy || '';
 }
 
-// FG By = latest user recorded against the current FG stock bucket.
+// FG By = the latest user recorded against the current FG stock row for this Part Code + Unit.
+// We deliberately keep this separate from PPC By and Dispatch By so the audit trail is clear.
 function getFGStockActor(partCode, unit){
   const p=String(partCode||'').trim().toLowerCase();
   const u=String(unit||'').trim().toLowerCase();
-  return stockActorByPartUnit[p+'|'+u] || '';
+  if(!p)return '';
+  const row=(data.stock||[]).find(s=>
+    String(s.PartCode||s.Code||'').trim().toLowerCase()===p &&
+    String(s.Unit||s.ProductionUnit||'').trim().toLowerCase()===u
+  );
+  if(!row)return '';
+  return row.LastUpdatedByName || row.LastUpdatedBy || row.UpdatedByName || row.UpdatedBy || row.UserName || row.User || '';
 }
 
 function renderTable() {
   const rows = getFiltered();
-  const renderRows = rows.slice(0, 200);
   const tbl = document.getElementById('orders-table');
   const empty = document.getElementById('orders-empty');
   const canBulk = SESSION && (isOwnerUI() || (data.v2.permissions||[]).includes('edit_orders'));
@@ -2708,10 +2454,8 @@ function renderTable() {
   </tr>`;
   if (rows.length === 0) { tbl.querySelector('tbody').innerHTML=''; empty.style.display='block'; updateBulkBar(); return; }
   empty.style.display='none';
-  const countNote = document.getElementById('orders-render-count');
-  if(countNote) countNote.textContent = rows.length > renderRows.length ? `Showing ${renderRows.length} of ${rows.length} matching orders` : `Showing ${rows.length} orders`;
   const plans=(data.v2&&data.v2.plans)||{}, adds=(data.v2&&data.v2.additional)||{};
-  tbl.querySelector('tbody').innerHTML = renderRows.map(o => {
+  tbl.querySelector('tbody').innerHTML = rows.map(o => {
     const orderQty=Number(o.OrderQty||0), dispatched=Number(o.DispatchedQty||0);
     const plan=plans[o.OrderID], planned=plan?Number(plan.PlannedQty||0):0, additional=Number(adds[o.OrderID]||0), total=planned+additional;
     const finalizedPpcActor=(plan && String(plan.Status||'').toLowerCase()==='finalized') ? (plan.FinalizedByName || plan.FinalizedBy || plan.UpdatedByName || '') : '';
@@ -2752,27 +2496,27 @@ function toggleOrderSelection(id,checked){if(checked)selectedOrders.add(String(i
 function toggleSelectAllVisible(checked){getFiltered().forEach(o=>{if(checked)selectedOrders.add(String(o.OrderID));else selectedOrders.delete(String(o.OrderID));});renderTable();}
 function selectAllMatching(){getFiltered().forEach(o=>selectedOrders.add(String(o.OrderID)));renderTable();}
 function clearSelection(){selectedOrders.clear();renderTable();}
-async function applyBulkStatus(){
-  const status=document.getElementById('bulk-status').value;
-  const count=selectedOrders.size;
-  if(!status||!count)return;
-  const confirmed=confirm(`Change ${count} selected order${count===1?'':'s'} to "${status}"?\n\nThis action updates many orders at once.`);
-  if(!confirmed)return;
-  try{
-    const res=await postAction({action:'bulkChangeStatus',orderIds:[...selectedOrders],status});
-    if(res.error)throw new Error(res.error);
-    alert(`Completed: ${res.successCount}\nFailed: ${res.failCount}`);
-    selectedOrders.clear();
-    await loadData(true,true);
-  }catch(e){alert(e.message);}
-}
+async function applyBulkStatus(){const status=document.getElementById('bulk-status').value;if(!status||!selectedOrders.size)return;try{const res=await postAction({action:'bulkChangeStatus',orderIds:[...selectedOrders],status});if(res.error)throw new Error(res.error);alert(`Completed: ${res.successCount}\nFailed: ${res.failCount}`);selectedOrders.clear();await loadData();}catch(e){alert(e.message);}}
 
 
 function getStockFor(partCode, unit) {
   const targetPart = String(partCode || '').trim().toLowerCase();
   const targetUnit = String(unit || SESSION?.unit || '').trim().toLowerCase();
-  if (!targetPart || !targetUnit) return 0;
-  return Number(stockByPartUnit[targetPart + '|' + targetUnit] || 0);
+  if (!targetPart) return 0;
+
+  const matches = (data.stock || []).filter(s =>
+    String(s.PartCode || s.Code || '').trim().toLowerCase() === targetPart
+  );
+  if (!matches.length) return 0;
+
+  if (targetUnit) {
+    const exact = matches.find(s =>
+      String(s.Unit || s.ProductionUnit || '').trim().toLowerCase() === targetUnit
+    );
+    return exact ? (Number(exact.AvailableQty) || 0) : 0;
+  }
+
+  return matches.reduce((sum, s) => sum + (Number(s.AvailableQty) || 0), 0);
 }
 
 function showStock() {
@@ -2827,7 +2571,7 @@ function renderBulkStockRows(){
   if(!tb)return;
   const rows=window.bulkStockRows||[];
   const units=data.units||['Unit 1','Unit 2','Unit 5','Unit Delta'];
-  const roleTokens=rolesUI_(SESSION?.role);
+  const roleTokens=String(SESSION?.role||'').toLowerCase().split(/[+,|&\/]+/).map(x=>x.trim()).filter(Boolean);
   const assigned=String(SESSION?.unit||'').trim();
   const isOwner=roleTokens.includes('owner');
 
@@ -2865,7 +2609,7 @@ function initBulkStockRows(){
 function addBulkStockRows(count=1){
   if(!window.bulkStockRows)window.bulkStockRows=[];
   const assigned=String(SESSION?.unit||'').trim();
-  const roleTokens=rolesUI_(SESSION?.role);
+  const roleTokens=String(SESSION?.role||'').toLowerCase().split(/[+,|&\/]+/).map(x=>x.trim()).filter(Boolean);
   const defaultUnit=roleTokens.includes('owner')?'':assigned;
   for(let i=0;i<count;i++)window.bulkStockRows.push({partCode:'',qty:'',unit:defaultUnit,mode:'add'});
   renderBulkStockRows();
@@ -2874,22 +2618,7 @@ function addBulkStockRows(count=1){
 function updateBulkStockRow(index,key,value){
   if(!window.bulkStockRows?.[index])return;
   window.bulkStockRows[index][key]=value;
-  if(key==='partCode'){
-    const row=document.querySelector('#bulk-stock-table tbody')?.rows?.[index];
-    if(row){
-      const cell=row.querySelector('.bulk-stock-current');
-      const part=String(value||'').trim();
-      const unit=String(window.bulkStockRows[index].unit||'').trim();
-      if(cell) cell.textContent=part&&unit?Number(getStockFor(part,unit)||0).toLocaleString():'0';
-    }
-    return;
-  }
-  if(key==='qty'){
-    const total=document.getElementById('bulk-stock-total-qty');
-    if(total) total.textContent=(window.bulkStockRows||[]).reduce((sum,r)=>sum+(Number(r.qty)||0),0).toLocaleString();
-    return;
-  }
-  if(key==='unit') renderBulkStockRows();
+  if(key==='partCode'||key==='unit')renderBulkStockRows();
 }
 
 function removeBulkStockRow(index){
@@ -2978,7 +2707,7 @@ async function submitBulkStock(){
 
 function initStockEntryUnit(){
   const el=document.getElementById('s-unit'); if(!el)return;
-  const roleTokens=rolesUI_(SESSION?.role);
+  const roleTokens=String(SESSION?.role||'').toLowerCase().split(/[+,|&\/]+/).map(x=>x.trim()).filter(Boolean);
   const assigned=String(SESSION?.unit||'').trim();
   if(assigned && !roleTokens.includes('owner')){
     el.innerHTML=`<option value="${esc(assigned)}" selected>${esc(assigned)}</option>`;
@@ -2995,41 +2724,18 @@ function initStockEntryUnit(){
 function initStockFilters() {
   const sel = document.getElementById('stock-unit-filter');
   if (!sel) return;
-
   const role = String(SESSION?.role || '').trim().toLowerCase();
   const assigned = String(SESSION?.unit || '').trim();
-  const units = data.units || ['Unit 1','Unit 2','Unit 5','Unit Delta'];
-  const isOwner = typeof isOwnerUI === 'function' ? isOwnerUI() : role.split(/[+,|&\/]+/).map(x=>x.trim()).includes('owner');
-  const current = String(sel.value || '');
+  const units = ['Unit 1','Unit 2','Unit 5','Unit Delta'];
 
-  // IMPORTANT: this function is called from renderStockTable().
-  // Never rebuild the <select> on every render, otherwise the user's
-  // selected Unit is reset to "All Units" before renderStockTable reads it.
-  if (!isOwner && assigned) {
-    if (sel.dataset.filterUnit !== assigned || sel.dataset.filterMode !== 'assigned') {
-      sel.innerHTML = `<option value="${esc(assigned)}">${esc(assigned)}</option>`;
-      sel.value = assigned;
-      sel.dataset.filterUnit = assigned;
-      sel.dataset.filterMode = 'assigned';
-    } else if (sel.value !== assigned) {
-      sel.value = assigned;
-    }
+  if (assigned && role !== 'owner') {
+    sel.innerHTML = `<option value="${esc(assigned)}">${esc(assigned)}</option>`;
+    sel.value = assigned;
     sel.disabled = true;
-    return;
+  } else {
+    sel.disabled = false;
+    sel.innerHTML = '<option value="">All Units</option>' + units.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
   }
-
-  const signature = units.join('|');
-  if (sel.dataset.filterMode !== 'owner' || sel.dataset.filterUnits !== signature) {
-    sel.innerHTML = '<option value="">All Units</option>' +
-      units.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
-    sel.dataset.filterMode = 'owner';
-    sel.dataset.filterUnits = signature;
-    sel.value = units.includes(current) ? current : '';
-  } else if (sel.value !== current) {
-    sel.value = current;
-  }
-
-  sel.disabled = false;
 }
 
 function clearStockFilters() {
@@ -3626,7 +3332,6 @@ function renderDispatchHistory() {
     <td>${esc(r.log.Note || '—')}</td>
     <td title="${esc(r.log.DispatchedByName || r.log.DispatchedBy || '—')}">${esc(actorShortName(r.log.DispatchedByName || r.log.DispatchedBy || ''))}</td>
     <td>${esc(fmtDateTime(r.loggedAt))}</td>
-    <td title="${esc(r.log.LastEditedDetails || '')}">${esc(r.log.LastEditedByName || r.log.LastEditedBy || '—')}</td>
     <td style="white-space:nowrap;">${(isOwnerUI()||isEditorUI())?`<button class="btn-ghost btn-small" type="button" onclick="openEditDispatch('${esc(r.log.LogID)}')">Edit</button>${isOwnerUI()?` <button class="btn-ghost btn-small" type="button" onclick="deleteDispatchEntry('${esc(r.log.LogID)}')">Delete</button>`:''}`:'—'}</td>
   </tr>`).join('') : '';
 
@@ -3807,10 +3512,26 @@ let bulkDispatchQty = {};
 let bulkDispatchShipTo = {};
 
 let ppcAutoDefaults = true;
+const PPC_DEFAULTS_STORAGE_KEY = 'svd_ppc_last_defaults_v1';
 let ppcBulkDefaults = {
   customer:'', customerLocation:'', unit:'', priority:'Medium',
   scheduledDate:todayISO(), shipToParty:'', shipToAddress:'', uom:'Nos'
 };
+function loadLastPPCDefaults_(){
+  try{
+    const raw=localStorage.getItem(PPC_DEFAULTS_STORAGE_KEY);
+    if(!raw)return;
+    const saved=JSON.parse(raw);
+    if(saved&&typeof saved==='object'){
+      ppcBulkDefaults={...ppcBulkDefaults,...saved};
+      if(!ppcBulkDefaults.scheduledDate)ppcBulkDefaults.scheduledDate=todayISO();
+    }
+  }catch(e){}
+}
+function saveLastPPCDefaults_(){
+  try{localStorage.setItem(PPC_DEFAULTS_STORAGE_KEY,JSON.stringify(ppcBulkDefaults));}catch(e){}
+}
+loadLastPPCDefaults_();
 
 function todayISO(){
   const d=new Date();
@@ -3819,6 +3540,26 @@ function todayISO(){
 }
 function togglePPCAutoDefaults(enabled){
   ppcAutoDefaults=!!enabled;
+}
+function useLastPPCDefaults_(){
+  loadLastPPCDefaults_();
+  if(!ppcBulkRows.length){addPPCBulkRow();}
+  const d={...ppcBulkDefaults};
+  ppcBulkRows.forEach((r,i)=>{
+    if(!r)return;
+    r.customer=d.customer||r.customer;
+    r.customerLocation=d.customerLocation||r.customerLocation;
+    if(!(isPPCUI()&&SESSION?.unit))r.unit=d.unit||r.unit;
+    r.priority=d.priority||r.priority||'Medium';
+    r.scheduledDate=r.scheduledDate||d.scheduledDate||todayISO();
+    r.shipToParty=d.shipToParty||r.shipToParty;
+    r.shipToAddress=d.shipToAddress||r.shipToAddress;
+    if(r.orderType!=='SET')r.uom=d.uom||r.uom||'Nos';
+    r.useDefaults=true;
+  });
+  renderPPCBulkRows();
+  const st=document.getElementById('ppc-bulk-status');
+  if(st){st.textContent='Last-used common details applied.';st.className='status-msg ok';}
 }
 function getPPCDefaultDetails_(){
   // Row 0 is the simple "fill once" row. New rows copy only common details.
@@ -3926,7 +3667,10 @@ function syncPPCBulkField_(el){
   if(!el||!el.dataset||el.dataset.i==null||!el.dataset.p)return;
   const i=Number(el.dataset.i),field=el.dataset.p,r=ppcBulkRows[i];if(!r)return;
   if(field==='unit' && (isPPCUI()||isDispatchUI()) && SESSION?.unit){r.unit=SESSION.unit;el.value=SESSION.unit;}else{r[field]=el.value;}
-  if(i===0 && ['customer','customerLocation','unit','priority','scheduledDate','shipToParty','shipToAddress','uom'].includes(field))getPPCDefaultDetails_();
+  if(i===0 && ['customer','customerLocation','unit','priority','scheduledDate','shipToParty','shipToAddress','uom'].includes(field)){
+    getPPCDefaultDetails_();
+    saveLastPPCDefaults_();
+  }
   if(field==='shipToParty'){const matches=bulkShipToAddressSuggestions(el.value);if(matches.length&&!String(r.shipToAddress||'').trim()){r.shipToAddress=matches[0];}}
   if(field==='partCode'||field==='unit'){const stock=getStockFor(r.partCode,r.unit);const stockEl=document.querySelector(`#ppc-order-bulk-table [data-ppc-stock="${i}"]`);if(stockEl){stockEl.textContent=Number(stock||0).toLocaleString();stockEl.classList.toggle('zero',Number(stock||0)<=0);}}
 }
@@ -3966,7 +3710,9 @@ async function savePPCBulkOrders(){
     data.orders.sort((a,b)=>new Date(b.CreatedAt)-new Date(a.CreatedAt));
     if(r.orders?.length){ const seen=new Set(data.customers||[]); r.orders.forEach(o=>{if(o.Customer&&!seen.has(o.Customer)){seen.add(o.Customer);data.customers.push(o.Customer);}}); }
     populateDropdowns();renderStats();renderTable();populateDispatchOrderSelect();renderPPCPendingRows();
-    st.textContent='✓ '+r.count+' orders created in one batch.';st.className='status-msg ok';
+    getPPCDefaultDetails_();
+    saveLastPPCDefaults_();
+    st.textContent='✓ '+r.count+' orders created in one batch. Last-used details saved.';st.className='status-msg ok';
     // Clear rows but keep the success message visible.
     ppcBulkRows=[];
     renderPPCBulkRows();
@@ -4172,7 +3918,7 @@ async function saveBulkDispatch(){
 
 function hasRoleUI(name){
   const raw=String(SESSION?.role||'').toLowerCase();
-  return rolesUI_(raw).includes(String(name).toLowerCase());
+  return raw.split(/[+,|&\/]+/).map(x=>x.trim()).includes(String(name).toLowerCase());
 }
 function isOwnerUI(){return hasRoleUI('owner');}
 function isPPCUI(){return hasRoleUI('ppc');}
@@ -4411,6 +4157,113 @@ async function createNewUser(){
 async function promptResetPassword(username){const p=prompt('New password for '+username+' (min 4 characters):');if(!p)return;try{const r=await postAction({action:'resetPassword',username,newPassword:p});if(r.error)throw new Error(r.error);alert('Password reset for '+username+'.');}catch(e){alert('Failed: '+e.message);}}
 async function promptDeleteUser(username){if(!confirm('Delete user "'+username+'"? This cannot be undone.'))return;try{const r=await postAction({action:'deleteUser',username});if(r.error)throw new Error(r.error);await loadUsers(true);}catch(e){alert('Failed: '+e.message);}}
 
+let tallyRowsPrepared = [];
+
+function tallyNormClient(v){ return String(v==null?'':v).toLowerCase().replace(/[^a-z0-9]+/g,''); }
+function tallyHeaderMap(headers){
+  const aliases={
+    date:['date','invoice date','voucher date'],
+    voucherType:['voucher type','voucher'],
+    invoiceNo:['invoice no','invoice number','invoice no.','invoice'],
+    orderNo:['order no','order number','sales order no','order no.'],
+    partCode:['part no','part number','part code','item code','article code'],
+    itemName:['item name','stock item','product name'],
+    customer:['customer','customer name','party name','particulars'],
+    shipToParty:['ship to party','ship to','shiptoparty'],
+    unit:['unit','sales unit','production unit','particulars'],
+    quantity:['quantity','qty','actual qty'],
+    uom:['uom','unit of measure'],
+    rate:['rate','price'],
+    value:['value','amount','sales value'],
+    gstin:['gstin','gst no','gstin/uin'],
+    vehicleNo:['vehicle no','vehicle number','vehicle no.'],
+    deliveryNoteNo:['delivery note no','delivery note number','delivery note no.'],
+    destination:['destination','place of supply']
+  };
+  const norm={}; headers.forEach(h=>norm[tallyNormClient(h)]=h);
+  const out={};
+  Object.keys(aliases).forEach(k=>{ for(const a of aliases[k]){const hit=norm[tallyNormClient(a)];if(hit){out[k]=hit;break;}} });
+  return out;
+}
+function tallyCell(row,map,key){ const h=map[key]; return h===undefined?'':row[h]; }
+function tallyDetectUnit(row,map){
+  const candidates=[tallyCell(row,map,'unit'),tallyCell(row,map,'customer'),tallyCell(row,map,'itemName')];
+  const text=candidates.join(' ');
+  const m=text.match(/unit\s*(1|2|5|delta)/i);
+  return m ? 'Unit '+m[1].replace(/^./,x=>x.toUpperCase()) : '';
+}
+function tallyToDateString(v){
+  if(v instanceof Date && !isNaN(v.getTime())){
+    const p=n=>String(n).padStart(2,'0');
+    return `${v.getFullYear()}-${p(v.getMonth()+1)}-${p(v.getDate())}`;
+  }
+  const s=String(v==null?'':v).trim();
+  if(!s)return '';
+  let m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if(m)return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  m=s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+  return m ? `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}` : s;
+}
+function tallyPrepareRows(jsonRows,headers){
+  const map=tallyHeaderMap(headers);
+  const required=['date','partCode','quantity'];
+  const missing=required.filter(x=>!map[x]);
+  if(missing.length) throw new Error('Required Tally columns not found: '+missing.join(', '));
+  return jsonRows.map(row=>({
+    date:tallyToDateString(tallyCell(row,map,'date')),
+    voucherType:String(tallyCell(row,map,'voucherType')||''), invoiceNo:String(tallyCell(row,map,'invoiceNo')||''), orderNo:String(tallyCell(row,map,'orderNo')||''),
+    partCode:String(tallyCell(row,map,'partCode')||'').trim(), itemName:String(tallyCell(row,map,'itemName')||''), customer:String(tallyCell(row,map,'customer')||''),
+    shipToParty:String(tallyCell(row,map,'shipToParty')||tallyCell(row,map,'customer')||'').trim(), unit:tallyDetectUnit(row,map), quantity:Number(tallyCell(row,map,'quantity'))||0,
+    uom:String(tallyCell(row,map,'uom')||'Nos'), rate:tallyCell(row,map,'rate')===''?'':Number(tallyCell(row,map,'rate')), value:tallyCell(row,map,'value')===''?'':Number(tallyCell(row,map,'value')),
+    gstin:String(tallyCell(row,map,'gstin')||''), vehicleNo:String(tallyCell(row,map,'vehicleNo')||''), deliveryNoteNo:String(tallyCell(row,map,'deliveryNoteNo')||''), destination:String(tallyCell(row,map,'destination')||'')
+  })).filter(r=>r.partCode || r.invoiceNo || r.orderNo);
+}
+async function previewTallyFile(){
+  const input=document.getElementById('tally-file'), status=document.getElementById('tally-status'), preview=document.getElementById('tally-preview'), btn=document.getElementById('tally-import-btn');
+  tallyRowsPrepared=[]; btn.disabled=true; document.getElementById('tally-summary').style.display='none';
+  if(!input.files||!input.files[0]){preview.textContent='Select a Tally Excel file to preview.';return;}
+  const file=input.files[0]; document.getElementById('tally-file-name').textContent=file.name+' · '+Math.round(file.size/1024)+' KB';
+  status.textContent='Reading Excel…'; status.className='status-msg';
+  try{
+    if(typeof XLSX==='undefined') throw new Error('Excel reader library did not load. Refresh the page and try again.');
+    const buf=await file.arrayBuffer(); const wb=XLSX.read(buf,{type:'array',cellDates:true});
+    const ws=wb.Sheets[wb.SheetNames[0]]; const rows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:true});
+    if(!rows.length)throw new Error('The first worksheet has no data rows.');
+    const headers=Object.keys(rows[0]); tallyRowsPrepared=tallyPrepareRows(rows,headers);
+    document.getElementById('tally-row-count').textContent=tallyRowsPrepared.length.toLocaleString();
+    document.getElementById('tally-col-count').textContent=headers.length.toLocaleString();
+    document.getElementById('tally-detection-status').textContent='Columns detected';
+    document.getElementById('tally-summary').style.display='block';
+    const sample=tallyRowsPrepared.slice(0,5).map(r=>`${r.date||'—'} | ${r.invoiceNo||'—'} | ${r.orderNo||'—'} | ${r.partCode||'—'} | ${r.quantity} | ${r.unit||'unit not detected'}`).join('<br>');
+    preview.innerHTML='<b>Detected columns:</b> '+headers.map(esc).join(', ')+'<br><br><b>Sample:</b><br>'+sample;
+    btn.disabled=!tallyRowsPrepared.length; status.textContent='Ready to import.'; status.className='status-msg ok';
+  }catch(e){status.textContent='Failed: '+e.message;status.className='status-msg err';preview.textContent='Could not read this file.';}
+}
+async function importTallyFile(){
+  if(!tallyRowsPrepared.length)return;
+  const file=document.getElementById('tally-file').files[0], btn=document.getElementById('tally-import-btn'), status=document.getElementById('tally-status');
+  if(!confirm('Import '+tallyRowsPrepared.length.toLocaleString()+' Tally rows from "'+file.name+'"?\n\nExisting identical rows will be ignored. Changed/unmatched rows will NOT update stock automatically.'))return;
+  btn.disabled=true; status.textContent='Importing…'; status.className='status-msg';
+  try{
+    const res=await postAction({action:'importTally',fileName:file.name,rows:tallyRowsPrepared});
+    if(res.error)throw new Error(res.error);
+    document.getElementById('tally-result').style.display='block';
+    document.getElementById('tally-result').innerHTML=`<div class="bulk-stock-summary"><b>Import complete</b><br>${res.totalRows} total · ${res.matchedRows} matched · ${res.duplicateRows} duplicates · ${res.changedRows} changed/review · ${res.exceptionRows} exceptions</div>`;
+    status.textContent='✓ Tally import completed.'; status.className='status-msg ok';
+    await loadData();
+  }catch(e){status.textContent='Failed: '+e.message;status.className='status-msg err';}
+  finally{btn.disabled=false;}
+}
+function clearTallyFile(){
+  const input=document.getElementById('tally-file'); if(input)input.value=''; tallyRowsPrepared=[];
+  const p=document.getElementById('tally-preview'); if(p)p.textContent='Select a Tally Excel file to preview the rows and detected columns.';
+  const n=document.getElementById('tally-file-name'); if(n)n.textContent='No file selected.';
+  const s=document.getElementById('tally-summary'); if(s)s.style.display='none';
+  const b=document.getElementById('tally-import-btn'); if(b)b.disabled=true;
+  const st=document.getElementById('tally-status'); if(st){st.textContent='';st.className='status-msg';}
+  const r=document.getElementById('tally-result'); if(r){r.style.display='none';r.innerHTML='';}
+}
+
 function fmtDateTime(v){if(!v)return '—';const d=new Date(v);if(isNaN(d))return String(v);return d.toLocaleString();}
 
 function exportCSV() {
@@ -4467,19 +4320,6 @@ if(document.getElementById('n-order-type')) toggleOrderType();
 if(document.getElementById('d-dispatch-type')) toggleDispatchItemType();
 document.addEventListener('click', e => { if(!e.target.closest('.searchable-order-field')) document.querySelectorAll('.order-search-results').forEach(x=>x.classList.remove('open')); });
 init();
-</script>
-
-<script>
-document.addEventListener('keydown',function(e){
-  const el=e.target;
-  if(!el||!el.closest||!el.closest('#bulk-stock-table'))return;
-  if(el.matches('.bulk-stock-part input,.bulk-stock-qty input')&&e.key==='Enter'){
-    e.preventDefault();
-    const row=el.closest('tr');
-    const next=row?.nextElementSibling?.querySelector('.bulk-stock-part input');
-    if(next) next.focus();
-  }
-},true);
 </script>
 </body>
 </html>
