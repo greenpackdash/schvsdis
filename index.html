@@ -1245,10 +1245,10 @@ body.gp-on{
 }
 body.gp-on.gp-col{--gpw:76px}
 body.gp-on .topbar,body.gp-on #stats,body.gp-on .tabs{display:none!important}
-body.gp-on #main-app{margin-left:var(--gpw);padding:0 24px 44px;transition:margin .22s ease;background:#08070d;min-height:100vh}
+body.gp-on #main-app{margin-left:var(--gpw);padding:90px 24px 44px;transition:margin .22s ease;background:#08070d;min-height:100vh}
 
 #gp-side{
-  position:fixed;left:0;top:0;bottom:0;width:var(--gpw,248px);
+  position:fixed;left:0;top:72px;bottom:0;width:var(--gpw,248px);
   background:#0b1215;
   color:#d8e6e1;
   border-right:1px solid #1a4b3e;
@@ -1294,7 +1294,7 @@ body.gp-col #gp-side .gp-menu-btn span{display:none}
 body.gp-col .gp-it{justify-content:center;padding-left:0;padding-right:0}
 
 #gp-top{
-  position:sticky;top:0;z-index:800;height:72px;
+  position:fixed;left:0;right:0;top:0;z-index:1100;height:72px;
   display:flex;align-items:center;gap:12px;
   background:#08070d;border-bottom:1px solid #1b1722;
   margin:0 -24px 18px;padding:0 28px;
@@ -1359,8 +1359,20 @@ body.gp-on.gp-hide #main-app{margin-left:0!important}
 body.gp-on{overflow-x:hidden!important}
 body.gp-on #main-app{
   margin-left:var(--gp-sidebar-w)!important;
-  padding:0 24px 44px!important;
+  padding:92px 24px 44px!important;
   min-height:100vh!important;
+  box-sizing:border-box!important;
+  overflow:visible!important;
+}
+body.gp-on{
+  min-height:100vh!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  scroll-padding-top:90px!important;
+}
+body.gp-on #tab-orders,
+body.gp-on .tab-panel{
+  scroll-margin-top:90px!important;
 }
 #gp-top{
   position:fixed!important;left:0!important;right:0!important;top:0!important;
@@ -1403,7 +1415,7 @@ body.gp-on.gp-hide #gp-side{width:0!important}
 body.gp-on.gp-hide #main-app{margin-left:0!important}
 body.gp-on.gp-hide #gp-top{padding-left:58px!important}
 @media(max-width:900px){
-  body.gp-on #main-app{margin-left:0!important;padding:0 10px 40px!important;padding-top:0!important}
+  body.gp-on #main-app{margin-left:0!important;padding:76px 10px 40px!important;overflow:visible!important}
   #gp-top{height:64px!important;padding:0 12px 0 14px!important}
   #gp-top .gp-head-logo{width:128px!important;height:38px!important}
   #gp-side{top:64px!important;width:238px!important;transform:translateX(-100%)!important}
@@ -1411,6 +1423,133 @@ body.gp-on.gp-hide #gp-top{padding-left:58px!important}
   #gp-reopen{top:74px!important}
 }
 </style>
+
+<!-- Keep the Control Center shell completely hidden until a successful login. -->
+<style id="gp-auth-visibility-fix">
+body:not(.gp-on) #gp-side,
+body:not(.gp-on) #gp-top,
+body:not(.gp-on) #gp-reopen,
+body:not(.gp-on) #gp-dr {
+  display:none !important;
+}
+body.gp-on #login-screen {
+  display:none !important;
+}
+</style>
+
+<style id="gp-light-theme-final">
+/* =========================================================
+   GREENPACK MIS — FINAL DAYLIGHT THEME
+   Explicitly retint the Control Center shell. The shell uses
+   fixed dark colors for the dark theme, so light mode needs a
+   dedicated override to prevent white text on white surfaces.
+   ========================================================= */
+:root[data-theme="light"] body.gp-on{
+  background:#f4f6fb!important;
+  color:#20232b!important;
+}
+:root[data-theme="light"] body.gp-on #main-app{
+  background:#f4f6fb!important;
+  color:#20232b!important;
+}
+
+/* Header */
+:root[data-theme="light"] #gp-top{
+  background:rgba(255,255,255,.97)!important;
+  border-bottom:1px solid #d9deea!important;
+  box-shadow:0 2px 12px rgba(16,24,40,.06)!important;
+}
+:root[data-theme="light"] #gp-top .gp-head-title{color:#20232b!important}
+:root[data-theme="light"] #gp-top .gp-head-sub{color:#667085!important}
+:root[data-theme="light"] #gp-top .gp-lang,
+:root[data-theme="light"] #gp-top .gp-theme,
+:root[data-theme="light"] #gp-top .gp-ib{
+  background:#fff!important;color:#344054!important;border-color:#d0d5dd!important;
+}
+:root[data-theme="light"] #gp-top .gp-theme:hover,
+:root[data-theme="light"] #gp-top .gp-lang:hover{background:#f8fafc!important;border-color:#7c3aed!important}
+:root[data-theme="light"] #gp-top .gp-role{
+  background:#f5f3ff!important;color:#5b21b6!important;border-color:#d8b4fe!important;
+}
+:root[data-theme="light"] #gp-top .gp-conn{
+  background:#ecfdf3!important;color:#047857!important;border-color:#a7f3d0!important;
+}
+:root[data-theme="light"] #gp-top .gp-logout{
+  background:#fff!important;color:#344054!important;border-color:#d0d5dd!important;
+}
+:root[data-theme="light"] #gp-top .gp-logout:hover{background:#f8fafc!important;color:#20232b!important;border-color:#98a2b3!important}
+
+/* Sidebar */
+:root[data-theme="light"] #gp-side{
+  background:#ffffff!important;color:#344054!important;border-right:1px solid #d9deea!important;
+  box-shadow:8px 0 28px rgba(16,24,40,.07)!important;
+}
+:root[data-theme="light"] #gp-side .gp-brand{
+  background:#ffffff!important;border-bottom:1px solid #e4e7ec!important;
+}
+:root[data-theme="light"] #gp-side .gp-menu-btn{
+  background:#fff!important;color:#344054!important;border-color:#b7c3d4!important;
+}
+:root[data-theme="light"] #gp-side .gp-menu-btn:hover{
+  background:#ecfdf3!important;color:#047857!important;border-color:#22a05a!important;
+}
+:root[data-theme="light"] .gp-grp{color:#667085!important}
+:root[data-theme="light"] .gp-it{color:#475467!important}
+:root[data-theme="light"] .gp-it:hover{
+  background:#f2f4f7!important;color:#20232b!important;border-color:#e4e7ec!important;
+}
+:root[data-theme="light"] .gp-it.on{
+  background:#0d6b25!important;color:#fff!important;border-color:#18883a!important;
+}
+:root[data-theme="light"] #gp-side>div:last-child{
+  background:#fff!important;border-top-color:#e4e7ec!important;
+}
+:root[data-theme="light"] #gp-reopen{
+  background:#0d6b25!important;color:#fff!important;border-color:#18883a!important;
+  box-shadow:0 8px 24px rgba(16,24,40,.16)!important;
+}
+
+/* Dashboard cards/charts */
+:root[data-theme="light"] .gp-k,
+:root[data-theme="light"] .gp-c,
+:root[data-theme="light"] #gp-dr{
+  background:#fff!important;color:#20232b!important;border-color:#dfe3ec!important;
+  box-shadow:0 6px 18px rgba(16,24,40,.05)!important;
+}
+:root[data-theme="light"] .gp-k small,
+:root[data-theme="light"] .gp-nd,
+:root[data-theme="light"] .gp-tl small{color:#667085!important}
+:root[data-theme="light"] .gp-c h3{color:#20232b!important}
+:root[data-theme="light"] .gp-row{border-bottom-color:#e4e7ec!important;color:#344054!important}
+:root[data-theme="light"] .gp-tl{border-left-color:#d0d5dd!important}
+:root[data-theme="light"] .gp-dr dt{color:#667085!important}
+:root[data-theme="light"] .gp-chip{background:#ecfdf3!important;color:#047857!important;border-color:#a7f3d0!important}
+:root[data-theme="light"] .gp-sev.c{background:#fff1f2!important;color:#be123c!important}
+:root[data-theme="light"] .gp-sev.w{background:#fffaeb!important;color:#b54708!important}
+
+/* Generic legacy MIS controls */
+:root[data-theme="light"] .tab,
+:root[data-theme="light"] .empty,
+:root[data-theme="light"] .mini-note,
+:root[data-theme="light"] .search-hint{color:#667085!important}
+:root[data-theme="light"] .tab:hover{color:#344054!important}
+:root[data-theme="light"] .tab.active{color:#5b21b6!important}
+:root[data-theme="light"] .admin-hero .badge{background:#f2f4f7!important;color:#344054!important;border-color:#e4e7ec!important}
+:root[data-theme="light"] .set-dispatch-title{color:#6d28d9!important}
+:root[data-theme="light"] .bulk-live-pill,
+:root[data-theme="light"] .bulk-full-btn{color:#6d28d9!important;background:#f5f3ff!important;border-color:#ddd6fe!important}
+:root[data-theme="light"] .bulk-scheduled-cell{color:#6d28d9!important}
+:root[data-theme="light"] .set-help-item b,
+:root[data-theme="light"] .set-builder-summary b{color:#20232b!important}
+
+/* Login daylight mode */
+:root[data-theme="light"] .login-card .brand-logo{
+  background:#fff!important;
+}
+:root[data-theme="light"] .login-card .status-msg.err{color:#b42318!important}
+:root[data-theme="light"] .login-card .status-msg.ok{color:#047857!important}
+</style>
+
 </head>
 
 <!-- LOGIN SCREEN -->
@@ -1422,7 +1561,7 @@ body.gp-on.gp-hide #gp-top{padding-left:58px!important}
     <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme"><span id="login-theme-icon">☀</span></button>
   </div>
   <div class="login-card">
-    <img src="./GREENPACK LATEST LOGO.PNG" alt="Greenpack Complete Packaging Solutions" class="brand-logo">
+    <img src="GREENPACK-LATEST-LOGO.png" alt="Greenpack Complete Packaging Solutions" class="brand-logo">
     <h2>Schedule vs Dispatch — MIS</h2>
     <div class="sub">Sign in with your Greenpack MIS credentials</div>
     <div class="field">
@@ -1454,7 +1593,7 @@ body.gp-on.gp-hide #gp-top{padding-left:58px!important}
 
 <div class="topbar">
   <div style="display:flex; align-items:center; gap:16px;">
-    <img src="./GREENPACK LATEST LOGO.PNG" alt="Greenpack Complete Packaging Solutions" class="brand-logo">
+    <img src="GREENPACK-LATEST-LOGO.png" alt="Greenpack Complete Packaging Solutions" class="brand-logo">
     <div>
       <h1>Schedule vs Dispatch — MIS</h1>
       <div class="sub" id="scope-sub">Live order tracking</div>
@@ -2413,8 +2552,18 @@ function doLogout() {
   sessionStorage.removeItem('svd_token');
   sessionStorage.removeItem('svd_session');
   TOKEN = ''; SESSION = null;
+  document.body.classList.remove('gp-on','gp-hide','gp-col');
+  localStorage.gpHide='0';
+  const side=document.getElementById('gp-side');
+  if(side) side.classList.remove('open');
+  const top=document.getElementById('gp-top');
+  const reopen=document.getElementById('gp-reopen');
+  if(top) top.style.display='none';
+  if(side) side.style.display='none';
+  if(reopen) reopen.style.display='none';
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
+  window.scrollTo(0,0);
 }
 
 function rolesUI_(raw){
@@ -4689,7 +4838,7 @@ function build(){
  const top=document.createElement('div');top.id='gp-top';
  top.innerHTML=`
    <div class="gp-head-brand">
-     <img class="gp-head-logo" src="./GREENPACK LATEST LOGO.PNG" alt="Greenpack Complete Packaging Solutions">
+     <img class="gp-head-logo" src="GREENPACK-LATEST-LOGO.png" alt="Greenpack Complete Packaging Solutions">
      <div class="gp-head-copy">
        <div class="gp-head-title">Schedule vs Dispatch — MIS</div>
        <div class="gp-head-sub">Live order tracking across all units</div>
@@ -4744,8 +4893,29 @@ window.switchTab=function(n){cur=n;const d=$('tab-dashboard');
  else{if(d)d.style.display='none';_sw(n)}navOn()};
 window.renderStats=function(){_stats();if(cur==='dashboard'&&built)renderDash()};
 window.applyRoleUI=function(){_role();if(built)navVis()};
-window.showApp=function(){_show();document.body.classList.add('gp-on');build();navVis();switchTab('dashboard')};
-window.doLogout=function(){document.body.classList.remove('gp-on');_out()};
+window.showApp=function(){
+  _show();
+  document.body.classList.add('gp-on');
+  build();
+  const side=$('gp-side'),top=$('gp-top'),reopen=$('gp-reopen');
+  if(side) side.style.display='flex';
+  if(top) top.style.display='flex';
+  if(reopen) reopen.style.display='';
+  window.scrollTo(0,0);
+  navVis();
+  switchTab('dashboard');
+};
+window.doLogout=function(){
+  _out();
+  document.body.classList.remove('gp-on','gp-hide','gp-col');
+  localStorage.gpHide='0';
+  const side=$('gp-side'),top=$('gp-top'),reopen=$('gp-reopen');
+  if(side) side.classList.remove('open');
+  if(side) side.style.display='none';
+  if(top) top.style.display='none';
+  if(reopen) reopen.style.display='none';
+  window.scrollTo(0,0);
+};
 window.toggleTheme=function(){_th();if(cur==='dashboard')setTimeout(renderDash,50)};
 
 /* ---------- DRILL-DOWN ---------- */
