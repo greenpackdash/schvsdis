@@ -1550,6 +1550,174 @@ body.gp-on #login-screen {
 :root[data-theme="light"] .login-card .status-msg.ok{color:#047857!important}
 </style>
 
+
+<style id="gp-final-visual-fix">
+/* =========================================================
+   FINAL GREENPACK CONTROL CENTER FIX
+   1) Keep dashboard content completely below the fixed header.
+   2) Make daylight mode a true light UI, including legacy MIS
+      controls that otherwise inherit dark-theme text/backgrounds.
+   ========================================================= */
+body.gp-on #main-app{
+  padding-top:calc(var(--gp-header-h) + 28px)!important;
+  scroll-margin-top:calc(var(--gp-header-h) + 12px)!important;
+}
+body.gp-on #tab-dashboard{
+  position:relative!important;
+  z-index:1!important;
+  margin-top:0!important;
+}
+body.gp-on #main-app > #tab-dashboard:first-of-type{
+  margin-top:0!important;
+}
+
+/* Prevent browser/focus restoration from leaving the dashboard underneath the header. */
+html{scroll-padding-top:calc(var(--gp-header-h,72px) + 16px)!important;}
+
+/* ---------- TRUE DAYLIGHT THEME ---------- */
+:root[data-theme="light"] body.gp-on #main-app,
+:root[data-theme="light"] body.gp-on #tab-dashboard{
+  background:#f4f6fb!important;
+  color:#20232b!important;
+}
+:root[data-theme="light"] body.gp-on .card,
+:root[data-theme="light"] body.gp-on .stat,
+:root[data-theme="light"] body.gp-on .admin-panel,
+:root[data-theme="light"] body.gp-on .history-card,
+:root[data-theme="light"] body.gp-on .config-list,
+:root[data-theme="light"] body.gp-on .set-help-item,
+:root[data-theme="light"] body.gp-on .set-builder-summary{
+  background:#fff!important;
+  color:#20232b!important;
+  border-color:#d9deea!important;
+  box-shadow:0 4px 16px rgba(16,24,40,.06)!important;
+}
+:root[data-theme="light"] body.gp-on h1,
+:root[data-theme="light"] body.gp-on h2,
+:root[data-theme="light"] body.gp-on h3,
+:root[data-theme="light"] body.gp-on h4,
+:root[data-theme="light"] body.gp-on h5,
+:root[data-theme="light"] body.gp-on b,
+:root[data-theme="light"] body.gp-on strong{
+  color:#20232b!important;
+}
+:root[data-theme="light"] body.gp-on .sub,
+:root[data-theme="light"] body.gp-on .mini-note,
+:root[data-theme="light"] body.gp-on .search-hint,
+:root[data-theme="light"] body.gp-on .admin-help,
+:root[data-theme="light"] body.gp-on .ppc-defaults-hint,
+:root[data-theme="light"] body.gp-on .status-msg{
+  color:#667085!important;
+}
+:root[data-theme="light"] body.gp-on label{
+  color:#667085!important;
+}
+:root[data-theme="light"] body.gp-on input,
+:root[data-theme="light"] body.gp-on select,
+:root[data-theme="light"] body.gp-on textarea{
+  background:#fff!important;
+  color:#20232b!important;
+  border-color:#d0d5dd!important;
+}
+:root[data-theme="light"] body.gp-on input::placeholder,
+:root[data-theme="light"] body.gp-on textarea::placeholder{color:#98a2b3!important}
+:root[data-theme="light"] body.gp-on input:hover,
+:root[data-theme="light"] body.gp-on select:hover,
+:root[data-theme="light"] body.gp-on textarea:hover{border-color:#98a2b3!important}
+:root[data-theme="light"] body.gp-on input:focus,
+:root[data-theme="light"] body.gp-on select:focus,
+:root[data-theme="light"] body.gp-on textarea:focus{
+  background:#fff!important;color:#20232b!important;border-color:#7c3aed!important;
+  box-shadow:0 0 0 3px rgba(124,58,237,.10)!important;
+}
+:root[data-theme="light"] body.gp-on .btn-ghost{
+  background:#fff!important;color:#344054!important;border-color:#d0d5dd!important;
+}
+:root[data-theme="light"] body.gp-on .btn-ghost:hover{
+  background:#f8fafc!important;color:#20232b!important;border-color:#98a2b3!important;
+}
+:root[data-theme="light"] body.gp-on table{color:#344054!important}
+:root[data-theme="light"] body.gp-on th{
+  background:#f3f5f9!important;color:#475467!important;border-bottom-color:#dfe3ec!important;
+}
+:root[data-theme="light"] body.gp-on td{
+  color:#344054!important;border-bottom-color:#edf0f4!important;background:#fff;
+}
+:root[data-theme="light"] body.gp-on tr:hover td{background:#f8fafc!important}
+:root[data-theme="light"] body.gp-on .table-scroll,
+:root[data-theme="light"] body.gp-on .bulk-dispatch-list{
+  background:#fff!important;border-color:#dfe3ec!important;
+}
+:root[data-theme="light"] body.gp-on .pill{
+  filter:none!important;
+}
+:root[data-theme="light"] body.gp-on .modal{
+  background:rgba(255,255,255,.98)!important;color:#20232b!important;border-color:#d9deea!important;
+}
+:root[data-theme="light"] body.gp-on .modal-head,
+:root[data-theme="light"] body.gp-on .modal-actions{border-color:#e4e7ec!important}
+:root[data-theme="light"] body.gp-on .chat-text{background:#f4f6fb!important;color:#344054!important}
+:root[data-theme="light"] body.gp-on .order-result,
+:root[data-theme="light"] body.gp-on .order-result-item,
+:root[data-theme="light"] body.gp-on .ppc-autocomplete-menu{
+  background:#fff!important;color:#344054!important;border-color:#d0d5dd!important;
+  box-shadow:0 12px 30px rgba(16,24,40,.12)!important;
+}
+:root[data-theme="light"] body.gp-on .ppc-autocomplete-item{color:#344054!important}
+:root[data-theme="light"] body.gp-on .ppc-autocomplete-item:hover{background:#f3f0ff!important;color:#4c1d95!important}
+
+/* Dashboard chart cards */
+:root[data-theme="light"] body.gp-on .gp-k,
+:root[data-theme="light"] body.gp-on .gp-c{
+  background:#fff!important;color:#20232b!important;border-color:#dfe3ec!important;
+}
+:root[data-theme="light"] body.gp-on .gp-k small,
+:root[data-theme="light"] body.gp-on .gp-nd,
+:root[data-theme="light"] body.gp-on .gp-tl small{color:#667085!important}
+:root[data-theme="light"] body.gp-on .gp-c h3{color:#20232b!important}
+:root[data-theme="light"] body.gp-on .gp-row{color:#344054!important;border-bottom-color:#e4e7ec!important}
+:root[data-theme="light"] body.gp-on .gp-tl{border-left-color:#d0d5dd!important}
+
+/* Header + sidebar */
+:root[data-theme="light"] body.gp-on #gp-top{
+  background:rgba(255,255,255,.98)!important;color:#20232b!important;border-bottom-color:#d9deea!important;
+}
+:root[data-theme="light"] body.gp-on #gp-top .gp-head-title{color:#20232b!important}
+:root[data-theme="light"] body.gp-on #gp-top .gp-head-sub{color:#667085!important}
+:root[data-theme="light"] body.gp-on #gp-top .gp-lang,
+:root[data-theme="light"] body.gp-on #gp-top .gp-theme{
+  background:#fff!important;color:#344054!important;border-color:#d0d5dd!important;
+}
+:root[data-theme="light"] body.gp-on #gp-top .gp-role{
+  background:#f5f3ff!important;color:#5b21b6!important;border-color:#d8b4fe!important;
+}
+:root[data-theme="light"] body.gp-on #gp-top .gp-conn{
+  background:#ecfdf3!important;color:#047857!important;border-color:#a7f3d0!important;
+}
+:root[data-theme="light"] body.gp-on #gp-top .gp-logout{
+  background:#fff!important;color:#344054!important;border-color:#d0d5dd!important;
+}
+:root[data-theme="light"] body.gp-on #gp-side{
+  background:#fff!important;color:#344054!important;border-right-color:#d9deea!important;
+  box-shadow:8px 0 28px rgba(16,24,40,.07)!important;
+}
+:root[data-theme="light"] body.gp-on #gp-side .gp-brand{background:#fff!important;border-bottom-color:#e4e7ec!important}
+:root[data-theme="light"] body.gp-on #gp-side .gp-menu-btn{background:#fff!important;color:#344054!important;border-color:#b7c3d4!important}
+:root[data-theme="light"] body.gp-on #gp-side .gp-menu-btn:hover{background:#ecfdf3!important;color:#047857!important;border-color:#22a05a!important}
+:root[data-theme="light"] body.gp-on .gp-grp{color:#667085!important}
+:root[data-theme="light"] body.gp-on .gp-it{color:#475467!important}
+:root[data-theme="light"] body.gp-on .gp-it:hover{background:#f2f4f7!important;color:#20232b!important;border-color:#e4e7ec!important}
+:root[data-theme="light"] body.gp-on .gp-it.on{background:#0d6b25!important;color:#fff!important;border-color:#18883a!important}
+:root[data-theme="light"] body.gp-on #gp-side>div:last-child{background:#fff!important;border-top-color:#e4e7ec!important}
+
+/* Force readable legacy text that was explicitly colored for dark mode. */
+:root[data-theme="light"] body.gp-on .nu,
+:root[data-theme="light"] body.gp-on .empty{color:#667085!important}
+:root[data-theme="light"] body.gp-on .danger-note{color:#b42318!important}
+:root[data-theme="light"] body.gp-on .status-msg.err{color:#b42318!important}
+:root[data-theme="light"] body.gp-on .status-msg.ok{color:#047857!important}
+</style>
+
 </head>
 
 <!-- LOGIN SCREEN -->
