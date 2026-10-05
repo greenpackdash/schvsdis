@@ -2573,6 +2573,124 @@ function currentAppLanguage(){ return localStorage.getItem(APP_LANG_KEY)||'en'; 
 function currentTheme(){ return localStorage.getItem(APP_THEME_KEY)||'dark'; }
 const I18N_TEXT_ORIGINALS = new WeakMap();
 function uiTextOriginal(node){ return node; }
+
+/* =========================================================
+   GREENPACK MIS — LANGUAGE PACK v2
+   Marathi = Marathi + English MIS terms
+   Hindi   = Hindi + English MIS terms
+   Business data is intentionally NOT translated.
+   ========================================================= */
+Object.assign(UI_TRANSLATIONS.mr, {
+  'Dashboard':'डॅशबोर्ड',
+  'ORDERS':'ऑर्डर्स',
+  'DISPATCH':'डिस्पॅच',
+  'STOCK':'स्टॉक',
+  'WORKSPACE':'वर्कस्पेस',
+  'Administration':'अॅडमिनिस्ट्रेशन',
+  'Menu':'मेनू',
+  'Hide menu':'मेनू लपवा',
+  'Show navigation':'नेव्हिगेशन दाखवा',
+  'Live — connected':'Live — Connected',
+  'Connecting…':'कनेक्ट होत आहे…',
+  'PPC Excel Import':'PPC Excel Import',
+  'FG Excel Import':'FG Excel Import',
+  'PPC · NEW ORDERS ONLY':'PPC · फक्त नवीन ऑर्डर्स',
+  'PPC Excel Order Import':'PPC Excel Order Import',
+  'Upload the PPC Excel template to create NEW customer orders. Existing orders are recognized and skipped — carry-forward orders must not be uploaded again.':'नवीन Customer Orders तयार करण्यासाठी PPC Excel template upload करा. Existing Orders ओळखून skip केल्या जातील — carry-forward orders पुन्हा upload करू नका.',
+  'PPC / Owner':'PPC / Owner',
+  'Download Template':'Template Download करा',
+  'Choose Excel':'Excel निवडा',
+  'No file selected':'कोणतीही file निवडलेली नाही',
+  'Important:':'महत्त्वाचे:',
+  'Use this only for new customer orders. Do not enter the same order again for next-day planning.':'हे फक्त नवीन Customer Orders साठी वापरा. Next-day planning साठी तीच order पुन्हा enter करू नका.',
+  'The existing OrderID remains the order\'s identity for future PPC planning.':'Future PPC planning साठी existing OrderID हाच order चा identity राहील.',
+  'Choose an Excel file to begin.':'सुरू करण्यासाठी Excel file निवडा.',
+  'No file loaded.':'कोणतीही file load झालेली नाही.',
+  'Apply New Orders':'New Orders Apply करा',
+  'FG STOCK · EXCEL':'FG STOCK · EXCEL',
+  'FG Stock Excel Import':'FG Stock Excel Import',
+  'Upload the FG stock template. Available Quantity becomes the current FG stock for Part Code + Production Unit. FG By is automatically taken from the logged-in user.':'FG stock template upload करा. Available Quantity ही Part Code + Production Unit साठी current FG stock बनेल. FG By logged-in user कडून automatically घेतले जाईल.',
+  'Owner / PPC / Dispatch':'Owner / PPC / Dispatch',
+  'Stock rule:':'Stock rule:',
+  'the import sets the live stock balance; it does not add the uploaded quantity again.':'Import live stock balance set करतो; uploaded quantity पुन्हा add होत नाही.',
+  'Customer Name / UOM / Stock Date / Remarks are retained in the import log for traceability.':'Customer Name / UOM / Stock Date / Remarks traceability साठी import log मध्ये ठेवले जातात.',
+  'Apply FG Stock':'FG Stock Apply करा',
+  'PPC Import':'PPC Import',
+  'FG Import':'FG Import',
+  'New Orders':'New Orders',
+  'Existing':'Existing',
+  'Duplicate':'Duplicate',
+  'Ready to create':'Create करण्यासाठी Ready',
+  'Existing order recognized — skipped':'Existing order ओळखली — skip केली',
+  'Duplicate row inside uploaded file — skipped':'Uploaded file मधील duplicate row — skip केली',
+  'Preview':'Preview',
+  'Import':'Import',
+  'Clear':'Clear',
+  'Apply':'Apply',
+  'Status':'Status',
+  'Message':'Message',
+  'Row':'Row',
+  'Total':'Total',
+  'Errors':'Errors',
+  'successfully':'यशस्वीपणे'
+});
+
+Object.assign(UI_TRANSLATIONS.hi, {
+  'Dashboard':'डैशबोर्ड',
+  'ORDERS':'ऑर्डर्स',
+  'DISPATCH':'डिस्पैच',
+  'STOCK':'स्टॉक',
+  'WORKSPACE':'वर्कस्पेस',
+  'Administration':'एडमिनिस्ट्रेशन',
+  'Menu':'मेन्यू',
+  'Hide menu':'मेन्यू छुपाएँ',
+  'Show navigation':'नेविगेशन दिखाएँ',
+  'Live — connected':'Live — Connected',
+  'Connecting…':'कनेक्ट हो रहा है…',
+  'PPC Excel Import':'PPC Excel Import',
+  'FG Excel Import':'FG Excel Import',
+  'PPC · NEW ORDERS ONLY':'PPC · केवल नई ऑर्डर्स',
+  'PPC Excel Order Import':'PPC Excel Order Import',
+  'Upload the PPC Excel template to create NEW customer orders. Existing orders are recognized and skipped — carry-forward orders must not be uploaded again.':'नई Customer Orders बनाने के लिए PPC Excel template upload करें। Existing Orders पहचानकर skip की जाएंगी — carry-forward orders को दोबारा upload न करें।',
+  'PPC / Owner':'PPC / Owner',
+  'Download Template':'Template Download करें',
+  'Choose Excel':'Excel चुनें',
+  'No file selected':'कोई file select नहीं है',
+  'Important:':'महत्वपूर्ण:',
+  'Use this only for new customer orders. Do not enter the same order again for next-day planning.':'इसे केवल नई Customer Orders के लिए इस्तेमाल करें। Next-day planning के लिए वही order दोबारा enter न करें।',
+  'The existing OrderID remains the order\'s identity for future PPC planning.':'Future PPC planning के लिए existing OrderID ही order की identity रहेगी।',
+  'Choose an Excel file to begin.':'शुरू करने के लिए Excel file चुनें।',
+  'No file loaded.':'कोई file load नहीं हुई है।',
+  'Apply New Orders':'New Orders Apply करें',
+  'FG STOCK · EXCEL':'FG STOCK · EXCEL',
+  'FG Stock Excel Import':'FG Stock Excel Import',
+  'Upload the FG stock template. Available Quantity becomes the current FG stock for Part Code + Production Unit. FG By is automatically taken from the logged-in user.':'FG stock template upload करें। Available Quantity, Part Code + Production Unit का current FG stock बनेगा। FG By logged-in user से automatically लिया जाएगा।',
+  'Owner / PPC / Dispatch':'Owner / PPC / Dispatch',
+  'Stock rule:':'Stock rule:',
+  'the import sets the live stock balance; it does not add the uploaded quantity again.':'Import live stock balance set करता है; uploaded quantity को दोबारा add नहीं करता।',
+  'Customer Name / UOM / Stock Date / Remarks are retained in the import log for traceability.':'Customer Name / UOM / Stock Date / Remarks traceability के लिए import log में रखे जाते हैं।',
+  'Apply FG Stock':'FG Stock Apply करें',
+  'PPC Import':'PPC Import',
+  'FG Import':'FG Import',
+  'New Orders':'New Orders',
+  'Existing':'Existing',
+  'Duplicate':'Duplicate',
+  'Ready to create':'Create करने के लिए Ready',
+  'Existing order recognized — skipped':'Existing order पहचान ली गई — skip की गई',
+  'Duplicate row inside uploaded file — skipped':'Uploaded file में duplicate row — skip की गई',
+  'Preview':'Preview',
+  'Import':'Import',
+  'Clear':'Clear',
+  'Apply':'Apply',
+  'Status':'Status',
+  'Message':'Message',
+  'Row':'Row',
+  'Total':'Total',
+  'Errors':'Errors',
+  'successfully':'सफलतापूर्वक'
+});
+
+
 function translateInterface(){
   const lang=currentAppLanguage(), dict=UI_TRANSLATIONS[lang]||UI_TRANSLATIONS.en;
   const root=document.documentElement;
@@ -5150,7 +5268,7 @@ function build(){
      <select id="gp-lang" class="gp-lang" aria-label="Language" onchange="setAppLanguage(this.value)">
        <option value="en">English</option><option value="mr">मराठी</option><option value="hi">हिन्दी</option>
      </select>
-     <button class="gp-theme" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">☀</button>
+     <button class="gp-theme" onclick="toggleTheme()" title="Switch to light theme" aria-label="Switch to light theme">☀</button>
      <span id="gp-role" class="gp-role">${esc(SESSION?.displayName||'')} — ${esc(SESSION?.role||'')}</span>
      <span id="gp-conn" class="gp-conn">Live — connected</span>
      <button class="gp-logout" onclick="doLogout()">Log out</button>
@@ -5218,7 +5336,16 @@ window.doLogout=function(){
   if(reopen) reopen.style.display='none';
   window.scrollTo(0,0);
 };
-window.toggleTheme=function(){_th();if(cur==='dashboard')setTimeout(renderDash,50)};
+window.toggleTheme=function(){
+  _th();
+  const t=currentTheme();
+  document.querySelectorAll('.gp-theme,.theme-toggle').forEach(b=>{
+    b.textContent = t==='light' ? '☾' : '☀';
+    b.title = t==='light' ? 'Switch to dark theme' : 'Switch to light theme';
+    b.setAttribute('aria-label', b.title);
+  });
+  if(cur==='dashboard')setTimeout(renderDash,50);
+};
 
 /* ---------- DRILL-DOWN ---------- */
 window.gpSet=(k,v)=>{flt[k]=v;renderDash()};window.gpClear=k=>{k?delete flt[k]:flt={};renderDash()};
@@ -5767,3 +5894,235 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
 </style>
 </body>
 </html>
+
+<style id="greenpack-theme-v2">
+/* =========================================================
+   GREENPACK MIS — THEME V2
+   Deep professional dark + clean plant/MIS light theme.
+   ========================================================= */
+
+/* ---------- DARK ---------- */
+:root[data-theme="dark"] body.gp-on{
+  --gp-bg:#080b0f;
+  --gp-surface:#10151b;
+  --gp-surface-2:#151c23;
+  --gp-surface-3:#1b242d;
+  --gp-line:#26313b;
+  --gp-line-strong:#34414c;
+  --gp-text:#f4f7f9;
+  --gp-muted:#9aa8b5;
+  --gp-green:#18a957;
+  --gp-green-strong:#0d7f3b;
+  --gp-green-soft:rgba(24,169,87,.14);
+  --gp-blue:#5b9cf6;
+  --gp-shadow:0 12px 32px rgba(0,0,0,.32);
+  background:
+    radial-gradient(900px 500px at 0% -10%,rgba(24,169,87,.10),transparent 62%),
+    radial-gradient(900px 500px at 100% 0%,rgba(91,156,246,.08),transparent 58%),
+    #080b0f!important;
+  color:var(--gp-text)!important;
+}
+:root[data-theme="dark"] body.gp-on #gp-top{
+  background:rgba(12,17,22,.94)!important;
+  border-bottom:1px solid var(--gp-line)!important;
+  box-shadow:0 6px 22px rgba(0,0,0,.22)!important;
+  backdrop-filter:blur(14px);
+}
+:root[data-theme="dark"] body.gp-on #gp-side{
+  background:linear-gradient(180deg,#0b1015 0%,#0a0f13 100%)!important;
+  border-right:1px solid var(--gp-line)!important;
+}
+:root[data-theme="dark"] body.gp-on .card,
+:root[data-theme="dark"] body.gp-on .set-builder,
+:root[data-theme="dark"] body.gp-on .import-hero{
+  background:linear-gradient(180deg,#11171d,#0e1419)!important;
+  border-color:var(--gp-line)!important;
+  box-shadow:var(--gp-shadow)!important;
+}
+:root[data-theme="dark"] body.gp-on .gp-it{
+  color:#aebbc6!important;
+}
+:root[data-theme="dark"] body.gp-on .gp-it:hover{
+  background:#121b22!important;
+  color:#fff!important;
+  border-color:#22322b!important;
+}
+:root[data-theme="dark"] body.gp-on .gp-it.on{
+  background:linear-gradient(90deg,#08762f,#0d8a3b)!important;
+  color:#fff!important;
+  border-color:#159447!important;
+  box-shadow:inset 3px 0 0 #42e584,0 4px 14px rgba(13,138,59,.20)!important;
+}
+:root[data-theme="dark"] body.gp-on input,
+:root[data-theme="dark"] body.gp-on select,
+:root[data-theme="dark"] body.gp-on textarea{
+  background:#0d1318!important;
+  color:#edf2f5!important;
+  border-color:#2a3640!important;
+}
+:root[data-theme="dark"] body.gp-on input:focus,
+:root[data-theme="dark"] body.gp-on select:focus,
+:root[data-theme="dark"] body.gp-on textarea:focus{
+  border-color:#2ab96a!important;
+  box-shadow:0 0 0 3px rgba(42,185,106,.13)!important;
+}
+:root[data-theme="dark"] body.gp-on .btn-ghost,
+:root[data-theme="dark"] body.gp-on .gp-lang,
+:root[data-theme="dark"] body.gp-on .gp-theme,
+:root[data-theme="dark"] body.gp-on .gp-logout{
+  background:#11181e!important;
+  color:#dce5ea!important;
+  border-color:#2b3741!important;
+}
+:root[data-theme="dark"] body.gp-on .btn-ghost:hover,
+:root[data-theme="dark"] body.gp-on .gp-theme:hover,
+:root[data-theme="dark"] body.gp-on .gp-logout:hover{
+  background:#182129!important;
+  border-color:#3a4a56!important;
+}
+:root[data-theme="dark"] body.gp-on .btn-primary{
+  background:linear-gradient(135deg,#0c8b3e,#16a654)!important;
+  border-color:#16a654!important;
+  box-shadow:0 5px 16px rgba(22,166,84,.22)!important;
+}
+:root[data-theme="dark"] body.gp-on .import-note{
+  background:rgba(24,169,87,.08)!important;
+  border-color:rgba(24,169,87,.25)!important;
+}
+:root[data-theme="dark"] body.gp-on .import-badge{
+  background:#123a25!important;
+  color:#74e7a2!important;
+  border-color:#1b7041!important;
+}
+
+/* ---------- LIGHT ---------- */
+:root[data-theme="light"] body.gp-on{
+  --gp-bg:#f3f6f8;
+  --gp-surface:#ffffff;
+  --gp-surface-2:#f8fafb;
+  --gp-surface-3:#eef3f0;
+  --gp-line:#dce4e0;
+  --gp-line-strong:#c7d3cd;
+  --gp-text:#17221d;
+  --gp-muted:#66756e;
+  --gp-green:#087a32;
+  --gp-green-strong:#056326;
+  --gp-green-soft:#eaf7ef;
+  --gp-blue:#2563eb;
+  --gp-shadow:0 8px 26px rgba(21,50,37,.08);
+  background:
+    radial-gradient(1000px 500px at 0% -15%,rgba(15,143,70,.08),transparent 62%),
+    #f3f6f8!important;
+  color:var(--gp-text)!important;
+}
+:root[data-theme="light"] body.gp-on #gp-top{
+  background:rgba(255,255,255,.96)!important;
+  border-bottom:1px solid #dbe4df!important;
+  box-shadow:0 4px 18px rgba(20,50,35,.07)!important;
+  backdrop-filter:blur(14px);
+}
+:root[data-theme="light"] body.gp-on #gp-side{
+  background:#ffffff!important;
+  border-right:1px solid #dce4e0!important;
+  box-shadow:4px 0 18px rgba(21,50,37,.035)!important;
+}
+:root[data-theme="light"] body.gp-on .gp-it{
+  color:#506158!important;
+}
+:root[data-theme="light"] body.gp-on .gp-it:hover{
+  background:#f1f7f3!important;
+  color:#173b27!important;
+  border-color:#d9e9df!important;
+}
+:root[data-theme="light"] body.gp-on .gp-it.on{
+  background:linear-gradient(90deg,#087a32,#0a913d)!important;
+  color:#fff!important;
+  border-color:#159447!important;
+  box-shadow:inset 3px 0 0 #42d878,0 4px 14px rgba(8,122,50,.13)!important;
+}
+:root[data-theme="light"] body.gp-on .card,
+:root[data-theme="light"] body.gp-on .set-builder,
+:root[data-theme="light"] body.gp-on .import-hero{
+  background:#ffffff!important;
+  border-color:#dce5e0!important;
+  box-shadow:var(--gp-shadow)!important;
+}
+:root[data-theme="light"] body.gp-on input,
+:root[data-theme="light"] body.gp-on select,
+:root[data-theme="light"] body.gp-on textarea{
+  background:#fff!important;
+  color:#17221d!important;
+  border-color:#cfdad4!important;
+}
+:root[data-theme="light"] body.gp-on input:focus,
+:root[data-theme="light"] body.gp-on select:focus,
+:root[data-theme="light"] body.gp-on textarea:focus{
+  border-color:#168a43!important;
+  box-shadow:0 0 0 3px rgba(22,138,67,.10)!important;
+}
+:root[data-theme="light"] body.gp-on .btn-ghost,
+:root[data-theme="light"] body.gp-on .gp-lang,
+:root[data-theme="light"] body.gp-on .gp-theme,
+:root[data-theme="light"] body.gp-on .gp-logout{
+  background:#fff!important;
+  color:#34443c!important;
+  border-color:#cfdad4!important;
+}
+:root[data-theme="light"] body.gp-on .btn-ghost:hover,
+:root[data-theme="light"] body.gp-on .gp-theme:hover,
+:root[data-theme="light"] body.gp-on .gp-logout:hover{
+  background:#f4f8f5!important;
+  border-color:#aebfb5!important;
+}
+:root[data-theme="light"] body.gp-on .btn-primary{
+  background:linear-gradient(135deg,#087a32,#0b9540)!important;
+  border-color:#087a32!important;
+  box-shadow:0 5px 16px rgba(8,122,50,.16)!important;
+}
+:root[data-theme="light"] body.gp-on .import-note{
+  background:#f0f8f3!important;
+  border-color:#cfe6d7!important;
+}
+:root[data-theme="light"] body.gp-on .import-badge{
+  background:#e8f6ed!important;
+  color:#087a32!important;
+  border-color:#c7e5d1!important;
+}
+
+/* ---------- BOTH THEMES: better readability for import screens ---------- */
+.import-hero{
+  border-radius:16px!important;
+  padding:20px 22px!important;
+  margin-bottom:14px!important;
+}
+.import-kicker{
+  letter-spacing:.12em!important;
+  font-weight:800!important;
+  font-size:10px!important;
+  margin-bottom:6px!important;
+}
+.import-hero h2{margin:0 0 7px!important;font-size:22px!important;}
+.import-note{
+  border-radius:12px!important;
+  padding:12px 14px!important;
+  line-height:1.6!important;
+}
+.import-summary{
+  border-radius:11px!important;
+  padding:11px 13px!important;
+  margin:12px 0!important;
+}
+.import-table-wrap{
+  border-radius:12px!important;
+  overflow:auto!important;
+}
+#ppc-import-table,#fg-import-table{min-width:900px!important;}
+#ppc-import-table th,#fg-import-table th{
+  position:sticky!important;top:0!important;z-index:5!important;
+}
+@media(max-width:900px){
+  .import-hero{padding:16px!important;}
+  .import-hero h2{font-size:18px!important;}
+  .import-toolbar{gap:8px!important;}
+}
+</style>
