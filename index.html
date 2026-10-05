@@ -886,6 +886,39 @@ body {
 </style>
 
 
+
+<style id="excel-import-ui-style">
+.import-hero{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+  padding:18px 20px;margin-bottom:14px;border-radius:16px;
+  background:linear-gradient(135deg,rgba(16,185,129,.13),rgba(91,141,239,.10));
+  border:1px solid rgba(16,185,129,.25);
+}
+.import-hero.fg{background:linear-gradient(135deg,rgba(59,130,246,.13),rgba(16,185,129,.08));border-color:rgba(59,130,246,.25)}
+.import-hero h2{margin:3px 0 5px;font-size:17px}
+.import-kicker{font-size:9px;letter-spacing:.14em;color:#5ee0a9;font-weight:800}
+.import-badge{font-size:10px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--panel-2);color:var(--muted);white-space:nowrap}
+.import-toolbar{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
+.import-toolbar>div{display:flex;gap:8px;flex-wrap:wrap}
+.import-note{padding:10px 12px;border:1px dashed var(--border);border-radius:10px;background:rgba(255,255,255,.025);color:var(--muted);font-size:11px;line-height:1.5;margin-bottom:12px}
+.import-note b{color:var(--text)}
+.import-summary{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel-2);font-size:12px;margin-bottom:10px}
+.import-summary .good{color:var(--accent-2);font-weight:700}
+.import-summary .warn{color:var(--warn);font-weight:700}
+.import-errors{color:var(--danger);font-size:11px;line-height:1.45;margin-bottom:8px;white-space:pre-wrap}
+.import-table-wrap{max-height:440px;border:1px solid var(--border);border-radius:10px}
+#import-table{min-width:900px}
+#ppc-import-table,#fg-import-table{min-width:900px}
+#ppc-import-table th,#fg-import-table th{position:sticky;top:0;z-index:5;background:var(--panel)}
+#ppc-import-table .status-new{color:var(--accent-2);font-weight:700}
+#ppc-import-table .status-existing,#ppc-import-table .status-dup{color:var(--warn);font-weight:700}
+.import-table-wrap td{vertical-align:top}
+@media(max-width:700px){
+  .import-hero{flex-direction:column}
+  .import-badge{align-self:flex-start}
+}
+</style>
+
 <style id="language-theme-style">
 /* ===== LANGUAGE + THEME CONTROLS ===== */
 .app-preferences{display:flex;align-items:center;gap:7px;margin-left:2px}
@@ -2198,6 +2231,75 @@ html{scroll-padding-top:calc(var(--gp-header-h,72px) + 16px)!important;}
     <div class="card"><h2>Configured Fields</h2><div id="admin-field-list" class="config-list"></div></div>
   </div>
 
+
+  <!-- PPC EXCEL IMPORT TAB -->
+  <div id="tab-ppc-import" style="display:none;">
+    <div class="import-hero">
+      <div>
+        <div class="import-kicker">PPC · NEW ORDERS ONLY</div>
+        <h2>PPC Excel Order Import</h2>
+        <div class="sub">Upload the PPC Excel template to create NEW customer orders. Existing orders are recognized and skipped — carry-forward orders must not be uploaded again.</div>
+      </div>
+      <div class="import-badge">PPC / Owner</div>
+    </div>
+    <div class="card">
+      <div class="import-toolbar">
+        <div>
+          <button class="btn-ghost btn-small" type="button" onclick="downloadPPCTemplate()">Download Template</button>
+          <button class="btn-ghost btn-small" type="button" onclick="document.getElementById('ppc-import-file').click()">Choose Excel</button>
+        </div>
+        <input id="ppc-import-file" type="file" accept=".xlsx,.xls,.csv" style="display:none">
+        <span id="ppc-import-file-name" class="mini-note">No file selected</span>
+      </div>
+      <div class="import-note">
+        <b>Important:</b> Use this only for <b>new customer orders</b>. Do not enter the same order again for next-day planning.
+        The existing OrderID remains the order's identity for future PPC planning.
+      </div>
+      <div id="ppc-import-summary" class="import-summary">Choose an Excel file to begin.</div>
+      <div id="ppc-import-errors" class="import-errors"></div>
+      <div class="table-scroll import-table-wrap"><table id="ppc-import-table"><thead></thead><tbody><tr><td class="empty">No file loaded.</td></tr></tbody></table></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" type="button" onclick="clearPPCImport()">Clear</button>
+        <button class="btn-primary" id="ppc-import-apply" type="button" onclick="applyPPCImportUI()" disabled>Apply New Orders</button>
+      </div>
+      <div class="status-msg" id="ppc-import-status"></div>
+    </div>
+  </div>
+
+  <!-- FG STOCK EXCEL IMPORT TAB -->
+  <div id="tab-fg-import" style="display:none;">
+    <div class="import-hero fg">
+      <div>
+        <div class="import-kicker">FG STOCK · EXCEL</div>
+        <h2>FG Stock Excel Import</h2>
+        <div class="sub">Upload the FG stock template. <b>Available Quantity becomes the current FG stock</b> for Part Code + Production Unit. FG By is automatically taken from the logged-in user.</div>
+      </div>
+      <div class="import-badge">Owner / PPC / Dispatch</div>
+    </div>
+    <div class="card">
+      <div class="import-toolbar">
+        <div>
+          <button class="btn-ghost btn-small" type="button" onclick="downloadFGTemplate()">Download Template</button>
+          <button class="btn-ghost btn-small" type="button" onclick="document.getElementById('fg-import-file').click()">Choose Excel</button>
+        </div>
+        <input id="fg-import-file" type="file" accept=".xlsx,.xls,.csv" style="display:none">
+        <span id="fg-import-file-name" class="mini-note">No file selected</span>
+      </div>
+      <div class="import-note">
+        <b>Stock rule:</b> the import sets the live stock balance; it does not add the uploaded quantity again.
+        Customer Name / UOM / Stock Date / Remarks are retained in the import log for traceability.
+      </div>
+      <div id="fg-import-summary" class="import-summary">Choose an Excel file to begin.</div>
+      <div id="fg-import-errors" class="import-errors"></div>
+      <div class="table-scroll import-table-wrap"><table id="fg-import-table"><thead></thead><tbody><tr><td class="empty">No file loaded.</td></tr></tbody></table></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" type="button" onclick="clearFGImport()">Clear</button>
+        <button class="btn-primary" id="fg-import-apply" type="button" onclick="applyFGImportUI()" disabled>Apply FG Stock</button>
+      </div>
+      <div class="status-msg" id="fg-import-status"></div>
+    </div>
+  </div>
+
   <!-- STOCK TAB -->
   <div id="tab-stock" style="display:none;">
     <div class="card" id="stock-admin-card">
@@ -2778,8 +2880,9 @@ function applyRoleUI() {
   const can = p => isOwner || perms.has(p);
   const allowed = new Set(['orders','stock','complaints','discussion']);
   if (isOwner || isDispatch || can('view_dispatch')) allowed.add('dispatch-history');
-  if (isOwner || isPPC || isAdmin || can('create_orders')) { allowed.add('multiple'); allowed.add('new'); }
+  if (isOwner || isPPC || isAdmin || can('create_orders')) { allowed.add('multiple'); allowed.add('new'); allowed.add('ppc-import'); }
   if (isOwner || isPPC) allowed.add('sets');
+  if (isOwner || isDispatch || isPPC) allowed.add('fg-import');
   if (isOwner || isDispatch || can('mark_dispatched')) { allowed.add('multiple'); allowed.add('new'); }
   if (isOwner || isAdmin || can('access_admin_panel')) allowed.add('admin');
   document.querySelectorAll('.tab').forEach(t => { t.style.display = allowed.has(t.dataset.tab) ? '' : 'none'; });
@@ -2790,6 +2893,8 @@ function applyRoleUI() {
   const setBuilderCard=document.getElementById('set-builder-card'); if(setBuilderCard) setBuilderCard.style.display=isPPC||isOwner?'':'none';
   const ppcCard=document.getElementById('ppc-multiple-card'); if(ppcCard) ppcCard.style.display=isPPC||isOwner||isAdmin?'':'none';
   const dispatchMulti=document.getElementById('dispatch-multiple-card'); if(dispatchMulti) dispatchMulti.style.display=isDispatch||isOwner?'':'none';
+  const ppcImportNav=document.querySelector('#gp-nav [data-t="ppc-import"]'); if(ppcImportNav) ppcImportNav.style.display=(isOwner||isPPC||isAdmin||can('create_orders'))?'':'none';
+  const fgImportNav=document.querySelector('#gp-nav [data-t="fg-import"]'); if(fgImportNav) fgImportNav.style.display=(isOwner||isDispatch||isPPC)?'':'none';
   const singleOrderCard=document.getElementById('single-order-card'); if(singleOrderCard) singleOrderCard.style.display=isDispatch&&!isPPC?'none':'';
   const dispatchEntryCard=document.getElementById('dispatch-entry-card'); if(dispatchEntryCard) dispatchEntryCard.style.display=isDispatch||isOwner?'':'none';
   const singleTitle=document.getElementById('single-order-title'); if(singleTitle) singleTitle.textContent=isDispatch&&!isPPC?'Single Dispatch':'New Order';
@@ -3061,7 +3166,7 @@ async function loadAux(mode){
 }
 
 function switchTab(name) {
-  ['multiple','sets','orders','new','stock','dispatch-history','complaints','discussion','admin'].forEach(t => {
+  ['multiple','sets','orders','new','stock','dispatch-history','ppc-import','fg-import','complaints','discussion','admin'].forEach(t => {
     const panel = document.getElementById('tab-' + t);
     const tab = document.querySelector(`.tab[data-tab="${t}"]`);
     if (panel) {
@@ -5009,10 +5114,10 @@ init();
 (function(){
 const $=id=>document.getElementById(id),N=v=>Number(v)||0,F=n=>N(n).toLocaleString('en-IN');
 const COL=['#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#14b8a6','#eab308','#64748b'];
-const PANELS=['multiple','sets','orders','new','stock','dispatch-history','complaints','discussion','admin'];
+const PANELS=['multiple','sets','orders','new','stock','dispatch-history','ppc-import','fg-import','complaints','discussion','admin'];
 let range='7',flt={},charts={},cur='dashboard',built=false;
-const NAV=[['','Dashboard','layout-dashboard','dashboard'],['ORDERS'],['All Orders','list','orders'],['New Order / Dispatch Entry','plus-square','new'],['Multiple Orders','layers','multiple'],['Customer Sets','boxes','sets'],
-['DISPATCH'],['Dispatch History','truck','dispatch-history'],['STOCK'],['FG Stock & Movement','package','stock'],['WORKSPACE'],['Complaints','alert-triangle','complaints'],['Discussion','message-square','discussion'],['Administration','settings','admin']];
+const NAV=[['','Dashboard','layout-dashboard','dashboard'],['ORDERS'],['All Orders','list','orders'],['New Order / Dispatch Entry','plus-square','new'],['Multiple Orders','layers','multiple'],['PPC Excel Import','file-spreadsheet','ppc-import'],['Customer Sets','boxes','sets'],
+['DISPATCH'],['Dispatch History','truck','dispatch-history'],['STOCK'],['FG Stock & Movement','package','stock'],['FG Excel Import','file-up','fg-import'],['WORKSPACE'],['Complaints','alert-triangle','complaints'],['Discussion','message-square','discussion'],['Administration','settings','admin']];
 const today=()=>fmtDate(new Date());
 function rng(){const p=n=>String(n).padStart(2,'0'),k=d=>d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()),t=new Date();let a=new Date(t),b=new Date(t);
  if(range==='y'){a.setDate(a.getDate()-1);b=new Date(a)}else if(range==='m')a=new Date(t.getFullYear(),t.getMonth(),1);else a.setDate(a.getDate()-(+range-1));
@@ -5223,6 +5328,215 @@ document.addEventListener('keydown',function(e){
   }
 },true);
 </script>
+
+<script>
+/* =========================================================
+   PPC + FG EXCEL IMPORT
+   - Frontend only reads the Excel and previews it.
+   - Existing Tally Dispatch Import is untouched.
+   ========================================================= */
+(function(){
+  const $=id=>document.getElementById(id);
+  const N=v=>Number(v)||0;
+  let ppcRows=[],fgRows=[],ppcPreview=null,fgPreview=null;
+
+  function escI(v){
+    return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function ymdI(v){
+    if(v instanceof Date && !isNaN(v.getTime())){
+      const d=new Date(v.getTime());
+      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    }
+    const s=String(v==null?'':v).trim();
+    if(!s)return '';
+    if(/^\d{4}-\d{1,2}-\d{1,2}$/.test(s)){
+      const d=new Date(s+'T00:00:00'); return isNaN(d.getTime())?'':d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    }
+    if(/^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$/.test(s)){
+      const a=s.split(/[\/-]/).map(Number),d=new Date(a[2],a[1]-1,a[0]);
+      return isNaN(d.getTime())?'':d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    }
+    return '';
+  }
+  function readExcel(file){
+    return file.arrayBuffer().then(buf=>{
+      const wb=XLSX.read(buf,{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      return XLSX.utils.sheet_to_json(ws,{defval:''});
+    });
+  }
+  function ppcParse(raw){
+    return raw.map((r,i)=>({
+      row:i+2,
+      customer:String(r['Customer Name']||'').trim(),
+      customerLocation:String(r['Customer Location']||'').trim(),
+      orderType:String(r['Order Type']||'STANDARD').trim().toUpperCase(),
+      partCode:String(r['Part Code']||'').trim(),
+      setCode:String(r['Set Code']||'').trim(),
+      orderQty:N(r['Order Quantity']),
+      uom:String(r['UOM']||'Nos').trim(),
+      unit:String(r['Production Unit']||'').trim(),
+      priority:String(r['Priority Level']||'Medium').trim(),
+      scheduledDate:ymdI(r['Scheduled Date']),
+      shipToParty:String(r['Ship To Party']||'').trim(),
+      shipToAddress:String(r['Ship-to Address']||'').trim()
+    })).filter(r=>Object.values(r).some(v=>String(v).trim()!==''));
+  }
+  function fgParse(raw){
+    return raw.map((r,i)=>({
+      row:i+2,
+      partCode:String(r['Part Code']||'').trim(),
+      customer:String(r['Customer Name']||'').trim(),
+      unit:String(r['Production Unit']||'').trim(),
+      qty:N(r['Available Quantity']),
+      uom:String(r['UOM']||'Nos').trim(),
+      stockDate:ymdI(r['Stock Date']),
+      remarks:String(r['Remarks']||'').trim()
+    })).filter(r=>Object.values(r).some(v=>String(v).trim()!==''));
+  }
+  function setStatus(id,msg,cls){
+    const e=$(id);if(!e)return;e.textContent=msg;e.className='status-msg '+(cls||'');
+  }
+
+  function renderPPCPreview(j){
+    ppcPreview=j;
+    const s=$('ppc-import-summary'), out=$('ppc-import-errors'),tb=$('ppc-import-table');
+    if(!s||!tb)return;
+    const newC=j.newCount||0,existC=j.existingCount||0,dupC=j.duplicateCount||0;
+    s.innerHTML=`Rows: <b>${j.total||ppcRows.length}</b> &nbsp; <span class="good">New: ${newC}</span> &nbsp; <span class="warn">Existing: ${existC}</span> &nbsp; <span class="warn">Duplicate in file: ${dupC}</span>`;
+    out.textContent=(j.validationErrors||[]).join('\n');
+    tb.querySelector('thead').innerHTML='<tr><th>Row</th><th>Status</th><th>Customer</th><th>Part / Set</th><th>Unit</th><th>Qty</th><th>Scheduled</th><th>Message</th></tr>';
+    tb.querySelector('tbody').innerHTML=(j.rows||[]).map(r=>{
+      const cls=r.status==='NEW'?'status-new':r.status==='EXISTING'?'status-existing':'status-dup';
+      return `<tr><td>${r.row}</td><td class="${cls}">${escI(r.status)}</td><td>${escI(r.customer)}</td><td>${escI(r.partCode)}</td><td>${escI(r.unit)}</td><td>${escI(r.orderQty)}</td><td>${escI(r.scheduledDate)}</td><td>${escI(r.message)}</td></tr>`;
+    }).join('')||'<tr><td class="empty" colspan="8">No rows to preview.</td></tr>';
+    $('ppc-import-apply').disabled=!(j.ok && newC>0);
+  }
+
+  async function previewPPC(rows){
+    setStatus('ppc-import-status','Checking Excel against current Orders…','');
+    const j=await postAction({action:'previewPPCOrderImport',orders:rows});
+    if(j.error){
+      setStatus('ppc-import-status',j.error,'err');
+      if(j.validationErrors)$('ppc-import-errors').textContent=j.validationErrors.join('\n');
+      $('ppc-import-apply').disabled=true;return;
+    }
+    renderPPCPreview(j);
+    setStatus('ppc-import-status',j.newCount?'Preview ready. Nothing has been saved yet.':'No new orders to create.','ok');
+  }
+
+  async function applyPPCImportUI(){
+    if(!ppcPreview||!ppcPreview.ok||!(ppcPreview.newCount>0))return;
+    const btn=$('ppc-import-apply');btn.disabled=true;setStatus('ppc-import-status','Creating new orders…','');
+    const j=await postAction({action:'applyPPCOrderImport',orders:ppcRows});
+    if(j.error){
+      setStatus('ppc-import-status',j.error,'err');
+      if(j.validationErrors)$('ppc-import-errors').textContent=j.validationErrors.join('\n');
+      btn.disabled=false;return;
+    }
+    setStatus('ppc-import-status',j.message||'PPC import completed.','ok');
+    await loadData(true,true);
+    // Refresh preview so already-created rows show as Existing if the user keeps the file open.
+    await previewPPC(ppcRows);
+  }
+
+  function renderFGPreview(j){
+    fgPreview=j;
+    const s=$('fg-import-summary'),out=$('fg-import-errors'),tb=$('fg-import-table');
+    s.innerHTML=`Rows: <b>${j.total||fgRows.length}</b> &nbsp; <span class="good">Ready: ${(j.rows||[]).length-(j.validationErrors||[]).length}</span>`;
+    out.textContent=(j.validationErrors||[]).join('\n');
+    tb.querySelector('thead').innerHTML='<tr><th>Row</th><th>Part Code</th><th>Customer</th><th>Unit</th><th>Available Qty</th><th>UOM</th><th>Stock Date</th><th>Remarks</th></tr>';
+    tb.querySelector('tbody').innerHTML=(j.rows||[]).map(r=>`<tr><td>${r.row}</td><td>${escI(r.partCode)}</td><td>${escI(r.customer)}</td><td>${escI(r.unit)}</td><td>${escI(r.availableQty)}</td><td>${escI(r.uom)}</td><td>${escI(r.stockDate)}</td><td>${escI(r.remarks)}</td></tr>`).join('')||'<tr><td class="empty" colspan="8">No rows to preview.</td></tr>';
+    $('fg-import-apply').disabled=!j.ok;
+  }
+
+  async function previewFG(rows){
+    setStatus('fg-import-status','Checking FG stock rows…','');
+    const j=await postAction({action:'previewFGStockImport',rows});
+    if(j.error){
+      setStatus('fg-import-status',j.error,'err');
+      if(j.validationErrors)$('fg-import-errors').textContent=j.validationErrors.join('\n');
+      $('fg-import-apply').disabled=true;return;
+    }
+    renderFGPreview(j);
+    setStatus('fg-import-status','Preview ready. Nothing has been saved yet.','ok');
+  }
+
+  async function applyFGImportUI(){
+    if(!fgPreview||!fgPreview.ok)return;
+    const btn=$('fg-import-apply');btn.disabled=true;setStatus('fg-import-status','Updating FG stock…','');
+    const j=await postAction({action:'applyFGStockImport',rows:fgRows});
+    if(j.error){
+      setStatus('fg-import-status',j.error,'err');
+      if(j.validationErrors)$('fg-import-errors').textContent=j.validationErrors.join('\n');
+      btn.disabled=false;return;
+    }
+    setStatus('fg-import-status',j.message||'FG stock import completed.','ok');
+    await loadData(true,true);
+  }
+
+  function handlePPCFile(f){
+    $('ppc-import-file-name').textContent=f.name;
+    setStatus('ppc-import-status','Reading '+f.name+'…','');
+    readExcel(f).then(raw=>{
+      ppcRows=ppcParse(raw);
+      if(!ppcRows.length)throw new Error('No usable rows found. Check the template headers.');
+      return previewPPC(ppcRows);
+    }).catch(e=>{setStatus('ppc-import-status',e.message||String(e),'err');});
+  }
+  function handleFGFile(f){
+    $('fg-import-file-name').textContent=f.name;
+    setStatus('fg-import-status','Reading '+f.name+'…','');
+    readExcel(f).then(raw=>{
+      fgRows=fgParse(raw);
+      if(!fgRows.length)throw new Error('No usable rows found. Check the template headers.');
+      return previewFG(fgRows);
+    }).catch(e=>{setStatus('fg-import-status',e.message||String(e),'err');});
+  }
+
+  function clearPPCImport(){
+    ppcRows=[];ppcPreview=null;
+    $('ppc-import-file').value='';$('ppc-import-file-name').textContent='No file selected';
+    $('ppc-import-summary').textContent='Choose an Excel file to begin.';$('ppc-import-errors').textContent='';
+    $('ppc-import-table').querySelector('thead').innerHTML='';$('ppc-import-table').querySelector('tbody').innerHTML='<tr><td class="empty">No file loaded.</td></tr>';
+    $('ppc-import-apply').disabled=true;setStatus('ppc-import-status','','');
+  }
+  function clearFGImport(){
+    fgRows=[];fgPreview=null;
+    $('fg-import-file').value='';$('fg-import-file-name').textContent='No file selected';
+    $('fg-import-summary').textContent='Choose an Excel file to begin.';$('fg-import-errors').textContent='';
+    $('fg-import-table').querySelector('thead').innerHTML='';$('fg-import-table').querySelector('tbody').innerHTML='<tr><td class="empty">No file loaded.</td></tr>';
+    $('fg-import-apply').disabled=true;setStatus('fg-import-status','','');
+  }
+
+  function downloadPPCTemplate(){
+    const wb=XLSX.utils.book_new();
+    const headers=['Customer Name','Customer Location','Order Type','Part Code','Set Code','Order Quantity','UOM','Production Unit','Priority Level','Scheduled Date','Ship To Party','Ship-to Address'];
+    const ws=XLSX.utils.aoa_to_sheet([headers]);
+    XLSX.utils.book_append_sheet(wb,ws,'Import');
+    XLSX.writeFile(wb,'Greenpack_PPC_Order_Import.xlsx');
+  }
+  function downloadFGTemplate(){
+    const wb=XLSX.utils.book_new();
+    const headers=['Part Code','Customer Name','Production Unit','Available Quantity','UOM','Stock Date','Remarks'];
+    const ws=XLSX.utils.aoa_to_sheet([headers]);
+    XLSX.utils.book_append_sheet(wb,ws,'FG_Stock_Import');
+    XLSX.writeFile(wb,'Greenpack_FG_Stock_Import.xlsx');
+  }
+
+  $('ppc-import-file')?.addEventListener('change',e=>e.target.files[0]&&handlePPCFile(e.target.files[0]));
+  $('fg-import-file')?.addEventListener('change',e=>e.target.files[0]&&handleFGFile(e.target.files[0]));
+
+  window.applyPPCImportUI=applyPPCImportUI;
+  window.applyFGImportUI=applyFGImportUI;
+  window.clearPPCImport=clearPPCImport;
+  window.clearFGImport=clearFGImport;
+  window.downloadPPCTemplate=downloadPPCTemplate;
+  window.downloadFGTemplate=downloadFGTemplate;
+})();
+</script>
+
 <!-- TALLY DISPATCH IMPORT — added after Greenpack Control Center dashboard patch -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
