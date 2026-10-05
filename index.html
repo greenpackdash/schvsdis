@@ -1729,7 +1729,7 @@ html{scroll-padding-top:calc(var(--gp-header-h,72px) + 16px)!important;}
     <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme"><span id="login-theme-icon">☀</span></button>
   </div>
   <div class="login-card">
-    <img src="GREENPACK LATEST LOGO.PNG" alt="Greenpack Complete Packaging Solutions" class="brand-logo">
+    <img src="GREENPACK-LATEST-LOGO.png" alt="Greenpack Complete Packaging Solutions" class="brand-logo">
     <h2>Schedule vs Dispatch — MIS</h2>
     <div class="sub">Sign in with your Greenpack MIS credentials</div>
     <div class="field">
@@ -1761,7 +1761,7 @@ html{scroll-padding-top:calc(var(--gp-header-h,72px) + 16px)!important;}
 
 <div class="topbar">
   <div style="display:flex; align-items:center; gap:16px;">
-    <img src="GREENPACK LATEST LOGO.PNG" alt="Greenpack Complete Packaging Solutions" class="brand-logo">
+    <img src="GREENPACK-LATEST-LOGO.png" alt="Greenpack Complete Packaging Solutions" class="brand-logo">
     <div>
       <h1>Schedule vs Dispatch — MIS</h1>
       <div class="sub" id="scope-sub">Live order tracking</div>
@@ -2542,7 +2542,39 @@ const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwShcRN
 const FAST_REFRESH_DEBOUNCE = 120;
 const V2_BUILD = '2026.09.03-V3-FAST-BATCH';
 let APPS_SCRIPT_URL = DEFAULT_APPS_SCRIPT_URL;
+// Always pin the frontend to the currently deployed Web App. This prevents an
+// older URL stored by a previous GitHub build from silently taking over.
 localStorage.setItem('svd_url', APPS_SCRIPT_URL);
+
+async function fetchAppScriptJson_(url, options={}, retries=2){
+  let lastErr;
+  for(let attempt=0; attempt<=retries; attempt++){
+    try{
+      const res = await fetch(url, {
+        cache:'no-store',
+        redirect:'follow',
+        ...options
+      });
+      const raw = await res.text();
+      if(!res.ok){
+        if([408,429,500,502,503,504].includes(res.status) && attempt<retries){
+          await new Promise(r=>setTimeout(r, 700*(attempt+1)));
+          continue;
+        }
+        throw new Error('HTTP '+res.status+(raw ? ': '+raw.slice(0,180) : ''));
+      }
+      try { return JSON.parse(raw); }
+      catch(e){ throw new Error('Apps Script returned non-JSON response'); }
+    }catch(e){
+      lastErr=e;
+      if(attempt<retries){
+        await new Promise(r=>setTimeout(r, 700*(attempt+1)));
+      }
+    }
+  }
+  throw lastErr || new Error('Unable to reach Apps Script');
+}
+
 let TOKEN = sessionStorage.getItem('svd_token') || '';
 let SESSION = JSON.parse(sessionStorage.getItem('svd_session') || 'null');
 let data = { orders: [], logs: [], customers: [], partCodes: [], locations: [], shipToParties: [], sets: [], setOrders: [], departments: [], stock: [], stockMovements: [], uoms: ['Nos','Pcs','Kg','Box','Sheet','Set','Meter'], discussion: [], complaints: [], complaintComments: [], v2: {permissions:[],roles:[],fields:[],dropdowns:[],plans:{},additional:{}} };
@@ -2918,8 +2950,7 @@ async function loadOlderOrders(){
   try{
     const nextOffset=Number(data.orderOffset||0)+Number(data.orderLimit||3000);
     const limit=Number(data.orderLimit||3000);
-    const res=await fetch(APPS_SCRIPT_URL+'?mode=core&token='+encodeURIComponent(TOKEN)+'&orderOffset='+encodeURIComponent(nextOffset)+'&orderLimit='+encodeURIComponent(limit)+'&_='+Date.now(),{cache:'no-store'});
-    const json=await res.json();
+    const json=await fetchAppScriptJson_(APPS_SCRIPT_URL+'?mode=core&token='+encodeURIComponent(TOKEN)+'&orderOffset='+encodeURIComponent(nextOffset)+'&orderLimit='+encodeURIComponent(limit)+'&_='+Date.now());
     if(json.error)throw new Error(json.error);
     const existing=new Map((data.orders||[]).map(o=>[String(o.OrderID),o]));
     (json.orders||[]).forEach(o=>existing.set(String(o.OrderID),o));
@@ -2949,8 +2980,7 @@ async function loadData(silent=false,force=false) {
   loadInFlight=(async()=>{
     try {
       const versionParam = (!force && dataVersion) ? '&sinceVersion=' + encodeURIComponent(dataVersion) : '';
-      const res = await fetch(APPS_SCRIPT_URL + '?mode=core&token=' + encodeURIComponent(TOKEN) + versionParam + '&_=' + Date.now(), {cache:'no-store'});
-      const json = await res.json();
+      const json = await fetchAppScriptJson_(APPS_SCRIPT_URL + '?mode=core&token=' + encodeURIComponent(TOKEN) + versionParam + '&_=' + Date.now());
       if (json.error && /session has expired|auth_required/i.test(json.error)) {
         stopAutoRefresh();
         setConn('err','Session expired — please sign in again.');
@@ -3013,8 +3043,7 @@ async function loadV2(force=false){
   if(v2InFlight) return v2InFlight;
   v2InFlight=(async()=>{
     try{
-      const res=await fetch(APPS_SCRIPT_URL+'?mode=v2&token='+encodeURIComponent(TOKEN),{cache:'no-store'});
-      const json=await res.json();
+      const json=await fetchAppScriptJson_(APPS_SCRIPT_URL+'?mode=v2&token='+encodeURIComponent(TOKEN));
       if(json.error){setConn('err',json.error);return false;}
       data.v2=json.v2||{permissions:[]};
       v2Loaded=true;
@@ -3028,7 +3057,7 @@ async function loadV2(force=false){
 let auxLoaded={complaints:false,discussion:false};
 async function loadAux(mode){
   if(auxLoaded[mode]) return;
-  try{const res=await fetch(APPS_SCRIPT_URL+'?mode='+mode+'&token='+encodeURIComponent(TOKEN),{cache:'no-store'});const json=await res.json();if(json.error)return;if(mode==='complaints'){data.complaints=json.complaints||[];data.complaintComments=json.complaintComments||[];renderComplaints();}else{data.discussion=json.discussion||[];renderDiscussion();}auxLoaded[mode]=true;}catch(e){}
+  try{const json=await fetchAppScriptJson_(APPS_SCRIPT_URL+'?mode='+mode+'&token='+encodeURIComponent(TOKEN));if(json.error)return;if(mode==='complaints'){data.complaints=json.complaints||[];data.complaintComments=json.complaintComments||[];renderComplaints();}else{data.discussion=json.discussion||[];renderDiscussion();}auxLoaded[mode]=true;}catch(e){}
 }
 
 function switchTab(name) {
@@ -5006,7 +5035,7 @@ function build(){
  const top=document.createElement('div');top.id='gp-top';
  top.innerHTML=`
    <div class="gp-head-brand">
-     <img class="gp-head-logo" src="GREENPACK LATEST LOGO.PNG" alt="Greenpack Complete Packaging Solutions">
+     <img class="gp-head-logo" src="GREENPACK-LATEST-LOGO.png" alt="Greenpack Complete Packaging Solutions">
      <div class="gp-head-copy">
        <div class="gp-head-title">Schedule vs Dispatch — MIS</div>
        <div class="gp-head-sub">Live order tracking across all units</div>
@@ -5223,7 +5252,7 @@ function mount(){
  gate();
 }
 function gate(){const it=document.querySelector('#gp-nav [data-t="tally"]');if(it)it.style.display=(typeof isOwnerUI==='function'&&isOwnerUI() || typeof isDispatchUI==='function'&&isDispatchUI())?'':'none'}
-async function loadState(){try{const r=await fetch(APPS_SCRIPT_URL+'?mode=tallymap&token='+encodeURIComponent(TOKEN)+'&_='+Date.now(),{cache:'no-store'});const j=await r.json();
+async function loadState(){try{const j=await fetchAppScriptJson_(APPS_SCRIPT_URL+'?mode=tallymap&token='+encodeURIComponent(TOKEN)+'&_='+Date.now());
  if(j.tally){map=j.tally.map||{};dup=new Set(j.tally.keys||[]);if(rows.length){fill();run();render()}}}catch(e){}}
 
 async function onFile(f){
@@ -5302,5 +5331,125 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
 })();
 </script>
 
+
+<style id="gp-menu-theme-alignment-final">
+/* FINAL CONTROL ALIGNMENT — Menu + Light/Dark toggle */
+#gp-side .gp-brand{
+  height:54px!important;
+  min-height:54px!important;
+  padding:0 12px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  box-sizing:border-box!important;
+}
+#gp-side .gp-menu-btn{
+  height:32px!important;
+  min-height:32px!important;
+  width:auto!important;
+  min-width:84px!important;
+  padding:0 11px!important;
+  margin:0!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  line-height:1!important;
+  vertical-align:middle!important;
+  box-sizing:border-box!important;
+}
+#gp-side .gp-menu-btn svg{
+  width:15px!important;
+  height:15px!important;
+  flex:0 0 15px!important;
+  display:block!important;
+}
+#gp-side .gp-menu-btn span{line-height:1!important}
+
+/* Header controls share one exact visual height and vertical center */
+#gp-top .gp-head-actions{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:10px!important;
+  height:100%!important;
+}
+#gp-top .gp-lang,
+#gp-top .gp-theme,
+#gp-top .gp-role,
+#gp-top .gp-conn,
+#gp-top .gp-logout{
+  box-sizing:border-box!important;
+  margin:0!important;
+  vertical-align:middle!important;
+}
+#gp-top .gp-lang{
+  height:34px!important;
+  min-height:34px!important;
+  min-width:108px!important;
+  padding:0 28px 0 12px!important;
+  line-height:32px!important;
+  display:block!important;
+}
+#gp-top .gp-theme{
+  width:34px!important;
+  min-width:34px!important;
+  height:34px!important;
+  min-height:34px!important;
+  padding:0!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  line-height:1!important;
+  font-size:15px!important;
+  flex:0 0 34px!important;
+}
+#gp-top .gp-theme:hover{transform:none!important}
+#gp-top .gp-role,
+#gp-top .gp-conn{
+  min-height:34px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+}
+#gp-top .gp-logout{
+  height:34px!important;
+  min-height:34px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  line-height:1!important;
+}
+
+/* Daylight theme: keep the toggle clearly visible and aligned */
+:root[data-theme="light"] #gp-top .gp-theme{
+  background:#fff!important;
+  color:#344054!important;
+  border:1px solid #cfd6e2!important;
+  box-shadow:0 1px 3px rgba(16,24,40,.08)!important;
+}
+:root[data-theme="light"] #gp-top .gp-theme:hover{
+  background:#f8fafc!important;
+  color:#5b21b6!important;
+  border-color:#7c3aed!important;
+}
+:root[data-theme="light"] #gp-side .gp-menu-btn{
+  background:#fff!important;
+  color:#344054!important;
+  border-color:#b7c3d4!important;
+  box-shadow:0 1px 2px rgba(16,24,40,.05)!important;
+}
+:root[data-theme="light"] #gp-side .gp-menu-btn:hover{
+  background:#ecfdf3!important;
+  color:#047857!important;
+  border-color:#22a05a!important;
+}
+
+@media(max-width:900px){
+  #gp-side .gp-brand{height:54px!important;min-height:54px!important;padding:0 12px!important}
+  #gp-top .gp-head-actions{gap:7px!important}
+  #gp-top .gp-lang{height:32px!important;min-height:32px!important;min-width:100px!important;line-height:30px!important}
+  #gp-top .gp-theme{width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important;flex-basis:32px!important}
+}
+</style>
 </body>
 </html>
