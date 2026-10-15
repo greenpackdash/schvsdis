@@ -1,4 +1,4 @@
-   <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -2566,6 +2566,18 @@ try{if(sessionStorage.getItem('svd_token'))document.documentElement.classList.ad
   .import-toolbar{gap:8px!important;}
 }
 </style>
+
+<style id="gp-discussion-notification-css">
+#gp-discussion-notifications{position:fixed;right:18px;top:82px;z-index:100000;display:flex;flex-direction:column;gap:10px;width:min(390px,calc(100vw - 28px));pointer-events:none}
+.gp-discussion-toast{pointer-events:auto;background:rgba(20,17,29,.97);color:#f5f3fa;border:1px solid rgba(139,92,246,.48);border-left:4px solid #8b5cf6;border-radius:13px;padding:12px 14px;box-shadow:0 16px 42px rgba(0,0,0,.42);animation:gpNoticeIn .22s ease-out;font-size:12px;line-height:1.45}
+.gp-discussion-toast strong{display:block;font-size:13px;margin-bottom:3px;color:#c4b5fd}
+.gp-discussion-toast .gp-notice-message{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px}
+.gp-discussion-toast button{float:right;background:transparent;color:#c4b5fd;padding:0 0 0 8px;font-size:17px;line-height:1}
+@keyframes gpNoticeIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+:root[data-theme="light"] .gp-discussion-toast{background:#fff;color:#344054;border-color:#d6c9ff;box-shadow:0 12px 32px rgba(16,24,40,.18)}
+:root[data-theme="light"] .gp-discussion-toast strong{color:#6d28d9}
+</style>
+
 </head>
 <body>
 <div id="boot-splash">Loading MIS…</div>
@@ -3970,6 +3982,7 @@ function showApp() {
   applyRoleUI();
   hydrateFromCache().then(h=>loadData(!!h));
   startAutoRefresh();
+  startDiscussionNotifications_();
 }
 
 /* =========================================================
@@ -5117,6 +5130,54 @@ async function sendDiscussion() {
   status.textContent='Sending…'; status.className='status-msg';
   try { const res=await postAction({action:'addDiscussion',message}); if(res.error) throw new Error(res.error); el.value=''; status.textContent='Sent.'; status.className='status-msg ok'; await loadData(); } catch(e){ status.textContent='Failed: '+e.message; status.className='status-msg err'; }
 }
+let discussionNoticeTimer_ = null;
+let discussionNoticePrimed_ = false;
+let discussionNoticeSeen_ = new Set();
+let discussionNoticeBusy_ = false;
+function showDiscussionPopup_(m){
+  let host=document.getElementById('gp-discussion-notifications');
+  if(!host){host=document.createElement('div');host.id='gp-discussion-notifications';document.body.appendChild(host);}
+  const who=String(m.DisplayName||m.Username||'Greenpack user');
+  let message=String(m.Message||'');
+  let created=String(m.CreatedAt||m.Timestamp||'');
+  if(isIsoDateText(message)&&!isIsoDateText(created)){const t=message;message=created;created=t;}
+  const card=document.createElement('div');card.className='gp-discussion-toast';
+  const title=document.createElement('strong');title.textContent='New Discussion Message';
+  const close=document.createElement('button');close.type='button';close.setAttribute('aria-label','Dismiss notification');close.textContent='×';close.onclick=()=>card.remove();
+  const meta=document.createElement('div');meta.textContent=who+(m.Unit?' · '+m.Unit:'');
+  const body=document.createElement('div');body.className='gp-notice-message';body.textContent=message.length>360?message.slice(0,357)+'…':message;
+  card.appendChild(close);card.appendChild(title);card.appendChild(meta);card.appendChild(body);host.prepend(card);
+  while(host.children.length>4)host.lastElementChild.remove();
+  window.setTimeout(()=>{if(card.isConnected)card.remove();},10000);
+  // Best-effort browser notification when permission has already been granted.
+  // The in-app popup above works without browser permission.
+  try{if('Notification' in window && Notification.permission==='granted' && document.visibilityState!=='visible')new Notification('Greenpack MIS · '+who,{body:message.slice(0,180)});}catch(e){}
+}
+async function pollDiscussionNotifications_(){
+  if(discussionNoticeBusy_||!TOKEN||!SESSION||!navigator.onLine)return;
+  discussionNoticeBusy_=true;
+  try{
+    const j=await fetchAppScriptJson_(APPS_SCRIPT_URL+'?mode=discussion&token='+encodeURIComponent(TOKEN)+'&_='+Date.now());
+    if(j.error||!Array.isArray(j.discussion))return;
+    const incoming=j.discussion;
+    const ids=incoming.map(m=>String(m.MessageID||[m.Username,m.CreatedAt,m.Message].join('|')));
+    if(!discussionNoticePrimed_){discussionNoticeSeen_=new Set(ids);discussionNoticePrimed_=true;data.discussion=incoming;auxLoaded.discussion=true;renderDiscussion();return;}
+    const fresh=[];
+    incoming.forEach((m,i)=>{const id=ids[i];if(!discussionNoticeSeen_.has(id)){discussionNoticeSeen_.add(id);if(String(m.Username||'').toLowerCase()!==String(SESSION.username||'').toLowerCase())fresh.push(m);}});
+    // Prevent an ever-growing in-memory set while preserving recent IDs.
+    if(discussionNoticeSeen_.size>2500)discussionNoticeSeen_=new Set(ids.slice(-1500));
+    data.discussion=incoming;auxLoaded.discussion=true;
+    if(document.getElementById('tab-discussion') && (document.getElementById('tab-discussion').style.display!=='none'))renderDiscussion();
+    fresh.slice(-3).forEach(showDiscussionPopup_);
+  }catch(e){}finally{discussionNoticeBusy_=false;}
+}
+function startDiscussionNotifications_(){
+  if(discussionNoticeTimer_)window.clearInterval(discussionNoticeTimer_);
+  discussionNoticePrimed_=false;discussionNoticeSeen_=new Set();
+  pollDiscussionNotifications_();
+  discussionNoticeTimer_=window.setInterval(pollDiscussionNotifications_,12000);
+}
+
 function renderDiscussion() {
   const box = document.getElementById('discussion-list');
   if (!box) return;
@@ -5588,7 +5649,16 @@ async function savePPCBulkOrders(){
   if(!rows.length){st.textContent='Add at least one order.';st.className='status-msg err';return;}
   st.textContent='Saving '+rows.length+' orders…';st.className='status-msg';
   try{
-    const r=await postAction({action:'bulkCreateOrders',orders:rows});
+    let r=await postAction({action:'bulkCreateOrders',orders:rows});
+    if(r.warning && Array.isArray(r.duplicateWarnings) && r.duplicateWarnings.length){
+      const lines=r.duplicateWarnings.slice(0,12).map(w=>
+        `• ${w.customer} / ${w.item} / ${w.unit}: existing ${w.orderId} (scheduled ${w.scheduledDate||'not set'}, pending ${Number(w.pendingQty||0).toLocaleString()})`
+      );
+      const extra=r.duplicateWarnings.length>12?`\n…and ${r.duplicateWarnings.length-12} more similar order(s).`:'';
+      const proceed=confirm('Possible duplicate order warning\n\nA similar order is already open in MIS:\n'+lines.join('\n')+extra+'\n\nDo you still want to create this order?\nChoose OK to continue, or Cancel to review your entry.');
+      if(!proceed){st.textContent='Cancelled. No orders were created.';st.className='status-msg';return;}
+      r=await postAction({action:'bulkCreateOrders',orders:rows,confirmSimilarOrderWarning:true});
+    }
     if(r.error) throw new Error((r.validationErrors||[]).join('\n')||r.error);
     (r.orders||[]).forEach(o=>data.orders.push(o));
     data.orders.sort((a,b)=>new Date(b.CreatedAt)-new Date(a.CreatedAt));
@@ -6652,12 +6722,17 @@ async function onFile(f){
   // Load SheetJS before using XLSX; otherwise upload fails with “XLSX is not defined”.
   await ensureXLSX();
   const wb=window.XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true}),j=window.XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
-  const seen={},out=[];let bad=0,scrap=0;
+  const seen={},legacySeen={},out=[];let bad=0,scrap=0;
   j.forEach(r=>{const inv=String(r['Invoice No']).trim(),part=String(r['Part No.']).trim(),qty=N(r['Quantity']),dt=r['Date'],um=String(r['Voucher Type']).match(/unit[\s-]*(\d+|delta)/i);
    if(!inv||!part||qty<=0||!(dt instanceof Date)||!um){bad++;return}
    if(/SCRAP/i.test(part+' '+r['Item Name'])){scrap++;return}
-   const base=[inv,part,qty,r['Order No.'],ymd(dt)].join('|');seen[base]=(seen[base]||0)+1;
-   out.push({key:base+'#'+seen[base],inv,part,qty,unit:'Unit '+(/\d/.test(um[1])?um[1]:'Delta'),date:ymd(dt),party:String(r['Particulars']).trim(),ship:String(r['Ship To Party']).trim()});});
+   const unit='Unit '+(/\d/.test(um[1])?um[1]:'Delta');
+   // Quantity is deliberately excluded: a corrected/re-exported quantity must not
+   // make an already-imported invoice line look like a brand-new dispatch.
+   const base=[inv,part,String(r['Order No.']).trim(),ymd(dt),unit].join('|');seen[base]=(seen[base]||0)+1;
+   // Legacy key is retained for backward compatibility with rows imported before this fix.
+   const legacyBase=[inv,part,qty,String(r['Order No.']).trim(),ymd(dt)].join('|');legacySeen[legacyBase]=(legacySeen[legacyBase]||0)+1;
+   out.push({key:base+'#'+seen[base],legacyKey:legacyBase+'#'+legacySeen[legacyBase],inv,part,qty,unit,date:ymd(dt),party:String(r['Particulars']).trim(),ship:String(r['Ship To Party']).trim()});});
   if(!out.length){st.textContent='No valid dispatch lines found. Check this is the Tally Sales Register export.';st.className='status-msg err';return}
   rows=out;await loadState();fill();run();render();
   st.textContent=`Read ${out.length} lines (${scrap} scrap and ${bad} blank/total rows skipped).`;st.className='status-msg ok';
@@ -6675,7 +6750,7 @@ function run(){
   });
  rows.forEach(r=>{
   r.cust=map[r.party]||'';r.allocs=[];r.got=0;r.candidates=[];
-  if(dup.has(r.key)){r.st='Duplicate';return}
+  if(dup.has(r.key)||dup.has(r.legacyKey)){r.st='Duplicate';return}
   if(!r.cust){r.selectedOrderId='';r.st='No mapping';return}
   const k=[r.cust,r.part,r.unit].map(x=>String(x).trim().toLowerCase()).join('|');
   r.candidates=(pools[k]||[]).filter(o=>N(o.PendingQty)>0);
