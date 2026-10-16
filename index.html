@@ -7587,5 +7587,194 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
 }
 </style>
 
+
+
+<!-- =====================================================================
+     FRONTEND PATCH — "Who is online" (Owner) + "Today's activity" (everyone)
+     Paste this whole block in index.html just BEFORE the closing </body> tag
+     (after the last <script>/<style> block). No other HTML changes needed.
+     ===================================================================== -->
+<style id="gp-presence-css">
+#gp-top .gp-pres-btn{height:34px;min-height:34px;box-sizing:border-box;display:inline-flex;align-items:center;gap:7px;
+  padding:0 12px;border-radius:18px;border:1px solid #30283a;background:#17131d;color:#f5f3fa;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+#gp-top .gp-pres-btn:hover{border-color:#594777}
+#gp-top .gp-pres-btn .dot{width:8px;height:8px;border-radius:50%;background:#32d48a;box-shadow:0 0 8px rgba(50,212,138,.7)}
+#gp-top .gp-pres-btn .dot.off{background:#8f8998;box-shadow:none}
+#gp-top .gp-pres-btn.act .dot{background:#8b5cf6;box-shadow:0 0 8px rgba(139,92,246,.7)}
+
+#gp-pres-panel{position:fixed;top:78px;right:18px;width:min(420px,calc(100vw - 20px));max-height:calc(100vh - 100px);overflow:auto;
+  z-index:1600;background:#0d0c13;color:#f5f3fa;border:1px solid #2a2332;border-radius:14px;box-shadow:0 22px 60px rgba(0,0,0,.55);
+  padding:14px 14px 10px;transform:translateY(-12px);opacity:0;pointer-events:none;transition:transform .2s ease,opacity .2s ease}
+#gp-pres-panel.open{transform:none;opacity:1;pointer-events:auto}
+#gp-pres-panel h3{margin:0;font-size:14px}
+.gp-pres-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.gp-pres-sub{font-size:11px;color:#8f8998;margin-bottom:10px}
+.gp-pres-x{background:transparent;color:#8f8998;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px}
+.gp-pres-x:hover{color:#fff;background:#211c29}
+.gp-pres-sec{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#8f8998;font-weight:800;margin:12px 0 6px}
+.gp-pres-row{display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid #211c29;font-size:12px}
+.gp-pres-row:last-child{border-bottom:0}
+.gp-pres-row .dot{width:9px;height:9px;border-radius:50%;flex:none;background:#4a4455}
+.gp-pres-row .dot.on{background:#32d48a;box-shadow:0 0 8px rgba(50,212,138,.7)}
+.gp-pres-row .who{flex:1;min-width:0}
+.gp-pres-row .who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gp-pres-row .who small,.gp-pres-row .meta{color:#8f8998;font-size:10.5px}
+.gp-pres-row .meta{text-align:right;white-space:nowrap}
+.gp-pres-badge{background:rgba(139,92,246,.16);color:#c4b5fd;border:1px solid rgba(139,92,246,.3);border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700}
+.gp-pres-feed .t{color:#8f8998;font-size:10.5px;min-width:44px}
+.gp-pres-feed .who small{white-space:normal}
+.gp-pres-empty{color:#8f8998;text-align:center;font-size:12px;padding:14px 0}
+.gp-pres-tabs{display:flex;gap:6px;margin:6px 0 2px}
+.gp-pres-tab{flex:1;background:#17131d;color:#8f8998;border:1px solid #30283a;border-radius:9px;padding:7px 8px;font-size:11.5px;font-weight:700}
+.gp-pres-tab.on{background:#1a132b;color:#c4b5fd;border-color:#513486}
+
+:root[data-theme="light"] #gp-top .gp-pres-btn{background:#fff;color:#344054;border-color:#d0d5dd}
+:root[data-theme="light"] #gp-pres-panel{background:#fff;color:#20232b;border-color:#d9deea;box-shadow:0 18px 44px rgba(16,24,40,.18)}
+:root[data-theme="light"] .gp-pres-row{border-bottom-color:#e4e7ec}
+:root[data-theme="light"] .gp-pres-x:hover{background:#f2f4f7;color:#20232b}
+:root[data-theme="light"] .gp-pres-tab{background:#f8fafc;color:#667085;border-color:#d0d5dd}
+:root[data-theme="light"] .gp-pres-tab.on{background:#f5f3ff;color:#5b21b6;border-color:#d8b4fe}
+:root[data-theme="light"] .gp-pres-badge{background:#f5f3ff;color:#5b21b6;border-color:#d8b4fe}
+
+@media(max-width:900px){
+  #gp-pres-panel{top:66px;right:8px}
+  #gp-top .gp-pres-btn{padding:0 9px;height:32px;min-height:32px}
+  #gp-top .gp-pres-btn .lbl{display:none}
+}
+</style>
+
+<script id="gp-presence-js">
+(function(){
+  const $=id=>document.getElementById(id);
+  const PING_MS=30000, POLL_OWNER_MS=20000, POLL_USER_MS=60000;
+  let state=null, pingT=null, pollT=null, isOpen=false, tab='online', injected=false;
+
+  const signedIn=()=>typeof TOKEN!=='undefined'&&TOKEN&&typeof SESSION!=='undefined'&&SESSION;
+  const owner=()=>signedIn()&&typeof isOwnerUI==='function'&&isOwnerUI();
+  const e=s=>typeof esc==='function'?esc(s):String(s==null?'':s);
+  const hhmm=iso=>{if(!iso)return '—';const d=new Date(iso);return isNaN(d)?'—':d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});};
+  function ago(iso){
+    if(!iso)return 'never';
+    const s=Math.max(0,Math.round((Date.now()-new Date(iso).getTime())/1000));
+    if(s<90)return 'just now';
+    if(s<3600)return Math.round(s/60)+' min ago';
+    if(s<86400)return Math.round(s/3600)+' h ago';
+    return Math.round(s/86400)+' d ago';
+  }
+
+  /* ---------- inject header button + panel ---------- */
+  function inject(){
+    const actions=document.querySelector('#gp-top .gp-head-actions');
+    if(!actions||injected&&$('gp-pres-btn'))return !!actions;
+    const btn=document.createElement('button');
+    btn.id='gp-pres-btn';btn.type='button';btn.className='gp-pres-btn';
+    btn.innerHTML='<span class="dot off"></span><span class="lbl" id="gp-pres-lbl">Activity</span>';
+    btn.onclick=ev=>{ev.stopPropagation();toggle();};
+    actions.insertBefore(btn,actions.firstChild);
+
+    const panel=document.createElement('div');
+    panel.id='gp-pres-panel';
+    panel.addEventListener('click',ev=>ev.stopPropagation());
+    document.body.appendChild(panel);
+    document.addEventListener('click',()=>{if(isOpen)toggle(false);});
+    document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&isOpen)toggle(false);});
+    injected=true;
+    return true;
+  }
+
+  function toggle(force){
+    isOpen=typeof force==='boolean'?force:!isOpen;
+    const p=$('gp-pres-panel');if(!p)return;
+    p.classList.toggle('open',isOpen);
+    if(isOpen){tab=owner()?'online':'activity';render();fetchState();}
+  }
+
+  /* ---------- data ---------- */
+  async function ping(){
+    if(!signedIn()||document.visibilityState!=='visible'||!navigator.onLine)return;
+    try{await postAction({action:'pingPresence'});}catch(_){}
+  }
+  async function fetchState(){
+    if(!signedIn()||!navigator.onLine)return;
+    try{
+      const j=await fetchAppScriptJson_(APPS_SCRIPT_URL+'?mode=presence&token='+encodeURIComponent(TOKEN)+'&_='+Date.now());
+      if(j&&j.ok){state=j;render();}
+    }catch(_){}
+  }
+  function schedule(){
+    clearInterval(pingT);clearTimeout(pollT);
+    if(!signedIn())return;
+    ping();fetchState();
+    pingT=setInterval(ping,PING_MS);
+    const loop=async()=>{
+      if(!signedIn())return;
+      if(document.visibilityState==='visible')await fetchState();
+      pollT=setTimeout(loop,owner()?POLL_OWNER_MS:POLL_USER_MS);
+    };
+    pollT=setTimeout(loop,owner()?POLL_OWNER_MS:POLL_USER_MS);
+  }
+  function stop(){clearInterval(pingT);clearTimeout(pollT);state=null;isOpen=false;
+    const p=$('gp-pres-panel');if(p)p.classList.remove('open');}
+
+  /* ---------- render ---------- */
+  function render(){
+    if(!injected)return;
+    const btn=$('gp-pres-btn'),lbl=$('gp-pres-lbl'),panel=$('gp-pres-panel');
+    if(!btn||!panel)return;
+    const isO=owner();
+    const dot=btn.querySelector('.dot');
+    if(isO){
+      const n=state?state.onlineCount||0:0;
+      lbl.textContent=n+' online';
+      dot.className='dot'+(n?'':' off');
+      btn.classList.remove('act');
+    }else{
+      lbl.textContent="Today's activity";
+      dot.className='dot';btn.classList.add('act');
+    }
+    btn.title=isO?'Who is online + activity of the day':"Activity of the day";
+    if(!isOpen)return;
+
+    const users=(state&&state.users)||[], feed=(state&&state.feed)||[];
+    const todayLabel=state&&state.today?state.today:'';
+    let h=`<div class="gp-pres-head"><h3>${isO?'Team Pulse':"Today's Activity"}</h3><button class="gp-pres-x" onclick="document.getElementById('gp-pres-btn').click()" aria-label="Close">✕</button></div>
+      <div class="gp-pres-sub">${e(todayLabel)} · resets every midnight${state?` · ${state.totalEntries||0} entries today`:''}</div>`;
+    if(isO){
+      h+=`<div class="gp-pres-tabs"><button class="gp-pres-tab ${tab==='online'?'on':''}" data-t="online">Online now</button><button class="gp-pres-tab ${tab==='activity'?'on':''}" data-t="activity">Activity</button></div>`;
+    }
+    if(!state){
+      h+='<div class="gp-pres-empty">Loading…</div>';
+    }else if(isO&&tab==='online'){
+      const on=users.filter(u=>u.online), off=users.filter(u=>!u.online);
+      h+=`<div class="gp-pres-sec">Online (${on.length})</div>`;
+      h+=on.length?on.map(u=>row(u,true)).join(''):'<div class="gp-pres-empty">Nobody online right now</div>';
+      h+=`<div class="gp-pres-sec">Offline (${off.length})</div>`;
+      h+=off.map(u=>row(u,false)).join('')||'<div class="gp-pres-empty">—</div>';
+    }else{
+      h+='<div class="gp-pres-sec">By person</div>';
+      const act=users.filter(u=>u.entries>0);
+      h+=act.length?act.map(u=>`<div class="gp-pres-row"><div class="who"><b>${e(u.displayName)}</b><small>${e(u.unit)} · last: ${e(u.lastAction)}</small></div><div class="meta"><span class="gp-pres-badge">${u.entries} entr${u.entries===1?'y':'ies'}</span><br>${hhmm(u.lastActivityAt)}</div></div>`).join(''):'<div class="gp-pres-empty">No activity recorded yet today</div>';
+      h+='<div class="gp-pres-sec">Latest actions</div><div class="gp-pres-feed">';
+      h+=feed.length?feed.slice(0,30).map(f=>`<div class="gp-pres-row"><span class="t">${hhmm(f.timestamp)}</span><div class="who"><b>${e(f.action)}</b><small>${e(f.displayName)}${f.unit?' · '+e(f.unit):''}${f.details?' — '+e(f.details):''}</small></div></div>`).join(''):'<div class="gp-pres-empty">Nothing yet today</div>';
+      h+='</div>';
+    }
+    panel.innerHTML=h;
+    panel.querySelectorAll('.gp-pres-tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render();});
+  }
+  function row(u,on){
+    return `<div class="gp-pres-row"><span class="dot ${on?'on':''}"></span><div class="who"><b>${e(u.displayName)}</b><small>${e(u.role)} · ${e(u.unit)}</small></div><div class="meta">${on?'Active now':'Seen '+ago(u.lastSeen)}<br>${u.entries} entr${u.entries===1?'y':'ies'} today</div></div>`;
+  }
+
+  /* ---------- lifecycle: start after login, stop after logout ---------- */
+  let wasIn=false;
+  setInterval(()=>{
+    const inNow=signedIn()&&document.body.classList.contains('gp-on');
+    if(inNow&&!wasIn){ if(inject()){wasIn=true;schedule();render();} }
+    else if(!inNow&&wasIn){wasIn=false;stop();}
+  },1000);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&wasIn){ping();fetchState();}});
+})();
+</script>
+
 </body>
 </html>
