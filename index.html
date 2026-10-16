@@ -6778,9 +6778,9 @@ function render(){
  <div class="gp-k"><small>Qty to dispatch</small><b>${F(q)}</b></div></div>
  <details ${unm?'open':''} style="margin-bottom:12px"><summary><b>Customer mapping</b> ${unm?`<span class="pill pill-high">${unm} unmapped</span>`:''}</summary>
  <div class="table-scroll"><table><tr><th>Tally name</th><th>MIS customer</th></tr>${parties.map(p=>`<tr><td>${esc(p)}</td><td><select onchange="tyMap('${esc(p).replace(/'/g,"\\'")}',this.value)"><option value="">— select —</option>${cs.map(x=>`<option ${map[p]===x?'selected':''}>${esc(x)}</option>`).join('')}</select></td></tr>`).join('')}</table></div></details>
- <div class="sub" style="margin:8px 0">Select the correct MIS order for each Tally line. The dropdown shows the order ID, scheduled date and current pending quantity. No order is selected automatically.</div>
+ <div class="sub" style="margin:8px 0">Select the correct MIS order for each Tally line. The dropdown shows the order creation date, scheduled date and current pending quantity. No order is selected automatically.</div>
  <div class="table-scroll" style="max-height:460px"><table><tr><th>Tally Date</th><th>Invoice</th><th>Customer</th><th>Part</th><th>Unit</th><th>Tally Qty</th><th>Choose MIS order (Scheduled date · Pending)</th><th>Matched Qty</th><th>Status</th></tr>
- ${list.map(({r,i})=>`<tr><td>${r.date}</td><td>${esc(r.inv)}</td><td>${esc(r.cust||r.party)}</td><td>${esc(r.part)}</td><td>${esc(r.unit)}</td><td>${F(r.qty)}</td><td><select style="min-width:300px;max-width:100%" ${(!r.cust||dup.has(r.key)||!r.candidates.length)?'disabled':''} onchange="tySelectOrder(${i},this.value)"><option value="">— Select order —</option>${(r.candidates||[]).map(o=>`<option value="${esc(String(o.OrderID))}" ${String(r.selectedOrderId)===String(o.OrderID)?'selected':''}>Order ${esc(String(o.OrderID))} · Scheduled ${esc(fmtDate(o.ScheduledDate))} · Pending ${F(N(o.PendingQty))}</option>`).join('')}</select></td><td>${F(r.got)}</td><td><span class="pill ${PILL[r.st]||'pill-high'}">${esc(r.st)}</span></td></tr>`).join('')}</table></div>
+ ${list.map(({r,i})=>`<tr><td>${r.date}</td><td>${esc(r.inv)}</td><td>${esc(r.cust||r.party)}</td><td>${esc(r.part)}</td><td>${esc(r.unit)}</td><td>${F(r.qty)}</td><td><select style="min-width:300px;max-width:100%" ${(!r.cust||dup.has(r.key)||!r.candidates.length)?'disabled':''} onchange="tySelectOrder(${i},this.value)"><option value="">— Select order —</option>${(r.candidates||[]).map(o=>`<option value="${esc(String(o.OrderID))}" ${String(r.selectedOrderId)===String(o.OrderID)?'selected':''}>Created ${esc(fmtDateTime(o.CreatedAt))} · Scheduled ${esc(fmtDate(o.ScheduledDate))} · Pending ${F(N(o.PendingQty))}</option>`).join('')}</select></td><td>${F(r.got)}</td><td><span class="pill ${PILL[r.st]||'pill-high'}">${esc(r.st)}</span></td></tr>`).join('')}</table></div>
  <div class="sub" style="margin:8px 0">Showing ${list.length} of ${rows.length}. Only lines where the selected order can cover the full Tally quantity are included in Apply. If a line shows <b>Partial</b>, choose an order with enough pending quantity; partial lines are not applied.</div>
  <button class="btn-primary" ${ok.length?'':'disabled'} onclick="tyApply()">Apply ${ok.length} lines (${F(q)} qty)</button><div class="status-msg" id="ty-ap"></div></div>`;
 }
@@ -7648,8 +7648,11 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
       const on=users.filter(u=>u.online),off=users.filter(u=>!u.online);
       h+=`<div class="gp-pres-sec">Online (${on.length})</div>`;
       h+=on.length?on.map(u=>row(u,true,isO)).join(''):'<div class="gp-pres-empty">Nobody online right now</div>';
-      h+=`<div class="gp-pres-sec">Offline (${off.length})</div>`;
-      h+=off.map(u=>row(u,false,isO)).join('')||'<div class="gp-pres-empty">—</div>';
+      // Non-Owners may see who is online, but must not see the offline-user list.
+      if(isO){
+        h+=`<div class="gp-pres-sec">Offline (${off.length})</div>`;
+        h+=off.map(u=>row(u,false,isO)).join('')||'<div class="gp-pres-empty">—</div>';
+      }
     }else{
       h+='<div class="gp-pres-sec">By person</div>';const act=users.filter(u=>u.entries>0);
       h+=act.length?act.map(u=>`<div class="gp-pres-row"><div class="who"><b>${e(u.displayName)}</b><small>${e(u.unit)} · last: ${e(u.lastAction)}</small></div><div class="meta"><span class="gp-pres-badge">${u.entries} entr${u.entries===1?'y':'ies'}</span><br>${hhmm(u.lastActivityAt)}</div></div>`).join(''):'<div class="gp-pres-empty">No activity recorded yet today</div>';
