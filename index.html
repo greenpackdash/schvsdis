@@ -4020,53 +4020,6 @@ let loadInFlight = null;
 let hasLoadedData = false;
 let dataVersion = 0;
 let forceNextSync = false;
-let loadAllPagesInFlight_ = false;
-
-// Load every Orders page in the background so All Orders date filters and
-// dashboard calculations operate on the complete dataset, not just the first
-// 3,000 rows. Each page uses the backend's existing offset/limit pagination.
-async function loadRemainingOrderPages_(){
-  if(loadAllPagesInFlight_ || !TOKEN || !SESSION || !data.hasMoreOrders) return;
-  loadAllPagesInFlight_ = true;
-  try {
-    while(data.hasMoreOrders && TOKEN && SESSION){
-      const limit = Math.max(1, Number(data.orderLimit || 3000));
-      const nextOffset = Number(data.orderOffset || 0) + limit;
-      const url = APPS_SCRIPT_URL + '?mode=core&token=' + encodeURIComponent(TOKEN) +
-        '&orderOffset=' + encodeURIComponent(nextOffset) + '&orderLimit=' + encodeURIComponent(limit) + '&_=' + Date.now();
-      const json = await fetchAppScriptJson_(url);
-      if(!json || json.error || !Array.isArray(json.orders)) break;
-      const mergedOrders = new Map((data.orders || []).map(o => [String(o.OrderID), o]));
-      json.orders.forEach(o => mergedOrders.set(String(o.OrderID), o));
-      data.orders = Array.from(mergedOrders.values()).sort((a,b) => new Date(a.CreatedAt || 0) - new Date(b.CreatedAt || 0));
-      const mergedLogs = new Map((data.logs || []).map(l => [String(l.LogID), l]));
-      (json.logs || []).forEach(l => mergedLogs.set(String(l.LogID), l));
-      data.logs = Array.from(mergedLogs.values());
-      data.orderOffset = nextOffset;
-      data.orderLimit = limit;
-      data.hasMoreOrders = Boolean(json.hasMoreOrders);
-      rebuildStockIndex_();
-      populateDropdowns();
-      renderStats();
-      renderCurrent_();
-      if (typeof window.renderDash === 'function') window.renderDash();
-      const olderBtn = document.getElementById('load-older-btn');
-      if(olderBtn) olderBtn.style.display = data.hasMoreOrders ? 'inline-flex' : 'none';
-      setConn('ok', 'Live — connected · ' + data.orders.length + ' orders' + (data.hasMoreOrders ? ' · loading older…' : ''));
-      // Yield to the browser between pages so the UI remains responsive.
-      await new Promise(resolve => setTimeout(resolve, 40));
-    }
-    if(!data.hasMoreOrders) {
-      data.orderOffset = Math.max(0, Number(data.orderOffset || 0));
-      saveCoreCache_(data);
-      setConn('ok', 'Live — connected · ' + (Array.isArray(data.orders) ? data.orders.length : 0) + ' orders');
-    }
-  } catch(e) {
-    console.warn('Could not finish loading older orders:', e);
-  } finally {
-    loadAllPagesInFlight_ = false;
-  }
-}
 async function refreshData(){
   const btns=[...document.querySelectorAll('button')].filter(b=>/^(refresh|refresh view)$/i.test(String(b.textContent||'').trim()));
   const old=btns.map(b=>b.textContent);
@@ -4166,12 +4119,7 @@ async function loadData(silent=false,force=false) {
       if (!silent || !hasLoadedData) setConn('err', 'Connection failed — data not lost.');
       return false;
     }
-    finally {
-      loadInFlight=null;
-      if(hasLoadedData && data.hasMoreOrders && !loadAllPagesInFlight_) {
-        setTimeout(() => loadRemainingOrderPages_(), 150);
-      }
-    }
+    finally { loadInFlight=null; }
   })();
   return loadInFlight;
 }
