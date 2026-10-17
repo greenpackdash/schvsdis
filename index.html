@@ -6753,10 +6753,17 @@ function run(){
   if(dup.has(r.key)||dup.has(r.legacyKey)){r.st='Duplicate';return}
   if(!r.cust){r.selectedOrderId='';r.st='No mapping';return}
   const k=[r.cust,r.part,r.unit].map(x=>String(x).trim().toLowerCase()).join('|');
-  r.candidates=(pools[k]||[]).filter(o=>N(o.PendingQty)>0);
-  if(!r.candidates.some(o=>String(o.OrderID)===String(r.selectedOrderId))) r.selectedOrderId='';
-  if(!r.selectedOrderId){r.st=r.candidates.length?'Select order':'Unmatched';return}
-  const selected=r.candidates.find(o=>String(o.OrderID)===String(r.selectedOrderId));
+  // Candidate order list is already sorted FIFO: oldest scheduled date, then creation time.
+  // Keep a manual choice only while it still has enough remaining capacity; otherwise
+  // automatically choose the first FIFO candidate that can cover this complete Tally line.
+  r.candidates=(pools[k]||[]).filter(o=>Math.max(0,pend[o.OrderID]||0)>0);
+  let selected=r.candidates.find(o=>String(o.OrderID)===String(r.selectedOrderId));
+  if(!selected || Math.max(0,pend[selected.OrderID]||0)<r.qty){
+    selected=r.candidates.find(o=>Math.max(0,pend[o.OrderID]||0)>=r.qty)||null;
+    r.selectedOrderId=selected?String(selected.OrderID):'';
+    r.autoSelected=!!selected;
+  }
+  if(!selected){r.st=r.candidates.length?'Select order':'Unmatched';return}
   const available=Math.max(0,pend[selected.OrderID]||0);
   if(available<=0){r.st='Order capacity used';return}
   const take=Math.min(r.qty,available);
@@ -6778,9 +6785,9 @@ function render(){
  <div class="gp-k"><small>Qty to dispatch</small><b>${F(q)}</b></div></div>
  <details ${unm?'open':''} style="margin-bottom:12px"><summary><b>Customer mapping</b> ${unm?`<span class="pill pill-high">${unm} unmapped</span>`:''}</summary>
  <div class="table-scroll"><table><tr><th>Tally name</th><th>MIS customer</th></tr>${parties.map(p=>`<tr><td>${esc(p)}</td><td><select onchange="tyMap('${esc(p).replace(/'/g,"\\'")}',this.value)"><option value="">— select —</option>${cs.map(x=>`<option ${map[p]===x?'selected':''}>${esc(x)}</option>`).join('')}</select></td></tr>`).join('')}</table></div></details>
- <div class="sub" style="margin:8px 0">Select the correct MIS order for each Tally line. The dropdown shows the order creation date, scheduled date and current pending quantity. No order is selected automatically.</div>
- <div class="table-scroll" style="max-height:460px"><table><tr><th>Tally Date</th><th>Invoice</th><th>Customer</th><th>Part</th><th>Unit</th><th>Tally Qty</th><th>Choose MIS order (Scheduled date · Pending)</th><th>Matched Qty</th><th>Status</th></tr>
- ${list.map(({r,i})=>`<tr><td>${r.date}</td><td>${esc(r.inv)}</td><td>${esc(r.cust||r.party)}</td><td>${esc(r.part)}</td><td>${esc(r.unit)}</td><td>${F(r.qty)}</td><td><select style="min-width:300px;max-width:100%" ${(!r.cust||dup.has(r.key)||!r.candidates.length)?'disabled':''} onchange="tySelectOrder(${i},this.value)"><option value="">— Select order —</option>${(r.candidates||[]).map(o=>`<option value="${esc(String(o.OrderID))}" ${String(r.selectedOrderId)===String(o.OrderID)?'selected':''}>Created ${esc(fmtDateTime(o.CreatedAt))} · Scheduled ${esc(fmtDate(o.ScheduledDate))} · Pending ${F(N(o.PendingQty))}</option>`).join('')}</select></td><td>${F(r.got)}</td><td><span class="pill ${PILL[r.st]||'pill-high'}">${esc(r.st)}</span></td></tr>`).join('')}</table></div>
+ <div class="sub" style="margin:8px 0">Select the correct MIS order for each Tally line. Orders are matched automatically using customer, part code and unit, prioritising the earliest scheduled order that can cover the full Tally quantity. If more than one valid order remains, you can change the selection. Internal Order IDs are hidden from this list.</div>
+ <div class="table-scroll" style="max-height:460px"><table><tr><th>Tally Date</th><th>Invoice</th><th>Customer</th><th>Part</th><th>Unit</th><th>Tally Qty</th><th>Choose MIS order (Customer · Part · Unit · Scheduled · Qty · Pending)</th><th>Matched Qty</th><th>Status</th></tr>
+ ${list.map(({r,i})=>`<tr><td>${r.date}</td><td>${esc(r.inv)}</td><td>${esc(r.cust||r.party)}</td><td>${esc(r.part)}</td><td>${esc(r.unit)}</td><td>${F(r.qty)}</td><td><select style="min-width:300px;max-width:100%" ${(!r.cust||dup.has(r.key)||!r.candidates.length)?'disabled':''} onchange="tySelectOrder(${i},this.value)"><option value="">— Select order —</option>${(r.candidates||[]).map(o=>`<option value="${esc(String(o.OrderID))}" ${String(r.selectedOrderId)===String(o.OrderID)?'selected':''}>${esc(o.Customer||r.cust||'Customer')} · Part ${esc(o.PartCode||r.part)} · ${esc(o.Unit||r.unit)} · Scheduled ${esc(fmtDate(o.ScheduledDate))} · Order Qty ${F(N(o.OrderQty))} · Pending ${F(Math.max(0,N(o.OrderQty)-N(o.DispatchedQty)))}</option>`).join('')}</select></td><td>${F(r.got)}</td><td><span class="pill ${PILL[r.st]||'pill-high'}">${esc(r.st)}</span></td></tr>`).join('')}</table></div>
  <div class="sub" style="margin:8px 0">Showing ${list.length} of ${rows.length}. Only lines where the selected order can cover the full Tally quantity are included in Apply. If a line shows <b>Partial</b>, choose an order with enough pending quantity; partial lines are not applied.</div>
  <button class="btn-primary" ${ok.length?'':'disabled'} onclick="tyApply()">Apply ${ok.length} lines (${F(q)} qty)</button><div class="status-msg" id="ty-ap"></div></div>`;
 }
