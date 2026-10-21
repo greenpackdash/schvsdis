@@ -7619,7 +7619,7 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
 
 
 <!-- =====================================================================
-     FRONTEND PATCH — "Who is online" (Owner) + "Today's activity" (everyone)
+     FRONTEND PATCH — online status for all users; detailed activity for Owner only
      Paste this whole block in index.html just BEFORE the closing </body> tag
      (after the last <script>/<style> block). No other HTML changes needed.
      ===================================================================== -->
@@ -7715,7 +7715,7 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
     isOpen=typeof force==='boolean'?force:!isOpen;
     const p=$('gp-pres-panel');if(!p)return;
     p.classList.toggle('open',isOpen);
-    if(isOpen){tab=owner()?'online':'activity';render();fetchState();}
+    if(isOpen){tab='online';render();fetchState();}
   }
 
   /* ---------- data ---------- */
@@ -7758,27 +7758,30 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
       dot.className='dot'+(n?'':' off');
       btn.classList.remove('act');
     }else{
-      lbl.textContent="Today's activity";
-      dot.className='dot';btn.classList.add('act');
+      const n=state?Number(state.onlineCount||0):0;
+      lbl.textContent=n+' online';
+      dot.className='dot'+(n?'':' off');btn.classList.remove('act');
     }
-    btn.title=isO?'Who is online + activity of the day':"Activity of the day";
+    btn.title=isO?"Who is online, last seen, and today's activity":"See who is online";
     if(!isOpen)return;
 
     const users=(state&&state.users)||[], feed=(state&&state.feed)||[];
     const todayLabel=state&&state.today?state.today:'';
-    let h=`<div class="gp-pres-head"><h3>${isO?'Team Pulse':"Today's Activity"}</h3><button class="gp-pres-x" onclick="document.getElementById('gp-pres-btn').click()" aria-label="Close">✕</button></div>
-      <div class="gp-pres-sub">${e(todayLabel)} · resets every midnight${state?` · ${state.totalEntries||0} entries today`:''}</div>`;
+    let h=`<div class="gp-pres-head"><h3>${isO?'Team Pulse':'Online now'}</h3><button class="gp-pres-x" onclick="document.getElementById('gp-pres-btn').click()" aria-label="Close">✕</button></div>`;
+    if(isO) h+=`<div class="gp-pres-sub">${e(todayLabel)} · resets every midnight${state?` · ${state.totalEntries||0} entries today`:''}</div>`;
     if(isO){
-      h+=`<div class="gp-pres-tabs"><button class="gp-pres-tab ${tab==='online'?'on':''}" data-t="online">Online now</button><button class="gp-pres-tab ${tab==='activity'?'on':''}" data-t="activity">Activity</button></div>`;
+      h+=`<div class="gp-pres-tabs"><button class="gp-pres-tab ${tab==='online'?'on':''}" data-t="online">Online now</button><button class="gp-pres-tab ${tab==='activity'?'on':''}" data-t="activity">Today's activity</button></div>`;
     }
     if(!state){
       h+='<div class="gp-pres-empty">Loading…</div>';
-    }else if(isO&&tab==='online'){
+    }else if(!isO || tab==='online'){
       const on=users.filter(u=>u.online), off=users.filter(u=>!u.online);
       h+=`<div class="gp-pres-sec">Online (${on.length})</div>`;
-      h+=on.length?on.map(u=>row(u,true)).join(''):'<div class="gp-pres-empty">Nobody online right now</div>';
-      h+=`<div class="gp-pres-sec">Offline (${off.length})</div>`;
-      h+=off.map(u=>row(u,false)).join('')||'<div class="gp-pres-empty">—</div>';
+      h+=on.length?on.map(u=>row(u,true,isO)).join(''):'<div class="gp-pres-empty">Nobody online right now</div>';
+      if(isO){
+        h+=`<div class="gp-pres-sec">Offline (${off.length})</div>`;
+        h+=off.map(u=>row(u,false,true)).join('')||'<div class="gp-pres-empty">—</div>';
+      }
     }else{
       h+='<div class="gp-pres-sec">By person</div>';
       const act=users.filter(u=>u.entries>0);
@@ -7790,8 +7793,10 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
     panel.innerHTML=h;
     panel.querySelectorAll('.gp-pres-tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render();});
   }
-  function row(u,on){
-    return `<div class="gp-pres-row"><span class="dot ${on?'on':''}"></span><div class="who"><b>${e(u.displayName)}</b><small>${e(u.role)} · ${e(u.unit)}</small></div><div class="meta">${on?'Active now':'Seen '+ago(u.lastSeen)}<br>${u.entries} entr${u.entries===1?'y':'ies'} today</div></div>`;
+  function row(u,on,showDetails){
+    const details=showDetails?`<small>${e(u.role)} · ${e(u.unit)}</small>`:'';
+    const meta=showDetails?`${on?'Active now':'Seen '+ago(u.lastSeen)}<br>${Number(u.entries||0)} entr${Number(u.entries||0)===1?'y':'ies'} today`:'';
+    return `<div class="gp-pres-row"><span class="dot ${on?'on':''}"></span><div class="who"><b>${e(u.displayName)}</b>${details}</div><div class="meta">${meta}</div></div>`;
   }
 
   /* ---------- lifecycle: start after login, stop after logout ---------- */
