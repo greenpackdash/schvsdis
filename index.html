@@ -6815,7 +6815,7 @@ function render(){
 }
 window.tyApply=async function(){
  const st=$('ty-ap'),ok=rows.filter(r=>r.allocs.length&&r.got===r.qty);
- const lines=ok.map(r=>({key:r.key,date:r.date,unit:r.unit,invoice:r.inv,partNo:r.part,customer:r.cust,shipTo:r.ship||r.party,allocs:r.allocs}));
+ const lines=ok.map(r=>({key:r.key,date:r.date,unit:r.unit,invoice:r.inv,partNo:r.part,qty:r.qty,customer:r.cust,shipTo:r.ship||r.party,allocs:r.allocs}));
  const pairs=[...new Set(rows.filter(r=>r.cust).map(r=>r.party))].map(p=>({tally:p,mis:map[p]}));
  if(!confirm(`Record ${lines.length} Tally lines as dispatched? Orders will be updated and FG stock deducted.`))return;
  let ap=0,sk=0,q=0;const fl=[];
