@@ -2578,6 +2578,20 @@ try{if(sessionStorage.getItem('svd_token'))document.documentElement.classList.ad
 :root[data-theme="light"] .gp-discussion-toast strong{color:#6d28d9}
 </style>
 
+
+<style id="gp-sidebar-performance-fix">
+/* Performance fix: avoid animating width and page margins, which forces the
+   browser to relayout the entire dashboard (including charts) every frame. */
+body.gp-on #main-app { transition: none !important; }
+#gp-side { transition: none !important; will-change: auto !important; }
+body.gp-on.gp-hide #gp-side { width: var(--gp-sidebar-w, 238px) !important; transform: translateX(-100%) !important; }
+body.gp-on.gp-hide #main-app { margin-left: 0 !important; }
+body.gp-on:not(.gp-hide) #gp-side { transform: translateX(0) !important; }
+#gp-side .gp-it, #gp-side .gp-menu-btn { transition: background-color .12s ease, color .12s ease, border-color .12s ease !important; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+</style>
 </head>
 <body>
 <div id="boot-splash">Loading MIS…</div>
