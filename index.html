@@ -7673,9 +7673,46 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
     injected=true;return true;
   }
   function toggle(force){isOpen=typeof force==='boolean'?force:!isOpen;const p=$('gp-pres-panel');if(!p)return;p.classList.toggle('open',isOpen);if(isOpen){tab='online';render();fetchState();}}
-  async function ping(){if(!signedIn()||document.visibilityState!=='visible'||!navigator.onLine)return;try{await postAction({action:'pingPresence'});}catch(_){}}
-  async function fetchState(){if(!signedIn()||!navigator.onLine)return;try{const j=await fetchAppScriptJson_(APPS_SCRIPT_URL+'?mode=presence&token='+encodeURIComponent(TOKEN)+'&_='+Date.now());if(j&&j.ok){state=j;render();}}catch(_){}}
-  function schedule(){clearInterval(pingT);clearTimeout(pollT);if(!signedIn())return;ping();fetchState();pingT=setInterval(ping,PING_MS);const loop=async()=>{if(!signedIn())return;if(document.visibilityState==='visible')await fetchState();pollT=setTimeout(loop,owner()?POLL_OWNER_MS:POLL_USER_MS);};pollT=setTimeout(loop,owner()?POLL_OWNER_MS:POLL_USER_MS);}
+  // Presence heartbeat: log failures instead of silently leaving the user offline.
+  let pingBusy=false, stateBusy=false;
+  async function ping(){
+    if(!signedIn()||document.visibilityState!=='visible'||!navigator.onLine||pingBusy)return;
+    pingBusy=true;
+    try{
+      const result=await postAction({action:'pingPresence',token:TOKEN});
+      if(!result||result.error||result.ok!==true){
+        console.error('[MIS Team Pulse] Heartbeat was not saved:',result);
+        return;
+      }
+      console.debug('[MIS Team Pulse] Heartbeat saved:',result.serverTime||'success');
+      // Read presence only after the server confirms the heartbeat was saved.
+      await fetchState();
+    }catch(err){console.error('[MIS Team Pulse] Heartbeat request failed:',err);}
+    finally{pingBusy=false;}
+  }
+  async function fetchState(){
+    if(!signedIn()||!navigator.onLine||stateBusy)return;
+    stateBusy=true;
+    try{
+      const url=APPS_SCRIPT_URL+'?mode=presence&token='+encodeURIComponent(TOKEN)+'&_='+Date.now();
+      const j=await fetchAppScriptJson_(url);
+      if(j&&j.ok){state=j;render();}
+      else console.error('[MIS Team Pulse] Presence endpoint returned an invalid response:',j);
+    }catch(err){console.error('[MIS Team Pulse] Could not load presence state:',err);}
+    finally{stateBusy=false;}
+  }
+  function schedule(){
+    clearInterval(pingT);clearTimeout(pollT);
+    if(!signedIn())return;
+    ping();fetchState();
+    pingT=setInterval(()=>{if(document.visibilityState==='visible')ping();},PING_MS);
+    const loop=async()=>{
+      if(!signedIn())return;
+      if(document.visibilityState==='visible')await fetchState();
+      pollT=setTimeout(loop,owner()?POLL_OWNER_MS:POLL_USER_MS);
+    };
+    pollT=setTimeout(loop,owner()?POLL_OWNER_MS:POLL_USER_MS);
+  }
   function stop(){clearInterval(pingT);clearTimeout(pollT);state=null;isOpen=false;const p=$('gp-pres-panel');if(p)p.classList.remove('open');}
   function render(){
     if(!injected)return;const btn=$('gp-pres-btn'),lbl=$('gp-pres-lbl'),panel=$('gp-pres-panel');if(!btn||!panel)return;
@@ -7710,7 +7747,13 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
   }
   let wasIn=false;
   setInterval(()=>{const inNow=signedIn()&&document.body.classList.contains('gp-on');if(inNow&&!wasIn){if(inject()){wasIn=true;schedule();render();}}else if(!inNow&&wasIn){wasIn=false;stop();}},1000);
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&wasIn){ping();fetchState();}});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible'&&wasIn){
+      // Restart timers in case the tab was backgrounded or the login state changed.
+      schedule();
+    }
+  });
+  window.addEventListener('online',()=>{if(wasIn)schedule();});
 })();
 </script>
 
