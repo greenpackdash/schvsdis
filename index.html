@@ -2578,26 +2578,37 @@ try{if(sessionStorage.getItem('svd_token'))document.documentElement.classList.ad
 :root[data-theme="light"] .gp-discussion-toast strong{color:#6d28d9}
 </style>
 
-
-<style id="gp-sidebar-performance-fix">
-/* Performance fix: avoid animating width and page margins, which forces the
-   browser to relayout the entire dashboard (including charts) every frame. */
-body.gp-on #main-app { transition: none !important; }
-#gp-side { transition: none !important; will-change: auto !important; }
-body.gp-on.gp-hide #gp-side { width: var(--gp-sidebar-w, 238px) !important; transform: translateX(-100%) !important; }
-body.gp-on.gp-hide #main-app { margin-left: 0 !important; }
-body.gp-on:not(.gp-hide) #gp-side { transform: translateX(0) !important; }
-#gp-side .gp-it, #gp-side .gp-menu-btn { transition: background-color .12s ease, color .12s ease, border-color .12s ease !important; }
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
-}
+<style id="login-3d-css">
+#login-3d{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.login-card{transform-style:preserve-3d;will-change:transform}
+.login-card::before{content:'';position:absolute;inset:-1px;border-radius:20px;padding:1px;
+  background:conic-gradient(from var(--spin,0deg),transparent 0 70%,rgba(167,139,250,.9),rgba(52,211,153,.9),transparent);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;animation:cardSpin 6s linear infinite}
+@property --spin{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes cardSpin{to{--spin:360deg}}
+.agent-chip{display:flex;align-items:center;justify-content:center;gap:8px;width:max-content;max-width:100%;
+  margin:0 auto 16px;padding:5px 12px;border-radius:999px;font-size:11px;letter-spacing:.03em;
+  color:#b9f5dc;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.28)}
+.agent-chip i{width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 10px #34d399;animation:agentBlink 1.4s ease-in-out infinite;flex:0 0 auto}
+.agent-chip span{transition:opacity .25s ease}
+@keyframes agentBlink{50%{opacity:.3}}
+:root[data-theme="light"] .agent-chip{color:#047857;background:#ecfdf3;border-color:#a7f3d0}
+@media(prefers-reduced-motion:reduce){.login-card::before{animation:none}.agent-chip i{animation:none}}
+/* Automatic low-performance fallback for the login animation */
+.lite .login-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+:root:not([data-theme="light"]) .lite .login-card{background:rgba(18,14,28,.94)!important}
+.lite .login-card::before,.lite.login-wrap::before,.lite.login-wrap::after,.lite .agent-chip i{animation:none!important}
+.lite.login-wrap::before,.lite.login-wrap::after{filter:blur(50px)}
 </style>
+
 </head>
 <body>
 <div id="boot-splash">Loading MIS…</div>
 
 <!-- LOGIN SCREEN -->
 <div id="login-screen" class="login-wrap">
+  <canvas id="login-3d" aria-hidden="true"></canvas>
   <div class="login-preferences">
     <select id="login-language-select" class="app-pref-select" aria-label="Language" onchange="setAppLanguage(this.value)">
       <option value="en">English</option><option value="mr">मराठी</option><option value="hi">हिन्दी</option>
@@ -7673,46 +7684,9 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
     injected=true;return true;
   }
   function toggle(force){isOpen=typeof force==='boolean'?force:!isOpen;const p=$('gp-pres-panel');if(!p)return;p.classList.toggle('open',isOpen);if(isOpen){tab='online';render();fetchState();}}
-  // Presence heartbeat: log failures instead of silently leaving the user offline.
-  let pingBusy=false, stateBusy=false;
-  async function ping(){
-    if(!signedIn()||document.visibilityState!=='visible'||!navigator.onLine||pingBusy)return;
-    pingBusy=true;
-    try{
-      const result=await postAction({action:'pingPresence',token:TOKEN});
-      if(!result||result.error||result.ok!==true){
-        console.error('[MIS Team Pulse] Heartbeat was not saved:',result);
-        return;
-      }
-      console.debug('[MIS Team Pulse] Heartbeat saved:',result.serverTime||'success');
-      // Read presence only after the server confirms the heartbeat was saved.
-      await fetchState();
-    }catch(err){console.error('[MIS Team Pulse] Heartbeat request failed:',err);}
-    finally{pingBusy=false;}
-  }
-  async function fetchState(){
-    if(!signedIn()||!navigator.onLine||stateBusy)return;
-    stateBusy=true;
-    try{
-      const url=APPS_SCRIPT_URL+'?mode=presence&token='+encodeURIComponent(TOKEN)+'&_='+Date.now();
-      const j=await fetchAppScriptJson_(url);
-      if(j&&j.ok){state=j;render();}
-      else console.error('[MIS Team Pulse] Presence endpoint returned an invalid response:',j);
-    }catch(err){console.error('[MIS Team Pulse] Could not load presence state:',err);}
-    finally{stateBusy=false;}
-  }
-  function schedule(){
-    clearInterval(pingT);clearTimeout(pollT);
-    if(!signedIn())return;
-    ping();fetchState();
-    pingT=setInterval(()=>{if(document.visibilityState==='visible')ping();},PING_MS);
-    const loop=async()=>{
-      if(!signedIn())return;
-      if(document.visibilityState==='visible')await fetchState();
-      pollT=setTimeout(loop,owner()?POLL_OWNER_MS:POLL_USER_MS);
-    };
-    pollT=setTimeout(loop,owner()?POLL_OWNER_MS:POLL_USER_MS);
-  }
+  async function ping(){if(!signedIn()||document.visibilityState!=='visible'||!navigator.onLine)return;try{await postAction({action:'pingPresence'});}catch(_){}}
+  async function fetchState(){if(!signedIn()||!navigator.onLine)return;try{const j=await fetchAppScriptJson_(APPS_SCRIPT_URL+'?mode=presence&token='+encodeURIComponent(TOKEN)+'&_='+Date.now());if(j&&j.ok){state=j;render();}}catch(_){}}
+  function schedule(){clearInterval(pingT);clearTimeout(pollT);if(!signedIn())return;ping();fetchState();pingT=setInterval(ping,PING_MS);const loop=async()=>{if(!signedIn())return;if(document.visibilityState==='visible')await fetchState();pollT=setTimeout(loop,owner()?POLL_OWNER_MS:POLL_USER_MS);};pollT=setTimeout(loop,owner()?POLL_OWNER_MS:POLL_USER_MS);}
   function stop(){clearInterval(pingT);clearTimeout(pollT);state=null;isOpen=false;const p=$('gp-pres-panel');if(p)p.classList.remove('open');}
   function render(){
     if(!injected)return;const btn=$('gp-pres-btn'),lbl=$('gp-pres-lbl'),panel=$('gp-pres-panel');if(!btn||!panel)return;
@@ -7747,13 +7721,82 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
   }
   let wasIn=false;
   setInterval(()=>{const inNow=signedIn()&&document.body.classList.contains('gp-on');if(inNow&&!wasIn){if(inject()){wasIn=true;schedule();render();}}else if(!inNow&&wasIn){wasIn=false;stop();}},1000);
-  document.addEventListener('visibilitychange',()=>{
-    if(document.visibilityState==='visible'&&wasIn){
-      // Restart timers in case the tab was backgrounded or the login state changed.
-      schedule();
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&wasIn){ping();fetchState();}});
+})();
+</script>
+
+<script id="login-3d-js">
+(function(){
+  const login=document.getElementById('login-screen'),cv=document.getElementById('login-3d');
+  if(!login||!cv)return;
+  const ctx=cv.getContext('2d');if(!ctx)return;
+  const card=login.querySelector('.login-card');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W,H,dpr,R,nodes=[],edges=[],adj=[],pulses=[],mx=0,my=0,tx=0,ty=0,t0=performance.now(),tick=0,raf=0,alive=false;
+
+  if(card)card.addEventListener('animationend',e=>{if(e.target===card)card.style.animation='none'});
+
+  if(card&&!card.querySelector('.agent-chip')){
+    const chip=document.createElement('div');chip.className='agent-chip';
+    chip.innerHTML='<i aria-hidden="true"></i><span>Agent online · secure channel</span>';
+    const h2=card.querySelector('h2');if(h2)card.insertBefore(chip,h2);
+    const span=chip.querySelector('span');
+    const msgs=['Agent online · secure channel','Verifying access scope…','Syncing Greenpack units…','Awaiting credentials'];
+    let k=0;
+    const say=m=>{if(!span)return;span.style.opacity=0;setTimeout(()=>{if(span&&login.offsetParent) {span.textContent=m;span.style.opacity=1}},220)};
+    setInterval(()=>{if(login.offsetParent){k=(k+1)%msgs.length;say(msgs[k])}},2800);
+    const pw=document.getElementById('login-password');
+    if(pw){pw.addEventListener('focus',()=>say('Encrypting credentials…'));pw.addEventListener('blur',()=>say('Awaiting credentials'));}
+  }
+
+  function build(){
+    const n=window.__lite?40:(W<700?55:100);nodes=[];edges=[];adj=[];pulses=[];
+    for(let i=0;i<n;i++){const y=1-(i/(n-1))*2,r=Math.sqrt(1-y*y),th=i*2.39996,j=.88+Math.random()*.12;nodes.push({x:Math.cos(th)*r*j,y:y*j,z:Math.sin(th)*r*j});adj.push([])}
+    const lim=n>80?.42:.55;
+    for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const a=nodes[i],b=nodes[j];if(Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z)<lim){edges.push([i,j]);adj[i].push(edges.length-1);adj[j].push(edges.length-1)}}
+  }
+  function resize(){dpr=Math.min(window.devicePixelRatio||1,2);W=login.clientWidth;H=login.clientHeight;if(!W||!H)return;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);R=Math.min(W,H)*(W<700?.46:.42);build();}
+  function project(a,b){return nodes.map(p=>{const x1=p.x*Math.cos(a)+p.z*Math.sin(a),z1=-p.x*Math.sin(a)+p.z*Math.cos(a);const y1=p.y*Math.cos(b)-z1*Math.sin(b),z2=p.y*Math.sin(b)+z1*Math.cos(b);const s=1/(1-z2*.35);return{x:W/2+x1*R*s,y:H/2+y1*R*s,d:(z2+1)/2,s}})}
+  function spawn(){if(!edges.length)return;const e=Math.floor(Math.random()*edges.length);pulses.push({e,from:Math.random()<.5?0:1,t:0,v:.012+Math.random()*.012})}
+  function draw(now){
+    if(!W||!H)return;
+    const light=document.documentElement.dataset.theme==='light';const line=light?'109,40,217':'167,139,250',dot=light?'109,40,217':'196,181,253',glow=light?'5,150,105':'52,211,153';
+    tx+=(mx-tx)*.05;ty+=(my-ty)*.05;const a=(now-t0)*.00014+tx*.7,b=.35+ty*.4,P=project(a,b);ctx.clearRect(0,0,W,H);
+    const g=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,R*1.1);g.addColorStop(0,`rgba(${line},${light?.10:.16})`);g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    ctx.lineWidth=1;edges.forEach(([i,j])=>{const p=P[i],q=P[j],d=(p.d+q.d)/2;ctx.strokeStyle=`rgba(${line},${(.04+.2*d)*(light?1.4:1)})`;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke()});
+    P.forEach(p=>{ctx.fillStyle=`rgba(${dot},${.25+.7*p.d})`;ctx.beginPath();ctx.arc(p.x,p.y,(1+2*p.d)*p.s*.9,0,6.283);ctx.fill()});
+    if(!reduce&&pulses.length<(window.__lite?5:14)&&tick++%16===0)spawn();
+    pulses=pulses.filter(u=>{const [i,j]=edges[u.e],s=u.from?j:i,e=u.from?i:j,p=P[s],q=P[e];u.t+=u.v;const x=p.x+(q.x-p.x)*u.t,y=p.y+(q.y-p.y)*u.t,al=.35+.65*((p.d+q.d)/2);const gr=ctx.createRadialGradient(x,y,0,x,y,12);gr.addColorStop(0,`rgba(${glow},${al})`);gr.addColorStop(1,'transparent');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(x,y,12,0,6.283);ctx.fill();ctx.fillStyle=`rgba(255,255,255,${al})`;ctx.beginPath();ctx.arc(x,y,1.8,0,6.283);ctx.fill();if(u.t>=1){const opts=adj[e].filter(k=>k!==u.e);if(!opts.length)return false;const nk=opts[Math.floor(Math.random()*opts.length)];u.e=nk;u.from=edges[nk][0]===e?0:1;u.t=0}return true});
+    if(card)card.style.transform=`perspective(900px) rotateY(${tx*7}deg) rotateX(${-ty*6}deg)`;
+  }
+  function stop(){alive=false;if(raf)cancelAnimationFrame(raf);raf=0;}
+  let lastFrame=0,slowFrames=0,frameSamples=0;
+  function goLite(){
+    if(window.__lite)return;
+    window.__lite=true;login.classList.add('lite');pulses=[];build();
+  }
+  function frame(now){
+    if(!alive)return;
+    if(!login.offsetParent||document.hidden){stop();return;}
+    const dt=lastFrame?now-lastFrame:0;
+    if(window.__lite&&lastFrame&&dt<33){raf=requestAnimationFrame(frame);return;}
+    lastFrame=now;
+    if(!window.__lite&&dt>0){
+      frameSamples++;
+      if(frameSamples>20&&frameSamples<140&&dt>34)slowFrames++;
+      if(slowFrames>30)goLite();
     }
-  });
-  window.addEventListener('online',()=>{if(wasIn)schedule();});
+    draw(now);raf=requestAnimationFrame(frame);
+  }
+  function start(){if(reduce){if(login.offsetParent&&!document.hidden)draw(performance.now());return}if(alive||!login.offsetParent||document.hidden)return;alive=true;lastFrame=0;raf=requestAnimationFrame(frame)}
+  login.addEventListener('mousemove',e=>{const r=login.getBoundingClientRect();mx=((e.clientX-r.left)/Math.max(1,r.width)-.5)*2;my=((e.clientY-r.top)/Math.max(1,r.height)-.5)*2});
+  login.addEventListener('mouseleave',()=>{mx=0;my=0});window.addEventListener('resize',()=>{resize();if(!reduce){stop();start()}else if(login.offsetParent)draw(performance.now())});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else start()});
+  // Poll only for the login visibility transition; the animation itself is stopped while logged in.
+  const visibility=setInterval(()=>{if(login.offsetParent){start()}else{stop();if(card)card.style.transform=''}},500);
+  window.addEventListener('pagehide',()=>{stop();clearInterval(visibility)});
+  if((navigator.hardwareConcurrency||4)<=2||(navigator.deviceMemory||4)<=2){window.__lite=true;login.classList.add('lite');}
+  resize();start();
 })();
 </script>
 
