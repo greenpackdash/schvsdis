@@ -6358,19 +6358,20 @@ function renderDash(){
  /* ---------- Dispatch achievement ---------- */
  const periodDispatchPct=orderQty>0?Math.min(100,(dispatchedQty/orderQty)*100):null;
 
- /* Yesterday = scheduled quantity for yesterday vs quantity dispatched by end of yesterday.
-    This avoids showing >100% and avoids counting today's dispatch against yesterday. */
- const yDate=new Date();
- yDate.setDate(yDate.getDate()-1);
- const yday=fmtDate(yDate);
- const yOrders=all.filter(o=>okF(o)&&fmtDate(o.ScheduledDate)===yday);
+ /* Yesterday dispatch: use the Kolkata calendar date and ignore dashboard filters.
+    The KPI must describe the whole plant, not only the currently filtered table. */
+ const _todayKolkata=_kolFmt.format(new Date());
+ const _ydayDate=new Date(_todayKolkata+'T00:00:00Z');
+ _ydayDate.setUTCDate(_ydayDate.getUTCDate()-1);
+ const yday=_ydayDate.toISOString().slice(0,10);
+ const yOrders=all.filter(o=>fmtDate(o.ScheduledDate)===yday);
  const yOrderIds=new Set(yOrders.map(o=>String(o.OrderID)));
  const yScheduledQty=sum(yOrders,o=>o.OrderQty);
  const yDispatchLogs=logs.filter(l=>yOrderIds.has(String(l.OrderID))&&fmtDate(l.DispatchedDate)<=yday);
+ /* If dispatch logs exist, use dated logs. Without dated logs, avoid counting
+    the order's current cumulative dispatched quantity as if it happened yesterday. */
  const yDispatchedQty=Math.min(yScheduledQty,
-   yDispatchLogs.length
-     ? sum(yDispatchLogs,l=>Math.max(0,N(l.DispatchedQty)))
-     : sum(yOrders,o=>Math.max(0,N(o.DispatchedQty)))
+   sum(yDispatchLogs,l=>Math.max(0,N(l.DispatchedQty)))
  );
  const yPct=yScheduledQty>0?Math.min(100,(yDispatchedQty/yScheduledQty)*100):null;
  const yDone=yPct!==null&&yPct>=99.999;
@@ -6378,10 +6379,10 @@ function renderDash(){
  const fg=sum(data.stock||[],s=>s.AvailableQty),cp=new Set(open.map(o=>o.Customer)).size;
 
  const pctText=periodDispatchPct===null?'—':periodDispatchPct.toFixed(1)+'%';
- const yPctText=yPct===null?'No scheduled dispatch':yPct.toFixed(1)+'%';
+ const yPctText=yPct===null?'No orders scheduled yesterday':yPct.toFixed(1)+'%';
  const ySub=yPct===null
-   ? '<i class="nu">no scheduled qty yesterday</i>'
-   : `<i class="${yDone?'up':'dn'}">${yDone?'✓ Done':'⚠ '+F(yScheduledQty-yDispatchedQty)+' pending'} <span class="nu">yesterday</span></i>`;
+   ? '<i class="nu">plant-wide scheduled quantity was zero yesterday</i>'
+   : `<i class="${yDone?'up':'dn'}">${yDone?'✓ Done':'⚠ '+F(Math.max(0,yScheduledQty-yDispatchedQty))+' pending'} <span class="nu">of yesterday\'s scheduled qty</span></i>`;
 
  const K=[
    ['Total Orders',sc.length,dlt(sc.length,sp.length),{'f-status':''}],
