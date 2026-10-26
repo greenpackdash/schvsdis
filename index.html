@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Schedule vs Dispatch — MIS</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap');
   :root {
     --bg: #0b0d12;
     --bg-grad: radial-gradient(1200px 600px at 10% -10%, rgba(91,141,239,.10), transparent 60%),
@@ -140,7 +141,6 @@
   .status-msg.err { color:var(--danger); }
 
   /* ===== LOGIN ===== */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap');
 
 .login-wrap {
   min-height: 100vh;
@@ -693,7 +693,7 @@ input[type="checkbox"] { accent-color: #8b5cf6; }
 /* ===== BAR-FILL (progress) — violet to teal gradient ===== */
 .bar-fill { background: linear-gradient(90deg, #8b5cf6, #34d399); }
 
-</style></style>
+</style>
 
 
 <style>
@@ -2713,7 +2713,7 @@ try{if(sessionStorage.getItem('svd_token'))document.documentElement.classList.ad
         <button class="btn-primary btn-small" id="csv-btn" onclick="exportCSV()" style="display:none;">Export CSV</button>
         <button class="btn-ghost btn-small" onclick="refreshData()">Refresh</button><button class="btn-ghost btn-small" id="load-older-btn" onclick="loadOlderOrders()" style="display:none;">Load older</button>
       </div>
-      <div class="search-hint">Search checks the actual Orders data, so you can find a part code even if it is not present in the Part Codes list.</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px;"><div class="search-hint" style="margin:0">Search checks the actual Orders data, so you can find a part code even if it is not present in the Part Codes list.</div><div style="display:flex;align-items:center;gap:8px;"><span id="orders-render-count" class="sub" aria-live="polite">Showing orders</span><button id="orders-show-more" type="button" class="btn-ghost btn-small" onclick="showMoreOrders()" style="display:none">Show more</button></div></div>
       <div id="bulkbar" class="bulkbar">
         <span class="bulk-count" id="bulk-count">0 selected</span>
         <button class="btn-ghost btn-small" onclick="selectAllMatching()">Select all matching</button>
@@ -2790,7 +2790,7 @@ try{if(sessionStorage.getItem('svd_token'))document.documentElement.classList.ad
           </table>
         </div>
       </div>
-      <div class="sub" id="n-stock-info" class="stock-live-info">Enter a Part Code to see current FG stock.</div>
+      <div id="n-stock-info" class="sub stock-live-info">Enter a Part Code to see current FG stock.</div>
       <button class="btn-primary btn-block" onclick="submitOrder()">Create Order</button>
       <div class="status-msg" id="new-status"></div>
     </div>
@@ -2991,7 +2991,7 @@ try{if(sessionStorage.getItem('svd_token'))document.documentElement.classList.ad
       </div>
       <div class="table-scroll">
         <table id="dispatch-history-table">
-          <thead><tr><th>Dispatch Date</th><th>Customer</th><th>Part Code</th><th>Unit</th><th>Ship To Party</th><th>Qty</th><th>UOM</th><th>Note</th><th>Dispatched By</th><th>Entry Time</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Dispatch Date</th><th>Customer</th><th>Part Code</th><th>Unit</th><th>Ship To Party</th><th>Qty</th><th>UOM</th><th>Note</th><th>Dispatched By</th><th>Entry Time</th><th>Edited By</th><th>Actions</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -3574,12 +3574,14 @@ function translateInterface(){
     });
   });
   document.querySelectorAll('option').forEach(o=>{
+    // Without an explicit value, option text is the submitted value; don't translate it.
+    if(!o.hasAttribute('value')) return;
     const original=o.dataset.i18nOriginal ?? o.textContent;
     o.dataset.i18nOriginal=original;
     if(dict[original]) o.textContent=dict[original];
   });
-  const a=document.getElementById('app-language-select'), l=document.getElementById('login-language-select');
-  if(a)a.value=lang; if(l)l.value=lang;
+  const a=document.getElementById('app-language-select'), l=document.getElementById('login-language-select'), gp=document.getElementById('gp-lang');
+  if(a)a.value=lang; if(l)l.value=lang; if(gp)gp.value=lang;
   updateThemeIcon();
 }
 function setAppLanguage(lang){
@@ -4359,9 +4361,12 @@ function getFGStockActor(partCode, unit){
   return stockActorByPartUnit[p+'|'+u] || '';
 }
 
+let ordersRenderLimit = 200;
+function showMoreOrders(){ ordersRenderLimit += 200; renderTable(); }
+
 function renderTable() {
   const rows = getFiltered();
-  const renderRows = rows.slice(0, 200);
+  const renderRows = rows.slice(0, ordersRenderLimit);
   const tbl = document.getElementById('orders-table');
   const empty = document.getElementById('orders-empty');
   const canBulk = SESSION && (isOwnerUI() || (data.v2.permissions||[]).includes('edit_orders'));
@@ -4371,10 +4376,12 @@ function renderTable() {
     <th>Planned</th><th>Additional</th><th>Total Dispatch</th><th>Dispatched</th><th>Pending</th><th>Progress</th><th>Scheduled</th>
     <th>FG Stock</th><th>FG Status</th><th>Pending Dept</th><th>Pending Reason</th><th>FG By</th><th>PPC By</th><th>Dispatch By</th><th>Status</th><th>Action</th>
   </tr>`;
-  if (rows.length === 0) { tbl.querySelector('tbody').innerHTML=''; empty.style.display='block'; updateBulkBar(); return; }
+  if (rows.length === 0) { tbl.querySelector('tbody').innerHTML=''; empty.style.display='block'; const n=document.getElementById('orders-render-count'); if(n)n.textContent='Showing 0 matching orders'; const m=document.getElementById('orders-show-more'); if(m)m.style.display='none'; updateBulkBar(); return; }
   empty.style.display='none';
   const countNote = document.getElementById('orders-render-count');
-  if(countNote) countNote.textContent = rows.length > renderRows.length ? `Showing ${renderRows.length} of ${rows.length} matching orders` : `Showing ${rows.length} orders`;
+  if(countNote) countNote.textContent = rows.length > renderRows.length ? `Showing ${renderRows.length} of ${rows.length} matching orders` : `Showing all ${rows.length} matching orders`;
+  const showMore = document.getElementById('orders-show-more');
+  if(showMore){ showMore.style.display = rows.length > renderRows.length ? '' : 'none'; showMore.disabled = renderRows.length >= rows.length; }
   const plans=(data.v2&&data.v2.plans)||{}, adds=(data.v2&&data.v2.additional)||{};
   tbl.querySelector('tbody').innerHTML = renderRows.map(o => {
     const orderQty=Number(o.OrderQty||0), dispatched=Number(o.DispatchedQty||0);
@@ -6146,7 +6153,7 @@ function exportCSV() {
     const line = [
       o.OrderID, o.Customer, o.CustomerLocation||'', o.PartCode, o.Unit, o.Priority, o.OrderQty, o.DispatchedQty, o.PendingQty,
       fmtDate(o.ScheduledDate), o.ShipToParty||'', o.ShipToAddress||'', o.PendingDepartment||'', o.PendingReason||'', o.Status
-    ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+    ].map(v => { let s=String(v==null?'':v); if(/^[\s]*[=+\-@]/.test(s)) s="'"+s; return `"${s.replace(/"/g,'""')}"`; }).join(',');
     lines.push(line);
   });
   const csv = lines.join('\n');
@@ -6798,15 +6805,16 @@ function render(){
  // Only complete automatic matches are applied; partial lines remain blocked.
  const ok=rows.filter(r=>r.allocs.length&&r.got===r.qty),q=ok.reduce((s,r)=>s+r.got,0),parties=[...new Set(rows.map(r=>r.party))].sort(),unm=parties.filter(p=>!map[p]).length,cs=data.customers||[];
  const list=rows.map((r,i)=>({r,i})).filter(x=>!filt||x.r.st===filt).slice(0,400);
- $('ty-out').innerHTML=`<div class="card"><div class="gp-kpis">${['Matched','Select order','Partial','Unmatched','No mapping','Duplicate'].map(k=>`<div class="gp-k" onclick="tyFilt('${filt===k?'':k}')"><small>${k}</small><b>${c[k]||0}</b></div>`).join('')}
+ $('ty-out').innerHTML=`<div class="card"><div class="gp-kpis">${['Matched','Partial','Unmatched','No mapping','Duplicate'].map(k=>`<div class="gp-k" onclick="tyFilt('${filt===k?'':k}')"><small>${k}</small><b>${c[k]||0}</b></div>`).join('')}
  <div class="gp-k"><small>Qty to dispatch</small><b>${F(q)}</b></div></div>
  <details ${unm?'open':''} style="margin-bottom:12px"><summary><b>Customer mapping</b> ${unm?`<span class="pill pill-high">${unm} unmapped</span>`:''}</summary>
- <div class="table-scroll"><table><tr><th>Tally name</th><th>MIS customer</th></tr>${parties.map(p=>`<tr><td>${esc(p)}</td><td><select onchange="tyMap('${esc(p).replace(/'/g,"\\'")}',this.value)"><option value="">— select —</option>${cs.map(x=>`<option ${map[p]===x?'selected':''}>${esc(x)}</option>`).join('')}</select></td></tr>`).join('')}</table></div></details>
+ <div class="table-scroll"><table><tr><th>Tally name</th><th>MIS customer</th></tr>${parties.map(p=>`<tr><td>${esc(p)}</td><td><select data-tally-party="${esc(p)}"><option value="">— select —</option>${cs.map(x=>`<option value="${esc(x)}" ${map[p]===x?'selected':''}>${esc(x)}</option>`).join('')}</select></td></tr>`).join('')}</table></div></details>
  <div class="sub" style="margin:8px 0">Rows are matched automatically by customer, part code and unit. Quantity is allocated across open orders in earliest-scheduled-first order, so you do not need to select each order manually.</div>
  <div class="table-scroll" style="max-height:460px"><table><tr><th>Tally Date</th><th>Invoice</th><th>Customer</th><th>Part</th><th>Unit</th><th>Tally Qty</th><th>Automatic order match</th><th>Matched Qty</th><th>Status</th></tr>
  ${list.map(({r,i})=>`<tr><td>${r.date}</td><td>${esc(r.inv)}</td><td>${esc(r.cust||r.party)}</td><td>${esc(r.part)}</td><td>${esc(r.unit)}</td><td>${F(r.qty)}</td><td>${r.allocs.length?r.allocs.map(a=>{const o=(data.orders||[]).find(x=>String(x.OrderID)===String(a.orderId));return `<div>${esc(o?fmtDate(o.ScheduledDate):'Order')} · ${F(a.qty)} qty</div>`}).join(''):'—'}</td><td>${F(r.got)}</td><td><span class="pill ${PILL[r.st]||'pill-high'}">${esc(r.st)}</span></td></tr>`).join('')}</table></div>
  <div class="sub" style="margin:8px 0">Showing ${list.length} of ${rows.length}. Only fully matched lines are included in Apply. Partial lines mean the combined pending quantity across matching orders is insufficient; those lines are not applied.</div>
  <button class="btn-primary" ${ok.length?'':'disabled'} onclick="tyApply()">Apply ${ok.length} lines (${F(q)} qty)</button><div class="status-msg" id="ty-ap"></div></div>`;
+ $('ty-out').querySelectorAll('select[data-tally-party]').forEach(sel=>sel.addEventListener('change',function(){tyMap(this.dataset.tallyParty,this.value)}));
 }
 window.tyApply=async function(){
  const st=$('ty-ap');
@@ -7502,14 +7510,13 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
       if(!TOKEN && login) login.style.display='flex';
     }
   }
-  // This script is the last script in <body>, so the required DOM already exists.
-  // Start immediately instead of waiting for DOMContentLoaded.
-  boot();
+  if(document.readyState==='complete') boot();
+  else window.addEventListener('load',boot,{once:true});
   window.addEventListener('load',()=>{
     try{
-      if(window.lucide&&typeof window.lucide.createIcons==='function')window.lucide.createIcons();
-      if(typeof window.renderDash==='function' && window.Chart && typeof window.cur!=='undefined') window.renderDash();
-    }catch(e){}
+      if(window.lucide&&typeof window.lucide.createIcons==='function') window.lucide.createIcons();
+      if(typeof window.renderDash==='function'&&window.Chart) window.renderDash();
+    }catch(e){console.warn('Dashboard/icon refresh skipped:',e);}
   },{once:true});
 })();
 </script>
@@ -7646,7 +7653,7 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
 <!-- =====================================================================
      FRONTEND PATCH — "Who is online" (Owner) + "Today's activity" (everyone)
      Paste this whole block in index.html just BEFORE the closing </body> tag
-     (after the last <script>/<style> block). No other HTML changes needed.
+     (after the last script or style block). No other HTML changes needed.
      ===================================================================== -->
 <style id="gp-presence-css">
 #gp-top .gp-pres-btn{height:34px;min-height:34px;box-sizing:border-box;display:inline-flex;align-items:center;gap:7px;padding:0 12px;border-radius:18px;border:1px solid #30283a;background:#17131d;color:#f5f3fa;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap}
