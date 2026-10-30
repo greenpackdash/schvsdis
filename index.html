@@ -4084,10 +4084,16 @@ async function loadOlderOrders(){
 }
 
 async function loadData(silent=false,force=false) {
+  // If a request is already running, preserve a pending forced sync and run it
+  // immediately after the in-flight request finishes.
+  if(loadInFlight) {
+    if(forceNextSync || force) return loadInFlight.then(()=>loadData(silent,true));
+    return loadInFlight;
+  }
+  if (forceNextSync) { force = true; forceNextSync = false; }
   // Auto-refresh remains enabled, but unchanged cycles now make a tiny
   // version-only request. A full payload is downloaded only when the data
   // version has changed (or when Refresh is explicitly forced).
-  if(loadInFlight) return loadInFlight;
   const tbody = document.querySelector('#orders-table tbody');
   if (tbody && !tbody.children.length) tbody.innerHTML = Array(6).fill('<tr class="skeleton-row"><td colspan="20"></td></tr>').join('');
   if (!silent) setConn('', 'Loading…');
@@ -4097,6 +4103,7 @@ async function loadData(silent=false,force=false) {
       const json = await fetchAppScriptJson_(APPS_SCRIPT_URL + '?mode=core&token=' + encodeURIComponent(TOKEN) + versionParam + '&_=' + Date.now());
       if (json.error && /session has expired|auth_required/i.test(json.error)) {
         stopAutoRefresh();
+        doLogout();
         setConn('err','Session expired — please sign in again.');
         return false;
       }
@@ -4254,13 +4261,14 @@ function populateDropdowns() {
   fp.innerHTML = '<option value="">All part codes</option>' + data.partCodes.map(p => `<option>${esc(p)}</option>`).join('');
   const fd = document.getElementById('f-dept');
   fd.innerHTML = '<option value="">All departments</option>' + data.departments.map(d => `<option>${esc(d)}</option>`).join('');
+  keep.forEach(([id,v]) => { const el=document.getElementById(id); if(el && v && [...el.options].some(o=>o.value===v||o.text===v)) el.value=v; });
 }
 
 function renderStats() {
   const orders = data.orders || [];
-  const pendingQtyOf = o => Math.max(0, Number(o.OrderQty||0) - Number(o.DispatchedQty||0));
+  const pendingQtyOf = o => String(o.Status)==='Completed' ? 0 : Math.max(0, Number(o.OrderQty||0) - Number(o.DispatchedQty||0));
   const pending = orders.filter(o => pendingQtyOf(o) > 0);
-  const completed = orders.filter(o => Number(o.OrderQty||0) > 0 && pendingQtyOf(o) <= 0);
+  const completed = orders.filter(o => String(o.Status)==='Completed' || (Number(o.OrderQty||0) > 0 && pendingQtyOf(o) <= 0));
   const totalOrderQty = orders.reduce((s,o) => s + Number(o.OrderQty||0), 0);
   const totalDispatched = orders.reduce((s,o) => s + Math.max(0,Number(o.DispatchedQty||0)), 0);
   const totalPendingQty = orders.reduce((s,o) => s + pendingQtyOf(o), 0);
@@ -5138,10 +5146,7 @@ async function postAction(body) {
   try {
     const json = JSON.parse(raw);
     if (json.version) {
-      dataVersion = Number(json.version) || dataVersion;
-      // A write may affect related data (FG stock, dispatch history, actors,
-      // status, etc.). Let the next background cycle perform one full sync,
-      // then return to cheap version-only heartbeats.
+      // Do not advance the client's version before the next GET syncs the new data.
       forceNextSync = true;
     }
     if (json.error && /session has expired/i.test(json.error)) {
@@ -5160,7 +5165,7 @@ async function sendDiscussion() {
   const message = el.value.trim();
   if (!message) { status.textContent='Write a message first.'; status.className='status-msg err'; return; }
   status.textContent='Sending…'; status.className='status-msg';
-  try { const res=await postAction({action:'addDiscussion',message}); if(res.error) throw new Error(res.error); el.value=''; status.textContent='Sent.'; status.className='status-msg ok'; await loadData(); } catch(e){ status.textContent='Failed: '+e.message; status.className='status-msg err'; }
+  try { const res=await postAction({action:'addDiscussion',message}); if(res.error) throw new Error(res.error); el.value=''; status.textContent='Sent.'; status.className='status-msg ok'; await loadData(); auxLoaded.discussion=false; await loadAux('discussion'); } catch(e){ status.textContent='Failed: '+e.message; status.className='status-msg err'; }
 }
 let discussionNoticeTimer_ = null;
 let discussionNoticePrimed_ = false;
@@ -5497,7 +5502,7 @@ async function submitComplaint(){
   const status=document.getElementById('complaint-status');
   if(!subject||!description){status.textContent='Subject and description are required.';status.className='status-msg err';return;}
   status.textContent='Saving…';status.className='status-msg';
-  try{const res=await postAction({action:'addComplaint',category:document.getElementById('c-category').value,priority:document.getElementById('c-priority').value,title:subject,description});if(res.error)throw new Error(res.error);status.textContent='Complaint raised: '+res.complaintId;status.className='status-msg ok';document.getElementById('c-subject').value='';document.getElementById('c-description').value='';await loadData();}catch(e){status.textContent='Failed: '+e.message;status.className='status-msg err';}
+  try{const res=await postAction({action:'addComplaint',category:document.getElementById('c-category').value,priority:document.getElementById('c-priority').value,title:subject,description});if(res.error)throw new Error(res.error);status.textContent='Complaint raised: '+res.complaintId;status.className='status-msg ok';document.getElementById('c-subject').value='';document.getElementById('c-description').value='';await loadData();auxLoaded.complaints=false;await loadAux('complaints');}catch(e){status.textContent='Failed: '+e.message;status.className='status-msg err';}
 }
 function renderComplaints(){
   const box=document.getElementById('complaints-list'); if(!box)return;
@@ -5513,11 +5518,11 @@ function renderComplaints(){
 }
 async function addComplaintComment(id){
   const input=document.getElementById('comment-'+id); const comment=input.value.trim(); if(!comment)return;
-  try{const res=await postAction({action:'addComplaintComment',complaintId:id,comment});if(res.error)throw new Error(res.error);input.value='';await loadData();}catch(e){alert(e.message);}
+  try{const res=await postAction({action:'addComplaintComment',complaintId:id,comment});if(res.error)throw new Error(res.error);input.value='';await loadData();auxLoaded.complaints=false;await loadAux('complaints');}catch(e){alert(e.message);}
 }
 async function closeComplaint(id){
   const resolution=prompt('Enter resolution / closing note:','Resolved'); if(resolution===null)return;
-  try{const res=await postAction({action:'closeComplaint',complaintId:id,resolution});if(res.error)throw new Error(res.error);await loadData();}catch(e){alert(e.message);}
+  try{const res=await postAction({action:'closeComplaint',complaintId:id,resolution});if(res.error)throw new Error(res.error);await loadData();auxLoaded.complaints=false;await loadAux('complaints');}catch(e){alert(e.message);}
 }
 
 
@@ -5667,11 +5672,10 @@ function bulkShipToAddressSuggestions(party){
 function removePPCBulkRow(i){ppcBulkRows.splice(i,1);renderPPCBulkRows();}
 async function savePPCBulkOrders(){
   const st=document.getElementById('ppc-bulk-status');
-  const sourceRows=ppcBulkRows.filter(r=>r.customer||r.partCode||r.orderQty);
-  const rows=sourceRows.map((r,sourceIndex)=>{
-    // Read the actual visible dropdown first. This fixes cases where the UI
-    // shows Unit 5/Unit 1/etc. but the internal row object is still blank.
-    const unitEl=document.querySelector(`#ppc-order-bulk-table [data-p="unit"][data-i="${sourceIndex}"]`);
+  const sourceRows=ppcBulkRows.map((r,i)=>({r,i})).filter(x=>x.r.customer||x.r.partCode||x.r.orderQty);
+  const rows=sourceRows.map(({r,i})=>{
+    // Read the visible Unit dropdown using the original row index, including blank rows.
+    const unitEl=document.querySelector(`#ppc-order-bulk-table [data-p="unit"][data-i="${i}"]`);
     const visibleUnit=String(unitEl?.value||'').trim();
     const fallbackUnit=String(r.unit||SESSION?.unit||((data.units||[])[0]||'')).trim();
     const selectedUnit=visibleUnit||fallbackUnit;
@@ -6069,7 +6073,7 @@ async function savePPCSet(){
   }catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}
 }
 
-async function createAdminRole(){const st=document.getElementById('admin-role-status');const name=document.getElementById('admin-role-name').value.trim();const permissions=[...(data.v2.permissions||[])];if(!name){st.textContent='Role name is required';st.className='status-msg err';return;}try{const r=await postAction({action:'createRole',roleName:name,permissions});if(r.error)throw new Error(r.error);st.textContent='Role created.';st.className='status-msg ok';await loadV2(true);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
+async function createAdminRole(){const st=document.getElementById('admin-role-status');const name=document.getElementById('admin-role-name').value.trim();const permissions=[...document.querySelectorAll('.admin-perm-check:checked')].map(x=>x.value);if(!name){st.textContent='Role name is required';st.className='status-msg err';return;}try{const r=await postAction({action:'createRole',roleName:name,permissions});if(r.error)throw new Error(r.error);st.textContent='Role created.';st.className='status-msg ok';await loadV2(true);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
 async function createAdminField(){const st=document.getElementById('admin-field-status');try{const r=await postAction({action:'createField',module:document.getElementById('admin-field-module').value.trim(),fieldName:document.getElementById('admin-field-name').value.trim(),label:document.getElementById('admin-field-label').value.trim(),type:document.getElementById('admin-field-type').value,dropdownId:document.getElementById('admin-field-dropdown').value.trim()});if(r.error)throw new Error(r.error);st.textContent='Field added to configuration.';st.className='status-msg ok';await loadV2(true);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
 async function createAdminDropdownOption(){const st=document.getElementById('admin-dd-status');try{const r=await postAction({action:'createDropdownOption',dropdownName:document.getElementById('admin-dd-name').value.trim(),optionValue:document.getElementById('admin-dd-option').value.trim()});if(r.error)throw new Error(r.error);st.textContent='Dropdown option added.';st.className='status-msg ok';await loadV2(true);}catch(e){st.textContent='Failed: '+e.message;st.className='status-msg err';}}
 async function assignAdminUserRole(){
@@ -6211,8 +6215,8 @@ const inR=(d,a,b)=>d>=a&&d<=b;
 const reason=o=>String(o.PendingReason||'—').replace(/\d[\d,]*/g,'N');
 function age(o){const s=fmtDate(o.ScheduledDate);if(s==='—')return null;const d=Math.floor((new Date(today())-new Date(s))/864e5);return d<0?null:d<=1?'0–1 Days':d<=3?'2–3 Days':d<=7?'4–7 Days':d<=15?'8–15 Days':'15+ Days'}
 const okF=o=>(!flt.unit||o.Unit===flt.unit)&&(!flt.cust||o.Customer===flt.cust)&&(!flt.reason||reason(o)===flt.reason)&&(!flt.age||age(o)===flt.age);
-const dashPendingQty=o=>Math.max(0,N(o.OrderQty)-N(o.DispatchedQty));
-const dashIsCompleted=o=>N(o.OrderQty)>0&&dashPendingQty(o)<=0;
+const dashPendingQty=o=>String(o.Status)==='Completed'?0:Math.max(0,N(o.OrderQty)-N(o.DispatchedQty));
+const dashIsCompleted=o=>String(o.Status)==='Completed'||(N(o.OrderQty)>0&&dashPendingQty(o)<=0);
 const isOpen=o=>String(o.Status)==='Pending'&&dashPendingQty(o)>0;
 
 /* ---------- SHELL ---------- */
@@ -6513,8 +6517,8 @@ document.addEventListener('keydown',function(e){
   }
   function ymdI(v){
     if(v instanceof Date && !isNaN(v.getTime())){
-      const d=new Date(v.getTime());
-      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      const d=new Date(v.getTime() + 432e5);
+      return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
     }
     const s=String(v==null?'':v).trim();
     if(!s)return '';
