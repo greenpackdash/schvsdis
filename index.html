@@ -2610,7 +2610,10 @@ try{if(sessionStorage.getItem('svd_token'))document.documentElement.classList.ad
   width:100%!important;
   max-width:100%!important;
   overflow-x:auto!important;
-  overflow-y:visible!important;
+  /* Prevent the horizontal-scroll wrapper from creating a second vertical
+     scrollbar. The autocomplete menu is fixed to the viewport and remains
+     independently usable outside this wrapper. */
+  overflow-y:hidden!important;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:thin;
   scrollbar-color:var(--accent,#7c3aed) var(--panel-2);
@@ -2632,8 +2635,10 @@ try{if(sessionStorage.getItem('svd_token'))document.documentElement.classList.ad
 /* Keep long customer names intact; users can drag the bottom scrollbar. */
 #ppc-autocomplete-menu{
   max-width:calc(100vw - 16px)!important;
+  max-height:min(320px, calc(100vh - 24px))!important;
   overflow-x:auto!important;
   overflow-y:auto!important;
+  overscroll-behavior:contain;
   white-space:nowrap!important;
   scrollbar-width:thin;
   scrollbar-color:var(--accent,#7c3aed) var(--panel-2);
