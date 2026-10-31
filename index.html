@@ -5887,12 +5887,64 @@ async function saveBulkDispatch(){
 
   if(!unit){st.textContent='Select dispatching unit.';st.className='status-msg err';return;}
 
-  const items=[...bulkDispatchSelected].map(id=>{
-    const o=(data.orders||[]).find(x=>String(x.OrderID)===String(id));
-    return {orderId:id,uom:o?.UOM||'Nos',dispatchedQty:bulkDispatchQty[id],shipToParty:bulkDispatchShipTo[id]||o?.ShipToParty||'',shipToAddress:o?.ShipToAddress||''};
+  const selectedIds=[...bulkDispatchSelected];
+  if(!selectedIds.length){st.textContent='Select at least one order.';st.className='status-msg err';return;}
+
+  // The list may have been loaded from a cached core snapshot. Always refresh
+  // from the Orders sheet before dispatch so completed/stale rows are not sent.
+  st.textContent='Checking latest order status…';
+  st.className='status-msg';
+  const refreshed=await loadData(true,true);
+  if(!refreshed){
+    st.textContent='Could not refresh the latest order status. Nothing was dispatched. Please retry.';
+    st.className='status-msg err';
+    return;
+  }
+
+  const byId=new Map();
+  (data.orders||[]).forEach(o=>{
+    const id=String(o.OrderID||'');
+    if(!id)return;
+    if(!byId.has(id))byId.set(id,[]);
+    byId.get(id).push(o);
   });
 
-  if(!items.length){st.textContent='Select at least one order.';st.className='status-msg err';return;}
+  const freshOrderById=new Map();
+  const staleIds=[];
+  const duplicateIds=[];
+  selectedIds.forEach(id=>{
+    const matches=byId.get(String(id))||[];
+    const pending=matches.filter(o=>
+      String(o.Status||'').toLowerCase()==='pending' &&
+      Number(o.PendingQty||0)>0
+    );
+    if(pending.length===1) freshOrderById.set(String(id),pending[0]);
+    else if(pending.length>1) duplicateIds.push(String(id));
+    else staleIds.push(String(id));
+  });
+
+  if(duplicateIds.length){
+    st.textContent='Duplicate Order IDs found in the refreshed order list: '+duplicateIds.join(', ')+'. No dispatch was submitted. Please correct duplicate Order IDs in the Orders sheet.';
+    st.className='status-msg err';
+    return;
+  }
+
+  if(staleIds.length){
+    staleIds.forEach(id=>{
+      bulkDispatchSelected.delete(id);
+      delete bulkDispatchQty[id];
+      delete bulkDispatchShipTo[id];
+    });
+    renderBulkDispatchRows();
+    st.textContent=staleIds.length+' selected order(s) are no longer pending in the latest data and were removed. Review the remaining rows, then click Dispatch Selected again.';
+    st.className='status-msg err';
+    return;
+  }
+
+  const items=selectedIds.map(id=>{
+    const o=freshOrderById.get(String(id));
+    return {orderId:id,uom:o?.UOM||'Nos',dispatchedQty:bulkDispatchQty[id],shipToParty:bulkDispatchShipTo[id]||o?.ShipToParty||'',shipToAddress:o?.ShipToAddress||''};
+  });
 
   const invalid=items.filter(x=>!Number(x.dispatchedQty)||Number(x.dispatchedQty)<=0);
   if(invalid.length){
@@ -5906,7 +5958,9 @@ async function saveBulkDispatch(){
 
   try{
     const r=await postAction({action:'bulkDispatch',items,unit,dispatchedDate:date,note});
-    if(r.error)throw new Error((r.validationErrors||[]).join('\n')||r.error);
+    if(r.error && !(Number(r.count)>0)) {
+      throw new Error((r.validationErrors||[]).join('\n')||r.error);
+    }
 
     (r.orders||[]).forEach(u=>{
       const o=data.orders.find(x=>String(x.OrderID)===String(u.orderId));
@@ -5934,8 +5988,13 @@ async function saveBulkDispatch(){
     // This does NOT make FG stock a prerequisite for dispatch.
     await loadData();
 
-    st.textContent='✓ '+savedCount+' dispatches saved in one batch. Current FG stock refreshed.';
-    st.className='status-msg ok';
+    if((r.validationErrors||[]).length){
+      st.textContent='✓ '+savedCount+' dispatches saved. '+r.validationErrors.length+' ambiguous/invalid row(s) were skipped and NOT dispatched. Review: '+r.validationErrors.join(' | ');
+      st.className='status-msg err';
+    }else{
+      st.textContent='✓ '+savedCount+' dispatches saved in one batch. Current FG stock refreshed.';
+      st.className='status-msg ok';
+    }
   }catch(e){
     st.textContent='Failed: '+e.message;
     st.className='status-msg err';
