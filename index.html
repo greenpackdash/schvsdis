@@ -6374,14 +6374,28 @@ document.addEventListener('click', e => { if(!e.target.closest('.searchable-orde
 const $=id=>document.getElementById(id),N=v=>Number(v)||0,F=n=>N(n).toLocaleString('en-IN');
 const COL=['#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#14b8a6','#eab308','#64748b'];
 const PANELS=['multiple','sets','orders','new','stock','dispatch-history','ppc-import','fg-import','complaints','discussion','admin'];
-let range='7',flt={},charts={},cur='dashboard',built=false;
+let range='m',customFrom='',customTo='',flt={},charts={},cur='dashboard',built=false;
 const NAV=[['','Dashboard','layout-dashboard','dashboard'],['ORDERS'],['All Orders','list','orders'],['New Order / Dispatch Entry','plus-square','new'],['Multiple Orders','layers','multiple'],['PPC Excel Import','file-spreadsheet','ppc-import'],['Customer Sets','boxes','sets'],
 ['DISPATCH'],['Dispatch History','truck','dispatch-history'],['Tally Import','file-up','tally'],['STOCK'],['FG Stock & Movement','package','stock'],['FG Excel Import','file-up','fg-import'],['WORKSPACE'],['Complaints','alert-triangle','complaints'],['Discussion','message-square','discussion'],['Administration','settings','admin']];
 const today=()=>fmtDate(new Date());
-function rng(){const p=n=>String(n).padStart(2,'0'),k=d=>d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()),t=new Date();let a=new Date(t),b=new Date(t);
- if(range==='y'){a.setDate(a.getDate()-1);b=new Date(a)}else if(range==='m')a=new Date(t.getFullYear(),t.getMonth(),1);else a.setDate(a.getDate()-(+range-1));
- const n=Math.round((b-a)/864e5)+1,pb=new Date(a);pb.setDate(pb.getDate()-1);const pa=new Date(pb);pa.setDate(pa.getDate()-(n-1));
- return{from:k(a),to:k(b),pf:k(pa),pt:k(pb),days:Array.from({length:n},(_,i)=>{const x=new Date(a);x.setDate(x.getDate()+i);return k(x)})}}
+function rng(){
+ const p=n=>String(n).padStart(2,'0'),k=d=>d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()),t=new Date();
+ let a=new Date(t.getFullYear(),t.getMonth(),1),b=new Date(t);
+ if(range==='today'){a=new Date(t.getFullYear(),t.getMonth(),t.getDate())}
+ else if(range==='y'){a=new Date(t.getFullYear(),t.getMonth(),t.getDate()-1);b=new Date(a)}
+ else if(range==='7'){a=new Date(t.getFullYear(),t.getMonth(),t.getDate()-6)}
+ else if(range==='lm'){a=new Date(t.getFullYear(),t.getMonth()-1,1);b=new Date(t.getFullYear(),t.getMonth(),0)}
+ else if(range==='yr'){a=new Date(t.getFullYear(),0,1)}
+ else if(range==='all'){
+   const dates=(data?.orders||[]).map(o=>fmtDate(o.ScheduledDate)).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x)).sort();
+   a=dates.length?new Date(dates[0]+'T00:00:00'):new Date(t.getFullYear(),t.getMonth(),1);
+ } else if(range==='custom'){
+   const f=customFrom||k(new Date(t.getFullYear(),t.getMonth(),1)),to=customTo||k(t);
+   a=new Date((f<=to?f:to)+'T00:00:00');b=new Date((f<=to?to:f)+'T00:00:00');
+ } else if(/^\d+$/.test(range)){a=new Date(t.getFullYear(),t.getMonth(),t.getDate()-(Number(range)-1))}
+ const n=Math.max(1,Math.round((b-a)/864e5)+1),pb=new Date(a);pb.setDate(pb.getDate()-1);const pa=new Date(pb);pa.setDate(pa.getDate()-(n-1));
+ return{from:k(a),to:k(b),pf:k(pa),pt:k(pb),days:Array.from({length:n},(_,i)=>{const x=new Date(a);x.setDate(x.getDate()+i);return k(x)})}
+}
 const inR=(d,a,b)=>d>=a&&d<=b;
 const reason=o=>String(o.PendingReason||'—').replace(/\d[\d,]*/g,'N');
 function age(o){const s=fmtDate(o.ScheduledDate);if(s==='—')return null;const d=Math.floor((new Date(today())-new Date(s))/864e5);return d<0?null:d<=1?'0–1 Days':d<=3?'2–3 Days':d<=7?'4–7 Days':d<=15?'8–15 Days':'15+ Days'}
@@ -6491,7 +6505,22 @@ window.toggleTheme=function(){
 };
 
 /* ---------- DRILL-DOWN ---------- */
-window.gpSet=(k,v)=>{flt[k]=v;renderDash()};window.gpClear=k=>{k?delete flt[k]:flt={};renderDash()};
+window.gpSet=(k,v)=>{flt[k]=v;renderDash()};
+window.gpClear=k=>{k?delete flt[k]:flt={};renderDash()};
+window.gpSetRange=v=>{
+ range=String(v||'m');
+ if(range==='custom'){
+   const now=new Date(),p=n=>String(n).padStart(2,'0');
+   customFrom=customFrom||now.getFullYear()+'-'+p(now.getMonth()+1)+'-01';
+   customTo=customTo||now.getFullYear()+'-'+p(now.getMonth()+1)+'-'+p(now.getDate());
+ }
+ renderDash();
+};
+window.gpSetCustomDates=()=>{
+ const f=$('gp-date-from')?.value||'',t=$('gp-date-to')?.value||'';
+ if(f)customFrom=f;if(t)customTo=t;
+ if(f&&t)renderDash();
+};
 window.gpGo=(tab,f)=>{switchTab(tab);if(tab==='orders'){['f-search','f-customer','f-unit','f-status','f-part'].forEach(i=>$(i)&&!$(i).disabled&&($(i).value=''));
  if(f)Object.keys(f).forEach(k=>{const e=$(k);if(e&&!e.disabled)e.value=f[k]});renderTable()}$('gp-dr').classList.remove('open')};
 window.gpOrder=id=>{const o=data.orders.find(x=>String(x.OrderID)===String(id));if(!o)return;
@@ -6512,16 +6541,16 @@ function ch(id,cfg,click,empty){const c=$(id);if(!c)return;if(!window.Chart)retu
 const sum=(a,f)=>a.reduce((s,x)=>s+N(f(x)),0);
 const grp=(a,k,v)=>{const m={};a.forEach(x=>{const g=k(x)||'—';m[g]=(m[g]||0)+N(v(x))});return Object.entries(m).sort((a,b)=>b[1]-a[1])};
 const card=(id,t,w)=>`<div class="gp-c ${w||''}"><h3>${t}</h3><div class="gp-cv"><canvas id="${id}"></canvas><div class="gp-nd">No data for the current filters</div></div></div>`;
-const dlt=(a,b)=>{if(!b&&!a)return'<i class="nu">—</i>';const p=b?((a-b)/b*100):100;return`<i class="${p>=0?'up':'dn'}">${p>=0?'↑':'↓'} ${Math.abs(p).toFixed(1)}% <span class="nu">vs prev</span></i>`};
+const dlt=(a,b)=>{if(range==='all')return'<i class="nu">all recorded history</i>';if(!b&&!a)return'<i class="nu">—</i>';const p=b?((a-b)/b*100):100;return`<i class="${p>=0?'up':'dn'}">${p>=0?'↑':'↓'} ${Math.abs(p).toFixed(1)}% <span class="nu">vs prev</span></i>`};
 
 /* ---------- DASHBOARD ---------- */
 function renderDash(){
  const root=$('tab-dashboard');if(!root||!built||!data.orders)return;
  const R=rng(),all=data.orders,orders=all.filter(okF),open=orders.filter(o=>dashPendingQty(o)>0),logs=data.logs||[];
  const oById={};all.forEach(o=>oById[String(o.OrderID)]=o);
- const sc=orders.filter(o=>inR(fmtDate(o.ScheduledDate),R.from,R.to)),sp=orders.filter(o=>inR(fmtDate(o.ScheduledDate),R.pf,R.pt));
+ const sc=range==='all'?orders:orders.filter(o=>inR(fmtDate(o.ScheduledDate),R.from,R.to)),sp=range==='all'?[]:orders.filter(o=>inR(fmtDate(o.ScheduledDate),R.pf,R.pt));
  const lg=a=>logs.filter(l=>oById[String(l.OrderID)]&&okF(oById[String(l.OrderID)])&&inR(fmtDate(l.DispatchedDate),a[0],a[1]));
- const lc=lg([R.from,R.to]),lp=lg([R.pf,R.pt]);
+ const lc=range==='all'?logs.filter(l=>oById[String(l.OrderID)]&&okF(oById[String(l.OrderID)])):lg([R.from,R.to]),lp=range==='all'?[]:lg([R.pf,R.pt]);
 
  /* ---------- KPI quantities: always derive remaining qty from Order - Dispatched ---------- */
  const orderQty=sum(sc,o=>o.OrderQty);
@@ -6573,7 +6602,22 @@ function renderDash(){
  ];
 
  const chips=Object.entries(flt).map(([k,v])=>`<span class="gp-chip" onclick="gpClear('${k}')">${k}: ${esc(v)} ✕</span>`).join('');
- root.innerHTML=`${chips?`<div>${chips}<span class="gp-chip" onclick="gpClear()">Clear all</span></div>`:''}
+ root.innerHTML=`<div class="gp-date-toolbar" style="display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:0 0 14px;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(135deg,rgba(139,92,246,.09),rgba(52,211,153,.035))">
+ <div style="min-width:190px;flex:0 0 210px"><label for="gp-range" style="display:block;margin-bottom:5px">Dashboard date range</label>
+ <select id="gp-range" onchange="gpSetRange(this.value)" style="width:100%">
+ <option value="today" ${range==='today'?'selected':''}>Today</option>
+ <option value="y" ${range==='y'?'selected':''}>Yesterday</option>
+ <option value="7" ${range==='7'?'selected':''}>Last 7 Days</option>
+ <option value="m" ${range==='m'?'selected':''}>This Month</option>
+ <option value="lm" ${range==='lm'?'selected':''}>Last Month</option>
+ <option value="yr" ${range==='yr'?'selected':''}>This Year</option>
+ <option value="all" ${range==='all'?'selected':''}>All Time — All Orders</option>
+ <option value="custom" ${range==='custom'?'selected':''}>Custom Range</option>
+ </select></div>
+ ${range==='custom'?`<div style="min-width:145px"><label for="gp-date-from">From</label><input id="gp-date-from" type="date" value="${customFrom}" onchange="gpSetCustomDates()"></div><div style="min-width:145px"><label for="gp-date-to">To</label><input id="gp-date-to" type="date" value="${customTo}" onchange="gpSetCustomDates()"></div>`:''}
+ <div style="font-size:11px;color:var(--muted);padding:0 0 9px">Showing scheduled orders: <b style="color:var(--text)">${R.from}</b> to <b style="color:var(--text)">${R.to}</b></div>
+ </div>
+ ${chips?`<div style="margin-bottom:12px">${chips}<span class="gp-chip" onclick="gpClear()">Clear all filters</span></div>`:''}
  <div class="gp-kpis">${K.map((k,i)=>`<div class="gp-k" data-k="${i}"><small>${k[0]}</small><b>${k[1]}</b>${k[2]}</div>`).join('')}</div>
  <div class="gp-g">${card('c-trend','Daily Operations Trend','w8')}${card('c-reason','Pending Reasons (qty)','w4')}
  ${card('c-unit','Unit Performance')}${card('c-cust','Customers with Highest Pending Qty')}
@@ -6636,7 +6680,7 @@ function renderDash(){
  if(yPct!==null&&yPct<100)rec.push(`Yesterday dispatch achievement was ${yPct.toFixed(1)}% — ${F(yScheduledQty-yDispatchedQty)} qty was not dispatched by end of yesterday.`);
  if(yPct===100)rec.push('Yesterday dispatch achievement was 100% — all scheduled quantity was dispatched.');
  if(periodDispatchPct!==null&&periodDispatchPct<90)rec.push(`Selected-period dispatch achievement is ${periodDispatchPct.toFixed(1)}%. Review pending orders and dispatch constraints.`);
- if(pendingQty>0)rec.push(`Current period pending quantity is ${F(pendingQty)} against ${F(orderQty)} ordered quantity.`);
+ if(pendingQty>0)rec.push(`Selected-range pending quantity is ${F(pendingQty)} against ${F(orderQty)} ordered quantity.`);
  $('gp-rec').innerHTML=`<h3>Management Summary</h3>${rec.map(x=>`<div class="gp-row"><span>${esc(x)}</span></div>`).join('')||'<div class="sub">No management exceptions for the selected period.</div>'}`;
 
  /* recent dispatches */
