@@ -2603,6 +2603,62 @@ try{if(sessionStorage.getItem('svd_token'))document.documentElement.classList.ad
 .lite.login-wrap::before,.lite.login-wrap::after{filter:blur(50px)}
 </style>
 
+
+<style id="ppc-customer-full-name-scroll-fix">
+/* PPC multiple-order entry: wider customer column + intentional horizontal scroll */
+#tab-multiple .table-scroll{
+  width:100%!important;
+  max-width:100%!important;
+  overflow-x:auto!important;
+  overflow-y:visible!important;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scrollbar-color:var(--accent,#7c3aed) var(--panel-2);
+}
+#ppc-order-bulk-table{
+  min-width:1280px!important;
+  table-layout:auto!important;
+}
+#ppc-order-bulk-table th:first-child,
+#ppc-order-bulk-table td.ppc-customer-cell{
+  min-width:310px!important;
+  width:310px!important;
+}
+#ppc-order-bulk-table .ppc-customer-cell input{
+  width:100%!important;
+  min-width:280px!important;
+  box-sizing:border-box!important;
+}
+/* Keep long customer names intact; users can drag the bottom scrollbar. */
+#ppc-autocomplete-menu{
+  max-width:calc(100vw - 16px)!important;
+  overflow-x:auto!important;
+  overflow-y:auto!important;
+  white-space:nowrap!important;
+  scrollbar-width:thin;
+  scrollbar-color:var(--accent,#7c3aed) var(--panel-2);
+}
+#ppc-autocomplete-menu .ppc-autocomplete-item{
+  display:block!important;
+  width:max-content!important;
+  min-width:100%!important;
+  max-width:none!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  padding-right:16px!important;
+}
+@media(max-width:700px){
+  #ppc-order-bulk-table{min-width:1120px!important}
+  #ppc-order-bulk-table th:first-child,
+  #ppc-order-bulk-table td.ppc-customer-cell{
+    min-width:270px!important;
+    width:270px!important;
+  }
+  #ppc-order-bulk-table .ppc-customer-cell input{min-width:240px!important}
+}
+</style>
+
 </head>
 <body>
 <div id="boot-splash">Loading MIS…</div>
@@ -5635,10 +5691,15 @@ function showPPCAutocomplete_(el){
   const matches=vals.filter(v=>!q||v.toLowerCase().includes(q)).slice(0,40);
   if(!matches.length){hidePPCAutocomplete_();return;}
   const r=el.getBoundingClientRect();
-  m.style.left=Math.max(4,r.left)+'px';
+  // Give customer suggestions enough room to read long registered names.
+  // The menu itself can scroll horizontally when a name is wider than the menu.
+  const isCustomer = el.dataset.p === 'customer';
+  const menuWidth = Math.min(window.innerWidth - 16, Math.max(r.width, isCustomer ? 390 : 280));
+  const menuLeft = Math.max(8, Math.min(r.left, window.innerWidth - menuWidth - 8));
+  m.style.left=menuLeft+'px';
   m.style.top=(r.bottom+3)+'px';
-  m.style.width=Math.max(r.width,220)+'px';
-  m.innerHTML=matches.map(v=>`<div class="ppc-autocomplete-item" data-value="${esc(v)}">${esc(v)}</div>`).join('');
+  m.style.width=menuWidth+'px';
+  m.innerHTML=matches.map(v=>`<div class="ppc-autocomplete-item" data-value="${esc(v)}" title="${esc(v)}">${esc(v)}</div>`).join('');
   m.classList.add('show');
   m.querySelectorAll('.ppc-autocomplete-item').forEach(item=>item.addEventListener('mousedown',e=>{
     e.preventDefault();
