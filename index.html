@@ -2639,6 +2639,8 @@ try{if(sessionStorage.getItem('svd_token'))document.documentElement.classList.ad
   overflow-x:auto!important;
   overflow-y:auto!important;
   overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-y;
   white-space:nowrap!important;
   scrollbar-width:thin;
   scrollbar-color:var(--accent,#7c3aed) var(--panel-2);
@@ -5724,7 +5726,13 @@ function syncPPCBulkField_(el){
   if(field==='partCode'||field==='unit'){const stock=getStockFor(r.partCode,r.unit);const stockEl=document.querySelector(`#ppc-order-bulk-table [data-ppc-stock="${i}"]`);if(stockEl){stockEl.textContent=Number(stock||0).toLocaleString();stockEl.classList.toggle('zero',Number(stock||0)<=0);}}
 }
 document.addEventListener('click',e=>{const m=document.getElementById('ppc-autocomplete-menu');if(m&&!m.contains(e.target)&&!e.target.closest('#ppc-order-bulk-table .ppc-autocomplete-wrap'))hidePPCAutocomplete_();});
-window.addEventListener('scroll',hidePPCAutocomplete_,true);
+// Close suggestions when the page/table scrolls, but do NOT close them
+// when the user scrolls inside the suggestion list itself.
+window.addEventListener('scroll', e=>{
+  const menu=document.getElementById('ppc-autocomplete-menu');
+  if(menu && (e.target===menu || menu.contains(e.target))) return;
+  hidePPCAutocomplete_();
+}, true);
 
 function togglePPCRowDefaults_(i,checked){
   ppcBulkRows[i].useDefaults=!!checked;
