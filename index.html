@@ -5785,7 +5785,7 @@ function renderBulkDispatchRows(){
       <td class="bulk-scheduled-cell">${o.ScheduledDate?esc(fmtDate(o.ScheduledDate)):'—'}</td>
       <td class="bulk-pending-cell"><b>${pending.toLocaleString()}</b><small>${esc(o.UOM||'Nos')}</small></td>
       <td class="bulk-qty-cell"><div class="bulk-qty-wrap">
-        <input type="number" min="1" max="${pending}" data-bqty="${esc(id)}" value="${esc(qty)}" placeholder="0">
+        <input type="number" min="1" max="${pending}" step="any" inputmode="decimal" autocomplete="off" data-bqty="${esc(id)}" value="${esc(qty)}" placeholder="Enter qty">
         <button type="button" class="bulk-full-btn" data-full="${esc(id)}">Full</button>
       </div></td>
       <td class="bulk-ship-cell"><input list="dl-shipto" data-bship="${esc(id)}" value="${esc(ship)}" placeholder="PPC ship-to"></td>
@@ -5796,9 +5796,51 @@ function renderBulkDispatchRows(){
       const tr=el.closest('tr'); if(tr)tr.classList.toggle('bulk-row-selected',el.checked); updateBulkDispatchUI_(); syncBulkMasterCheck_(); };
   });
   tb.querySelectorAll('[data-bqty]').forEach(el=>{
-    el.oninput=()=>{ const id=el.dataset.bqty; const o=(data.orders||[]).find(x=>String(x.OrderID)===String(id));
-      let v=Number(el.value||0); if(o)v=Math.min(Math.max(v,0),Number(o.PendingQty||0)); el.value=v||''; bulkDispatchQty[id]=el.value;
-      if(v>0)bulkDispatchSelected.add(id); updateBulkDispatchUI_(); syncBulkMasterCheck_(); };
+    const id = el.dataset.bqty;
+    const getPending = () => {
+      const order = (data.orders || []).find(x => String(x.OrderID) === String(id));
+      return order ? Math.max(0, Number(order.PendingQty) || 0) : 0;
+    };
+
+    // Keep the field untouched while the user is typing.
+    el.addEventListener('input', () => {
+      const raw = el.value;
+      bulkDispatchQty[id] = raw;
+      const value = raw === '' ? 0 : Number(raw);
+      const pending = getPending();
+
+      if (Number.isFinite(value) && value > 0) {
+        if (value > pending) {
+          el.value = String(pending);
+          bulkDispatchQty[id] = el.value;
+        }
+        bulkDispatchSelected.add(id);
+      }
+      updateBulkDispatchUI_();
+      syncBulkMasterCheck_();
+    });
+
+    // Validate/clamp after editing, rather than on each keystroke.
+    el.addEventListener('change', () => {
+      const raw = el.value.trim();
+      const pending = getPending();
+      if (raw === '') {
+        bulkDispatchQty[id] = '';
+      } else {
+        const value = Number(raw);
+        if (!Number.isFinite(value) || value <= 0) {
+          el.value = '';
+          bulkDispatchQty[id] = '';
+        } else if (value > pending) {
+          el.value = String(pending);
+          bulkDispatchQty[id] = el.value;
+        } else {
+          bulkDispatchQty[id] = raw;
+        }
+      }
+      updateBulkDispatchUI_();
+      syncBulkMasterCheck_();
+    });
   });
   tb.querySelectorAll('[data-full]').forEach(el=>{
     el.onclick=()=>{ const id=el.dataset.full; const o=(data.orders||[]).find(x=>String(x.OrderID)===String(id)); if(!o)return;
