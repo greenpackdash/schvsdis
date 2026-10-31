@@ -810,6 +810,7 @@ body {
 .bulk-qty-cell{min-width:150px}
 .bulk-qty-wrap{display:flex;gap:5px;align-items:center}
 .bulk-qty-wrap input{width:88px;padding:7px 8px}
+.bulk-qty-wrap input[data-bqty]{min-width:88px;text-align:center;font-variant-numeric:tabular-nums;}
 .bulk-full-btn{padding:7px 9px;font-size:10px;color:#c4b5fd;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.28)}
 .bulk-full-btn:hover{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.45)}
 .bulk-ship-cell{min-width:190px}
@@ -5785,7 +5786,7 @@ function renderBulkDispatchRows(){
       <td class="bulk-scheduled-cell">${o.ScheduledDate?esc(fmtDate(o.ScheduledDate)):'—'}</td>
       <td class="bulk-pending-cell"><b>${pending.toLocaleString()}</b><small>${esc(o.UOM||'Nos')}</small></td>
       <td class="bulk-qty-cell"><div class="bulk-qty-wrap">
-        <input type="number" min="1" max="${pending}" step="any" inputmode="decimal" autocomplete="off" data-bqty="${esc(id)}" value="${esc(qty)}" placeholder="Enter qty">
+        <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" spellcheck="false" data-bpending="${pending}" data-bqty="${esc(id)}" value="${esc(qty)}" placeholder="Enter qty">
         <button type="button" class="bulk-full-btn" data-full="${esc(id)}">Full</button>
       </div></td>
       <td class="bulk-ship-cell"><input list="dl-shipto" data-bship="${esc(id)}" value="${esc(ship)}" placeholder="PPC ship-to"></td>
@@ -5797,33 +5798,27 @@ function renderBulkDispatchRows(){
   });
   tb.querySelectorAll('[data-bqty]').forEach(el=>{
     const id = el.dataset.bqty;
-    const getPending = () => {
-      const order = (data.orders || []).find(x => String(x.OrderID) === String(id));
-      return order ? Math.max(0, Number(order.PendingQty) || 0) : 0;
-    };
+    // Use the pending quantity from this exact rendered row. Do not look it up
+    // again by OrderID: duplicate/stale order records can otherwise resolve to 0.
+    const pending = Math.max(0, Number(el.dataset.bpending) || 0);
 
-    // Keep the field untouched while the user is typing.
+    // Never change the input's value during typing. This keeps the caret stable
+    // and prevents a zero/old record from overwriting the digits being entered.
     el.addEventListener('input', () => {
-      const raw = el.value;
+      const raw = el.value.replace(/[^0-9]/g, '');
+      if (el.value !== raw) el.value = raw;
       bulkDispatchQty[id] = raw;
-      const value = raw === '' ? 0 : Number(raw);
-      const pending = getPending();
 
-      if (Number.isFinite(value) && value > 0) {
-        if (value > pending) {
-          el.value = String(pending);
-          bulkDispatchQty[id] = el.value;
-        }
+      if (raw !== '' && Number(raw) > 0) {
         bulkDispatchSelected.add(id);
       }
       updateBulkDispatchUI_();
       syncBulkMasterCheck_();
     });
 
-    // Validate/clamp after editing, rather than on each keystroke.
+    // Validate only when the user leaves the field or confirms the value.
     el.addEventListener('change', () => {
       const raw = el.value.trim();
-      const pending = getPending();
       if (raw === '') {
         bulkDispatchQty[id] = '';
       } else {
@@ -5835,7 +5830,8 @@ function renderBulkDispatchRows(){
           el.value = String(pending);
           bulkDispatchQty[id] = el.value;
         } else {
-          bulkDispatchQty[id] = raw;
+          bulkDispatchQty[id] = String(value);
+          el.value = String(value);
         }
       }
       updateBulkDispatchUI_();
