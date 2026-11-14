@@ -6556,11 +6556,43 @@ function renderDash(){
  const lc=range==='all'?logs.filter(l=>oById[String(l.OrderID)]&&okF(oById[String(l.OrderID)])):lg([R.from,R.to]),lp=range==='all'?[]:lg([R.pf,R.pt]);
 
  /* ---------- KPI quantities: always derive remaining qty from Order - Dispatched ---------- */
- const orderQty=sum(sc,o=>o.OrderQty);
- const dispatchedQty=sum(lc,l=>Math.max(0,N(l.DispatchedQty)));
- const pendingQty=sum(sc,o=>dashPendingQty(o));
- const completedCount=sc.filter(dashIsCompleted).length;
- const pendingCount=sc.filter(o=>dashPendingQty(o)>0).length;
+ 
+// Complete all-time figures are supplied by the backend.
+// Date filters and dashboard filters continue using the existing calculation.
+const allTimeStats =
+  range === 'all' &&
+  !Object.values(flt).some(Boolean) &&
+  data.allTimeDashboardStats
+    ? data.allTimeDashboardStats
+    : null;
+
+const orderQty = allTimeStats
+  ? Number(allTimeStats.totalOrderQty || 0)
+  : sum(sc, o => o.OrderQty);
+
+const dispatchedQty = allTimeStats
+  ? Number(allTimeStats.totalDispatchedQty || 0)
+  : sum(lc, l => Math.max(0, N(l.DispatchedQty)));
+
+const pendingQty = allTimeStats
+  ? Number(allTimeStats.totalPendingQty || 0)
+  : sum(sc, o => dashPendingQty(o));
+
+const completedCount = allTimeStats
+  ? Number(allTimeStats.completedOrders || 0)
+  : sc.filter(dashIsCompleted).length;
+
+const pendingCount = allTimeStats
+  ? Number(allTimeStats.pendingOrders || 0)
+  : sc.filter(o => dashPendingQty(o) > 0).length;
+
+const totalOrderCount = allTimeStats
+  ? Number(allTimeStats.totalOrders || 0)
+  : sc.length;
+
+const totalPendingCustomers = allTimeStats
+  ? Number(allTimeStats.pendingCustomers || 0)
+  : new Set(open.map(o => o.Customer)).size;
 
  /* ---------- Dispatch achievement ---------- */
  const periodDispatchPct=orderQty>0?Math.min(100,(dispatchedQty/orderQty)*100):null;
@@ -6592,7 +6624,7 @@ function renderDash(){
    : `<i class="${yDone?'up':'dn'}">${yDone?'✓ Done':'⚠ '+F(Math.max(0,yScheduledQty-yDispatchedQty))+' pending'} <span class="nu">of yesterday\'s scheduled qty</span></i>`;
 
  const K=[
-   ['Total Orders',sc.length,dlt(sc.length,sp.length),{'f-status':''}],
+   ['Total Orders',totalOrderCount,dlt(totalOrderCount,sp.length),{'f-status':''}],
    ['Completed',completedCount,'<i class="nu">in period</i>',{'f-status':'Completed'}],
    ['Pending Orders',pendingCount,'<i class="nu">in selected period</i>',{'f-status':'Pending'}],
    ['Order Qty',F(orderQty),dlt(orderQty,sum(sp,o=>o.OrderQty)),{}],
@@ -6601,7 +6633,7 @@ function renderDash(){
    ['Dispatch %',pctText,`<i class="${periodDispatchPct!==null&&periodDispatchPct>=100?'up':'nu'}">${periodDispatchPct!==null&&periodDispatchPct>=100?'✓ 100% done':'achievement for selected period'}</i>`,{}],
    ['Yesterday Dispatch',yPctText,ySub,{}],
    ['FG Stock',F(fg),'<i class="nu">current</i>','stock'],
-   ['Customers Pending',cp,'<i class="nu">open now</i>',{'f-status':'Pending'}]
+   ['Customers Pending',totalPendingCustomers,'<i class="nu">open now</i>',{'f-status':'Pending'}]
  ];
 
  const chips=Object.entries(flt).map(([k,v])=>`<span class="gp-chip" onclick="gpClear('${k}')">${k}: ${esc(v)} ✕</span>`).join('');
