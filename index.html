@@ -4126,8 +4126,8 @@ async function loadOlderOrders(){
   const btn=document.getElementById('load-older-btn');
   if(btn){btn.disabled=true;btn.textContent='Loading…';}
   try{
-    const nextOffset=Number(data.orderOffset||0)+Number(data.orderLimit||3000);
     const limit=Number(data.orderLimit||3000);
+    const nextOffset=Number(data.orderOffset||0)+limit;
     const json=await fetchAppScriptJson_(APPS_SCRIPT_URL+'?mode=core&token='+encodeURIComponent(TOKEN)+'&orderOffset='+encodeURIComponent(nextOffset)+'&orderLimit='+encodeURIComponent(limit)+'&_='+Date.now());
     if(json.error)throw new Error(json.error);
     const existing=new Map((data.orders||[]).map(o=>[String(o.OrderID),o]));
@@ -4139,14 +4139,28 @@ async function loadOlderOrders(){
     data.orderOffset=nextOffset;
     data.orderLimit=limit;
     data.hasMoreOrders=Boolean(json.hasMoreOrders);
-    rebuildStockIndex_();
+    rebuildStockIndex_(); buildLogShipToIndex_();
     populateDropdowns(); renderStats(); renderCurrent_();
-  }catch(e){alert('Could not load older orders: '+e.message);}
+    setConn('ok','Live — connected · '+data.orders.length+' orders');
+  }catch(e){console.warn('Could not load older orders: '+e.message);}
   finally{
     if(btn){btn.disabled=false;btn.textContent='Load older';btn.style.display=data.hasMoreOrders?'inline-flex':'none';}
   }
 }
 
+let autoOlderRunning_=false;
+async function loadAllOlderOrders_(){
+  if(autoOlderRunning_) return;
+  autoOlderRunning_=true;
+  try{
+    let guard=0;
+    while(data.hasMoreOrders && guard++<60){
+      const before=Number(data.orderOffset||0);
+      await loadOlderOrders();
+      if(Number(data.orderOffset||0)===before) break; // page failed; stop instead of looping
+    }
+  }finally{autoOlderRunning_=false;}
+}
 async function loadData(silent=false,force=false) {
   // If a request is already running, preserve a pending forced sync and run it
   // immediately after the in-flight request finishes.
@@ -4180,8 +4194,9 @@ async function loadData(silent=false,force=false) {
       // exactly where it is; there is no reason to rebuild the DOM.
       if (json.unchanged) {
         dataVersion = Number(json.version || dataVersion || 0);
-        if (hasLoadedData) setConn('ok', 'Live — connected · ' + (Array.isArray(data.orders) ? data.orders.length : 0) + ' orders');
-        return true;
+      if (hasLoadedData) setConn('ok', 'Live — connected · ' + (Array.isArray(data.orders) ? data.orders.length : 0) + ' orders');
+      if (data.hasMoreOrders) setTimeout(loadAllOlderOrders_, 200);
+      return true;
       }
 
       const hadOlderPages = Number(data.orderOffset||0) > 0;
