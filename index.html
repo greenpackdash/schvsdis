@@ -4197,7 +4197,6 @@ async function loadData(silent=false,force=false) {
       if (hasLoadedData) setConn('ok', 'Live — connected · ' + (Array.isArray(data.orders) ? data.orders.length : 0) + ' orders');
       if (data.hasMoreOrders) setTimeout(loadAllOlderOrders_, 200);
       return true;
-      }
 
       const hadOlderPages = Number(data.orderOffset||0) > 0;
       if(hadOlderPages && Array.isArray(data.orders) && Array.isArray(json.orders)){
@@ -4226,7 +4225,8 @@ async function loadData(silent=false,force=false) {
       // Control Center dashboard: the original app calls renderStats() lexically,
       // so explicitly refresh the dashboard after the data payload is ready.
       if (typeof window.renderDash === 'function') window.renderDash();
-      if (document.querySelector('.tab.active')?.dataset.tab === 'admin') loadV2();
+     if (document.querySelector('.tab.active')?.dataset.tab === 'admin') loadV2();
+      if (data.hasMoreOrders) setTimeout(loadAllOlderOrders_, 200);
       return true;
     } catch (e) {
       if (!silent || !hasLoadedData) setConn('err', 'Connection failed — data not lost.');
