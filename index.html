@@ -3737,7 +3737,7 @@ let _cacheTimer=null;
 function saveCoreCache_(json){
   if(!SESSION || Number(json.orderOffset||0)>0) return;
   clearTimeout(_cacheTimer);
-  _cacheTimer=setTimeout(()=>IDB.set('core:'+SESSION.username,{v:dataVersion,payload:json}),1200);
+  _cacheTimer=setTimeout(()=>IDB.set('core2:'+SESSION.username,{v:dataVersion,payload:json}),1200);
 }
 function buildLogShipToIndex_(){
   logShipToIndex={};
@@ -3746,7 +3746,7 @@ function buildLogShipToIndex_(){
 let logShipToIndex = {};
 async function hydrateFromCache(){
   if(!SESSION)return false;
-  const c=await IDB.get('core:'+SESSION.username);
+  const c=await IDB.get('core2:'+SESSION.username);
   if(!c?.payload)return false;
   data={...data,...c.payload};
   dataVersion=Number(c.v||0);
