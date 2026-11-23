@@ -6358,9 +6358,14 @@ function exportCSV() {
 const _kolFmt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'});
 const _fdCache=new Map();
 function fmtDate(v){
-  if(!v)return '—';const s=String(v).trim();const m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if(m&&!/[T ]/.test(s))return `${m[1]}-${m[2]}-${m[3]}`;
-  const hit=_fdCache.get(s);if(hit)return hit;const d=new Date(v);if(isNaN(d.getTime()))return s;
+  if(!v)return '—';
+  const s=String(v).trim();
+  const iso=s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:$|[ T])/);
+  if(iso) return `${iso[1]}-${iso[2].padStart(2,'0')}-${iso[3].padStart(2,'0')}`;
+  const dmy=s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})(?:$|[ T])/);
+  if(dmy) return `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
+  const hit=_fdCache.get(s);if(hit)return hit;
+  const d=new Date(v);if(isNaN(d.getTime()))return s;
   const o={};_kolFmt.formatToParts(d).forEach(x=>{if(x.type!=='literal')o[x.type]=x.value;});
   const out=`${o.year}-${o.month}-${o.day}`;if(_fdCache.size>5000)_fdCache.clear();_fdCache.set(s,out);return out;
 }
@@ -6400,10 +6405,11 @@ function rng(){
  else if(range==='y'){a=new Date(t.getFullYear(),t.getMonth(),t.getDate()-1);b=new Date(a)}
  else if(range==='7'){a=new Date(t.getFullYear(),t.getMonth(),t.getDate()-6)}
  else if(range==='lm'){a=new Date(t.getFullYear(),t.getMonth()-1,1);b=new Date(t.getFullYear(),t.getMonth(),0)}
- else if(range==='yr'){a=new Date(t.getFullYear(),0,1)}
+else if(range==='yr'){a=new Date(t.getFullYear(),0,1);b=new Date(t.getFullYear(),11,31);}
  else if(range==='all'){
    const dates=(data?.orders||[]).map(o=>fmtDate(o.ScheduledDate)).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x)).sort();
    a=dates.length?new Date(dates[0]+'T00:00:00'):new Date(t.getFullYear(),t.getMonth(),1);
+   if(dates.length && dates[dates.length-1]>k(b)) b=new Date(dates[dates.length-1]+'T00:00:00');
  } else if(range==='custom'){
    const f=customFrom||k(new Date(t.getFullYear(),t.getMonth(),1)),to=customTo||k(t);
    a=new Date((f<=to?f:to)+'T00:00:00');b=new Date((f<=to?to:f)+'T00:00:00');
