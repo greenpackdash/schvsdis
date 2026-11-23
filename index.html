@@ -4126,7 +4126,7 @@ async function loadOlderOrders(){
   const btn=document.getElementById('load-older-btn');
   if(btn){btn.disabled=true;btn.textContent='Loading…';}
   try{
-    const limit=Number(data.orderLimit||3000);
+    const limit=Number(data.orderLimit||3000000);
     const nextOffset=Number(data.orderOffset||0)+limit;
     const json=await fetchAppScriptJson_(APPS_SCRIPT_URL+'?mode=core&token='+encodeURIComponent(TOKEN)+'&orderOffset='+encodeURIComponent(nextOffset)+'&orderLimit='+encodeURIComponent(limit)+'&_='+Date.now());
     if(json.error)throw new Error(json.error);
