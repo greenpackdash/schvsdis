@@ -8205,32 +8205,47 @@ body:not(.gp-on) #gp-ai-fab,body:not(.gp-on) #gp-ai-panel{display:none!important
 <div id="gp-ai-panel" role="dialog" aria-label="MIS assistant">
   <div id="gp-ai-head"><span>MIS Assistant</span><button type="button" id="gp-ai-x" aria-label="Close">✕</button></div>
   <div id="gp-ai-msgs"></div>
-  <div id="gp-ai-form"><input id="gp-ai-q" maxlength="300" placeholder="e.g. Pending qty for BAJAJ in Unit 1?" autocomplete="off"><button class="btn-primary btn-small" type="button" id="gp-ai-send">Ask</button></div>
+  <style> #gp-ai-form{flex-direction:column;gap:8px} #gp-ai-filters{display:flex;gap:6px} #gp-ai-filters select{flex:1;min-width:0;font-size:13px;min-height:36px} #gp-ai-opts{display:grid;grid-template-columns:1fr 1fr;gap:6px} #gp-ai-opts button{font-size:12px;padding:8px;min-height:38px;text-align:left} </style> <div id="gp-ai-form">   <div id="gp-ai-filters">     <select id="gp-ai-unit" aria-label="Unit"></select>     <select id="gp-ai-cust" aria-label="Customer"></select>   </div>   <div id="gp-ai-opts"></div> </div>
 </div>
 <script id="gp-ai-js">
 (function(){
   const $=id=>document.getElementById(id),box=()=>$('gp-ai-msgs');let busy=false;
+  const OPTS=[['pending','📦 Pending orders'],['overdue','⏰ Overdue orders'],['due_today','📅 Due today'],['top_customers','🏆 Top 5 customers'],['dispatched_today','🚚 Dispatched today'],['low_fg','⚠ Low FG stock']];
+  const UNITS=['Unit 1','Unit 2','Unit 3','Unit 5','Unit Delta'];
   function add(cls,text){const d=document.createElement('div');d.className='gp-ai-m '+cls;d.textContent=text;box().appendChild(d);box().scrollTop=box().scrollHeight;return d;}
-  function table(d,rows){ // built with textContent => customer names can never run as HTML
+  function table(d,rows){
     if(!rows||!rows.length)return;const t=document.createElement('table'),cols=Object.keys(rows[0]);
     const h=t.insertRow();cols.forEach(c=>{const th=document.createElement('th');th.textContent=c;h.appendChild(th);});
     rows.forEach(r=>{const tr=t.insertRow();cols.forEach(c=>{tr.insertCell().textContent=r[c]==null?'':r[c];});});
     const w=document.createElement('div');w.style.overflowX='auto';w.appendChild(t);d.appendChild(w);
   }
-  async function ask(){
-    const inp=$('gp-ai-q'),q=inp.value.trim();if(!q||busy)return;
-    busy=true;inp.value='';add('u',q);const wait=add('b','Thinking…');
+  function fillFilters(){
+    const u=$('gp-ai-unit'),c=$('gp-ai-cust');
+    const uv=u.value,cv=c.value;
+    u.innerHTML='';c.innerHTML='';
+    const addOpt=(sel,val,label)=>{const o=document.createElement('option');o.value=val;o.textContent=label;sel.appendChild(o);};
+    addOpt(u,'','All units');UNITS.forEach(x=>addOpt(u,x,x));
+    addOpt(c,'','All customers');
+    ((typeof data!=='undefined'&&data.customers)||[]).forEach(x=>addOpt(c,x,x));
+    u.value=uv;c.value=cv;
+  }
+  async function ask(intent,label){
+    if(busy)return;busy=true;
+    const u=$('gp-ai-unit').value,c=$('gp-ai-cust').value;
+    add('u',label+(u?' · '+u:'')+(c?' · '+c:''));
+    const wait=add('b','Checking…');
     try{
-      const r=await postAction({action:'askAssistant',question:q});
+      const r=await postAction({action:'askAssistant',intent:intent,unit:u,customer:c});
       wait.textContent=r.error?('⚠ '+r.error):(r.answer||'No answer.');
       if(!r.error)table(wait,r.rows);
     }catch(e){wait.textContent='⚠ Could not reach the assistant.';}
     busy=false;box().scrollTop=box().scrollHeight;
   }
-  $('gp-ai-fab').onclick=()=>{const p=$('gp-ai-panel');p.classList.toggle('open');if(p.classList.contains('open')){if(!box().children.length)add('b','Hi! Ask me about pending quantity, overdue orders or dispatch. Example: "Overdue orders for BAJAJ".');$('gp-ai-q').focus();}};
+  const opts=$('gp-ai-opts');
+  OPTS.forEach(([k,l])=>{const b=document.createElement('button');b.type='button';b.className='btn-ghost btn-small';b.textContent=l;b.onclick=()=>ask(k,l);opts.appendChild(b);});
+  $('gp-ai-fab').onclick=()=>{const p=$('gp-ai-panel');p.classList.toggle('open');if(p.classList.contains('open')){fillFilters();if(!box().children.length)add('b','Hi! Pick a report below. You can narrow it by unit or customer first.');}};
   $('gp-ai-x').onclick=()=>$('gp-ai-panel').classList.remove('open');
-  $('gp-ai-send').onclick=ask;$('gp-ai-q').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ask();}});
-  const _out=window.doLogout;window.doLogout=function(){box().textContent='';$('gp-ai-panel').classList.remove('open');if(_out)_out.apply(this,arguments);}; // clear chat on shared phones
+  const _out=window.doLogout;window.doLogout=function(){box().textContent='';$('gp-ai-panel').classList.remove('open');if(_out)_out.apply(this,arguments);};
 })();
 </script>
 
