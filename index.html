@@ -8082,6 +8082,107 @@ if(document.readyState!=='loading' && document.getElementById('main-app')) mount
   resize();start();
 })();
 </script>
+<!-- =====================================================================
+  GREENPACK — WELCOME ROBOT (paste just BEFORE </body>, after the last <script>)
+  - Shows ONCE per login (not on page refresh).
+  - 100% local: no AI call, no data leaves the browser.
+  - Name is inserted with textContent (cannot inject HTML/JS).
+  ===================================================================== -->
+<style id="gp-welcome-css">
+#gp-welcome{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  padding:max(20px,env(safe-area-inset-top)) 20px max(20px,env(safe-area-inset-bottom));
+  background:rgba(8,7,13,.80);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .35s ease;cursor:pointer}
+#gp-welcome.show{opacity:1}#gp-welcome.hide{opacity:0;pointer-events:none}
+.gpw-bubble{order:-1;max-width:min(360px,90vw);text-align:center;padding:14px 20px;border-radius:18px;position:relative;
+  background:#fff;color:#17221d;box-shadow:0 18px 50px rgba(0,0,0,.45);animation:gpwPop .5s cubic-bezier(.16,1,.3,1) .6s both}
+.gpw-bubble:after{content:'';position:absolute;left:50%;bottom:-9px;width:18px;height:18px;background:#fff;transform:translateX(-50%) rotate(45deg)}
+.gpw-hi{font:700 20px/1.25 'Space Grotesk',-apple-system,"Segoe UI","Noto Sans Devanagari",sans-serif;min-height:26px}
+.gpw-hi b{color:#087a32}
+.gpw-sub{font-size:12.5px;color:#667085;margin-top:4px}
+.gpw-tap{font-size:11px;color:#a99fc4;margin-top:6px}
+.gpw-bot{width:170px;height:200px;animation:gpwIn .9s cubic-bezier(.16,1,.3,1) both,gpwFloat 3s ease-in-out .9s infinite;filter:drop-shadow(0 14px 24px rgba(0,0,0,.45))}
+.gpw-eye{transform-box:fill-box;transform-origin:center;animation:gpwBlink 4s infinite}
+.gpw-arm{transform-box:view-box;transform-origin:125px 118px;animation:gpwWave .55s ease-in-out .9s infinite alternate;transform:rotate(-125deg)}
+.gpw-led{animation:gpwLed 1.2s ease-in-out infinite}
+@keyframes gpwIn{from{transform:translateY(120px) scale(.6);opacity:0}to{transform:none;opacity:1}}
+@keyframes gpwFloat{50%{transform:translateY(-8px)}}
+@keyframes gpwPop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+@keyframes gpwBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+@keyframes gpwWave{from{transform:rotate(-115deg)}to{transform:rotate(-158deg)}}
+@keyframes gpwLed{50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){.gpw-bot,.gpw-arm,.gpw-eye,.gpw-led,.gpw-bubble{animation:none!important}.gpw-arm{transform:rotate(-135deg)}}
+</style>
+
+<script id="gp-welcome-js">
+(function(){
+  const KEY='gp_welcomed';
+  const TXT={
+    en:{m:'Good Morning',a:'Good Afternoon',e:'Good Evening',n:'Hello',sub:'Welcome to Greenpack MIS',tap:'Tap anywhere to continue'},
+    mr:{m:'सुप्रभात',a:'शुभ दुपार',e:'शुभ संध्याकाळ',n:'नमस्कार',sub:'Greenpack MIS मध्ये आपले स्वागत आहे',tap:'पुढे जाण्यासाठी कुठेही टॅप करा'},
+    hi:{m:'सुप्रभात',a:'शुभ दोपहर',e:'शुभ संध्या',n:'नमस्ते',sub:'Greenpack MIS में आपका स्वागत है',tap:'आगे बढ़ने के लिए कहीं भी टैप करें'}
+  };
+  function hourIST(){
+    try{return Number(new Intl.DateTimeFormat('en-GB',{hour:'numeric',hourCycle:'h23',timeZone:'Asia/Kolkata'}).format(new Date()));}
+    catch(e){return new Date().getHours();}
+  }
+  function slot(h){return h>=5&&h<12?'m':h>=12&&h<17?'a':h>=17&&h<21?'e':'n';}
+  function firstName(){
+    const raw=String((window.SESSION&&(SESSION.displayName||SESSION.username))||'').trim().split(/\s+/)[0]||'';
+    return raw?raw.charAt(0).toUpperCase()+raw.slice(1):'';
+  }
+  const SVG=`<svg class="gpw-bot" viewBox="0 0 170 200" aria-hidden="true">
+    <line x1="85" y1="14" x2="85" y2="32" stroke="#34d399" stroke-width="3"/>
+    <circle class="gpw-led" cx="85" cy="10" r="6" fill="#34d399"/>
+    <rect x="32" y="56" width="8" height="22" rx="4" fill="#34d399"/><rect x="130" y="56" width="8" height="22" rx="4" fill="#34d399"/>
+    <rect x="40" y="32" width="90" height="70" rx="22" fill="#1f2937" stroke="#34d399" stroke-width="2.5"/>
+    <rect x="50" y="46" width="70" height="40" rx="14" fill="#0b1215"/>
+    <ellipse class="gpw-eye" cx="70" cy="64" rx="7" ry="9" fill="#34d399"/><ellipse class="gpw-eye" cx="100" cy="64" rx="7" ry="9" fill="#34d399"/>
+    <path d="M72 78 Q85 89 98 78" stroke="#34d399" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <rect x="36" y="114" width="14" height="44" rx="7" fill="#374151"/>
+    <rect x="52" y="108" width="66" height="60" rx="18" fill="#1f2937" stroke="#34d399" stroke-width="2.5"/>
+    <circle cx="85" cy="138" r="8" fill="#0d6b25" stroke="#34d399" stroke-width="2"/>
+    <rect x="62" y="170" width="16" height="18" rx="6" fill="#374151"/><rect x="92" y="170" width="16" height="18" rx="6" fill="#374151"/>
+    <g class="gpw-arm"><rect x="118" y="112" width="14" height="44" rx="7" fill="#374151"/><circle cx="125" cy="160" r="9" fill="#34d399"/></g>
+  </svg>`;
+
+  function play(){
+    if(document.getElementById('gp-welcome'))return;
+    const lang=(typeof currentAppLanguage==='function'?currentAppLanguage():'en'),t=TXT[lang]||TXT.en;
+    const greet=t[slot(hourIST())],name=firstName();
+    const root=document.createElement('div');root.id='gp-welcome';root.setAttribute('role','status');root.setAttribute('aria-live','polite');
+    root.innerHTML=SVG+'<div class="gpw-bubble"><div class="gpw-hi"></div><div class="gpw-sub"></div><div class="gpw-tap"></div></div>';
+    // textContent only -> a malicious display name can never run as HTML/JS
+    root.querySelector('.gpw-sub').textContent=t.sub;
+    root.querySelector('.gpw-tap').textContent=t.tap;
+    const hi=root.querySelector('.gpw-hi');
+    document.body.appendChild(root);
+    requestAnimationFrame(()=>root.classList.add('show'));
+
+    const full=greet+(name?', ':'')  ,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const renderHi=txt=>{hi.textContent='';hi.append(document.createTextNode(txt.slice(0,full.length)));
+      if(txt.length>full.length){const b=document.createElement('b');b.textContent=txt.slice(full.length);hi.append(b);}};
+    const target=full+name+(name?' 👋':' 👋');
+    let i=0,timer=null,done=false;
+    if(reduce){renderHi(target);}
+    else{setTimeout(()=>{timer=setInterval(()=>{i++;renderHi(target.slice(0,i));if(i>=target.length)clearInterval(timer);},45);},800);}
+
+    function close(){if(done)return;done=true;clearInterval(timer);root.classList.remove('show');root.classList.add('hide');setTimeout(()=>root.remove(),400);document.removeEventListener('keydown',onKey);}
+    function onKey(e){if(e.key==='Escape'||e.key==='Enter')close();}
+    root.addEventListener('click',close);document.addEventListener('keydown',onKey);
+    setTimeout(close,5200);
+  }
+
+  // Show only right after a fresh login (flag lives in sessionStorage, cleared on logout)
+  const _show=window.showApp;
+  window.showApp=function(){
+    if(_show)_show.apply(this,arguments);
+    try{if(!sessionStorage.getItem(KEY)){sessionStorage.setItem(KEY,'1');setTimeout(play,400);}}catch(e){}
+  };
+  const _out=window.doLogout;
+  window.doLogout=function(){try{sessionStorage.removeItem(KEY);}catch(e){} if(_out)_out.apply(this,arguments);};
+  window.gpPlayWelcome=play; // for testing: type gpPlayWelcome() in the browser console
+})();
+</script>
 
 </body>
 </html>
